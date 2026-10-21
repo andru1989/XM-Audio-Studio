@@ -7,6 +7,8 @@ struct XMAudioStudioApp: App {
     @StateObject private var controller: HeadphonesController
     @StateObject private var settings: AppSettings
     @StateObject private var studio: EqStudioModel
+    /// Local DSP ("Advanced EQ"); off at every launch, only shown in the studio window.
+    @StateObject private var dsp = DSPStudioModel()
 
     init() {
         ProbeMode.runIfRequested()
@@ -76,6 +78,7 @@ struct XMAudioStudioApp: App {
                 .environmentObject(controller)
                 .environmentObject(settings)
                 .environmentObject(studio)
+                .environmentObject(dsp)
         }
         .defaultSize(width: 1000, height: 760)
         .withoutWindowRestoration()
