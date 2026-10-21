@@ -23,7 +23,7 @@ struct HeaderView: View {
                 }
                 .padding(14)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .glassSurface(cornerRadius: Radius.card)
+                .cardSurface(cornerRadius: Radius.card)
             } else {
                 VStack(spacing: 10) {
                     artwork
@@ -44,21 +44,7 @@ struct HeaderView: View {
     /// cast by the gradient's rectangle and showed up as a grey box behind the
     /// headphones. Stacked, the shadow is cast only by the photo's own alpha.
     private var artwork: some View {
-        ZStack {
-            Ellipse()
-                .fill(
-                    RadialGradient(
-                        colors: [Color.white.opacity(0.10), Color.clear],
-                        center: .center,
-                        startRadius: 2,
-                        endRadius: 62
-                    )
-                )
-                .blur(radius: 8)
-
-            HeadphoneImage()
-                .shadow(color: Color.black.opacity(0.45), radius: 10, y: 7)
-        }
+        HeadphoneImage()
     }
 
     /// State summary for the wide layout. The banner is otherwise mostly empty at
@@ -79,18 +65,19 @@ struct HeaderView: View {
                 glanceRow("Playing on", playing)
             }
         }
-        .frame(width: 240, alignment: .leading)
+        .frame(width: 270, alignment: .leading)
     }
 
     private func glanceRow(_ key: String, _ value: String) -> some View {
         HStack(spacing: 10) {
-            Text(key)
+            Text(LocalizedStringKey(key))
                 .foregroundStyle(.tertiary)
             Spacer(minLength: 8)
-            Text(value)
+            Text(LocalizedStringKey(value))
                 .foregroundStyle(.secondary)
                 .fontWeight(.medium)
                 .lineLimit(1)
+                .minimumScaleFactor(0.85)
         }
         .font(.caption)
     }
@@ -163,16 +150,10 @@ struct BatteryGauge: View {
             HStack(spacing: 1.5) {
                 ZStack(alignment: .leading) {
                     RoundedRectangle(cornerRadius: Self.corner)
-                        .fill(Color.black.opacity(0.28))
+                        .fill(Surface.well)
 
                     RoundedRectangle(cornerRadius: Self.corner - Self.inset)
-                        .fill(
-                            LinearGradient(
-                                colors: [tint, tint.opacity(0.72)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
+                        .fill(tint)
                         .frame(width: fillWidth, height: Self.bodyHeight - Self.inset * 2)
                         .padding(.leading, Self.inset)
 
@@ -186,14 +167,7 @@ struct BatteryGauge: View {
                 }
                 .frame(width: Self.bodyWidth, height: Self.bodyHeight)
                 .overlay(
-                    RoundedRectangle(cornerRadius: Self.corner).strokeBorder(
-                        LinearGradient(
-                            colors: [Color.black.opacity(0.30), Color.white.opacity(0.14)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 1
-                    )
+                    RoundedRectangle(cornerRadius: Self.corner).strokeBorder(Surface.wellEdge, lineWidth: 1)
                 )
 
                 // Terminal cap.

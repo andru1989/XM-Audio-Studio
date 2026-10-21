@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "XMAudioStudio",
     platforms: [
-        .macOS(.v14)
+        .macOS(.v15)
     ],
     targets: [
         // Sony MDR protocol, RFCOMM transport and the session controller.

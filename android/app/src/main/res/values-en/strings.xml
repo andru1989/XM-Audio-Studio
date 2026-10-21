@@ -113,4 +113,7 @@
     <string name="demo_takeover">Simulate takeover from the phone</string>
     <string name="about">About</string>
     <string name="feature_unverified">Pending hardware test</string>
+    <string name="device_curve_not_saved">Your headphones have a curve that is not in your library yet.</string>
+    <string name="save_to_library">Save to library</string>
+    <string name="device_curve_name">My headphones curve</string>
 </resources>

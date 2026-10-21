@@ -20,6 +20,12 @@ struct DashboardView: View {
 
             ScrollView {
                 VStack(spacing: 14) {
+                    if settings.isDemo {
+                        Label("Demo mode: simulated headphones, invented data.", systemImage: "theatermasks")
+                            .font(.caption)
+                            .foregroundStyle(StudioColor.warning)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                     HeaderView(horizontal: isWide)
 
                     if isWide {
@@ -49,56 +55,43 @@ struct DashboardView: View {
         }
     }
 
+    /// One row: actions on the left, settings and protocol info on the right. Kept to a
+    /// single line so the dashboard fits its default window height.
     private var footer: some View {
-        VStack(spacing: 10) {
-            HStack(spacing: 8) {
-                Button {
-                    openWindow(id: "desktop-widget")
-                } label: {
-                    Label("Widget", systemImage: "macwindow.on.rectangle")
-                        .frame(maxWidth: .infinity)
-                }
-                .help("Open the floating desktop widget")
-
-                Button {
-                    controller.refreshState()
-                } label: {
-                    Label("Refresh", systemImage: "arrow.clockwise")
-                        .frame(maxWidth: .infinity)
-                }
-                .help("Re-read every setting from the headphones")
-
-                Button(role: .destructive) {
-                    controller.disconnect()
-                } label: {
-                    Text("Disconnect")
-                        .frame(maxWidth: .infinity)
-                }
+        HStack(spacing: 8) {
+            Button {
+                openWindow(id: "desktop-widget")
+            } label: {
+                Label("Widget", systemImage: "macwindow.on.rectangle")
             }
-            .buttonStyle(.bordered)
-            .controlSize(.small)
+            .help("Open the floating desktop widget")
 
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Toggle("Show only in the menu bar", isOn: $settings.menuBarOnly)
-                        .toggleStyle(.checkbox)
-                        .help("Hides the Dock icon. The menu bar panel stays available, and you can reopen this window from there.")
-
-                    Toggle("Release the headphones when I'm not using the app", isOn: $settings.releaseWhenIdle)
-                        .toggleStyle(.checkbox)
-                        .help("Releases the control connection after all windows and panels have been closed for a short time.")
-
-                    Toggle("Debug log", isOn: $controller.protocolLoggingEnabled)
-                        .toggleStyle(.checkbox)
-                        .help("Write a hex transcript of every frame to protocol.log")
-                }
-                Spacer()
-                Text(footerText)
-                    .foregroundStyle(.tertiary)
+            Button {
+                controller.refreshState()
+            } label: {
+                Label("Refresh", systemImage: "arrow.clockwise")
             }
-            .font(.caption2)
-            .foregroundStyle(.secondary)
+            .help("Re-read every setting from the headphones")
+
+            Button(role: .destructive) {
+                controller.disconnect()
+            } label: {
+                Text("Disconnect")
+            }
+
+            SettingsLink {
+                Label("Settings…", systemImage: "gearshape")
+            }
+
+            Spacer(minLength: 8)
+            Text(LocalizedStringKey(footerText))
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .lineLimit(1)
+                .truncationMode(.middle)
         }
+        .buttonStyle(.bordered)
+        .controlSize(.small)
         .padding(.top, 2)
     }
 

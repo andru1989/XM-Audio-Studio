@@ -4,6 +4,9 @@
 #
 # Usage: Scripts/build_app.sh [release|debug]
 #
+# Builds a universal binary (Apple Silicon arm64 + Intel x86_64) by default.
+# Set XMAS_ARCHS="arm64" (or "x86_64") for a faster single-architecture build.
+#
 # Code signing, in order of preference:
 #   1. $XMAS_SIGN_IDENTITY, if set.
 #   2. The first "Apple Development" identity in the keychain.
@@ -18,7 +21,15 @@ cd "$(dirname "$0")/.."
 CONFIG="${1:-release}"
 APP_NAME="XM Audio Studio"
 EXECUTABLE="XMAudioStudio"
-BUILD_DIR=".build/${CONFIG}"
+ARCHS="${XMAS_ARCHS:-arm64 x86_64}"
+ARCH_FLAGS=()
+for arch in ${ARCHS}; do ARCH_FLAGS+=(--arch "${arch}"); done
+if [ "$(echo ${ARCHS} | wc -w | tr -d ' ')" -gt 1 ]; then
+    # Multi-arch builds go through the Xcode build system into .build/apple.
+    BUILD_DIR=".build/apple/Products/$(tr '[:lower:]' '[:upper:]' <<< "${CONFIG:0:1}")${CONFIG:1}"
+else
+    BUILD_DIR=".build/${ARCHS}-apple-macosx/${CONFIG}"
+fi
 APP_DIR=".build/${APP_NAME}.app"
 RESOURCES="Sources/XMAudioStudio/Resources"
 
@@ -30,19 +41,19 @@ build_with_cache_recovery() (
     build_log="$(mktemp -t xmas-build.XXXXXX)"
     trap 'rm -f "${build_log}"' EXIT
 
-    if swift build -c "${CONFIG}" 2>&1 | tee "${build_log}"; then
+    if swift build -c "${CONFIG}" "${ARCH_FLAGS[@]}" 2>&1 | tee "${build_log}"; then
         return 0
     fi
     if grep -Eq "PCH was compiled with module cache path|PCH file .* was built from a different branch|missing required module 'SwiftShims'" "${build_log}"; then
         echo "==> Stale Swift module cache detected; cleaning and retrying..."
         swift package clean
-        swift build -c "${CONFIG}"
+        swift build -c "${CONFIG}" "${ARCH_FLAGS[@]}"
         return
     fi
     return 1
 )
 
-echo "==> Building (${CONFIG})..."
+echo "==> Building (${CONFIG}, ${ARCHS})..."
 build_with_cache_recovery
 
 if [ ! -f "${RESOURCES}/AppIcon.icns" ] || [ "Scripts/make_icon.swift" -nt "${RESOURCES}/AppIcon.icns" ]; then
@@ -76,6 +87,7 @@ else
     codesign --force --deep --sign - "${APP_DIR}"
 fi
 codesign --verify --deep --strict "${APP_DIR}"
+echo "==> Architectures: $(lipo -archs "${APP_DIR}/Contents/MacOS/${EXECUTABLE}")"
 
 echo "==> Done: ${APP_DIR}"
 echo "    Launch with: open \"${APP_DIR}\""

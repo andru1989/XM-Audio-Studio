@@ -1,10 +1,13 @@
 import SwiftUI
 import SonyHeadphonesKit
+import AudioStudioKit
 
 /// Equalizer preset chips, plus the band faders when the custom preset is active.
 /// A section rather than its own card, sharing `SoundCard` with the listening mode.
 struct EqualizerSection: View {
     @EnvironmentObject private var controller: HeadphonesController
+    @EnvironmentObject private var studio: EqStudioModel
+    @Environment(\.openWindow) private var openWindow
 
     private let columns = [GridItem(.adaptive(minimum: 92), spacing: 6)]
 
@@ -34,6 +37,29 @@ struct EqualizerSection: View {
                         StateNotReportedBanner()
                     }
 
+                    HStack {
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Active profile")
+                                .font(.caption2)
+                                .foregroundStyle(.secondary)
+                            Text(studio.activeProfile?.name ?? NSLocalizedString("Custom (unsaved)", comment: ""))
+                                .font(.callout.weight(.medium))
+                        }
+                        Spacer()
+                        if studio.deviceCurveNotInLibrary {
+                            Button("Save to Library") {
+                                studio.saveCurrent(as: studio.suggestedImportName)
+                            }
+                            .controlSize(.small)
+                            .help("Keep the curve the headphones have now as a profile in this app")
+                        }
+                        Button("Equalizer Studio…") {
+                            openWindow(id: "equalizer-studio")
+                            NSApp.activate(ignoringOtherApps: true)
+                        }
+                        .controlSize(.small)
+                    }
+
                     LazyVGrid(columns: columns, spacing: 6) {
                         ForEach(EqualizerPreset.allCases) { option in
                             presetChip(option, isSelected: option.rawValue == presetCode)
@@ -57,58 +83,24 @@ struct EqualizerSection: View {
         }
     }
 
-    // MARK: - Custom band faders
+    // MARK: - Custom curve summary
 
+    /// The dashboard only summarises the custom curve; the faders live in the Equalizer
+    /// Studio window so the dashboard fits its default window size without scrolling.
     private var customBands: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let spec = studio.spec
+        let grid = FrequencyGrid.logSpaced(min: 20, max: 20_000, count: 120)
+        let curve = AutoEqImporter.deviceModel(spec).responseDb(steps: bands, at: grid)
+        return VStack(alignment: .leading, spacing: 6) {
             Divider()
-
-            HStack(alignment: .bottom, spacing: 2) {
-                ForEach(Array(bands.enumerated()), id: \.offset) { index, gain in
-                    bandFader(index: index, gain: gain)
-                }
-            }
-            .frame(maxWidth: .infinity)
-
-            HStack {
-                Text("Low")
-                Spacer()
-                Text("High")
-            }
-            .font(.caption2)
-            .foregroundStyle(.tertiary)
-
-            Button("Reset to flat") {
-                controller.setEqualizerBands(
-                    Array(repeating: 0, count: SonyCommands.defaultBandCount)
-                )
-            }
-            .controlSize(.small)
-            .disabled(bands.allSatisfy { $0 == 0 })
-        }
-    }
-
-    private func bandFader(index: Int, gain: Int) -> some View {
-        VStack(spacing: 3) {
-            Text(gain > 0 ? "+\(gain)" : "\(gain)")
-                .font(.system(size: 9).monospacedDigit())
-                .foregroundStyle(gain == 0 ? .tertiary : .secondary)
-
-            VerticalFader(
-                value: gain,
-                range: SonyCommands.bandGainRange
-            ) { newGain in
-                var updated = bands
-                updated[index] = newGain
-                controller.setEqualizerBands(updated)
-            }
-            .frame(width: 24, height: 86)
-            .accessibilityLabel("Band \(index + 1) of \(bands.count)")
-            .accessibilityValue("\(gain)")
-
-            Text("\(index + 1)")
-                .font(.system(size: 9).monospacedDigit())
-                .foregroundStyle(.tertiary)
+            ResponseChart(
+                curves: [ChartCurve(frequencies: grid, gainsDb: curve, color: StudioColor.deviceEq, dashed: true, lineWidth: 1.8)],
+                bandFrequencies: spec.bandFrequenciesHz,
+                bandGainsDb: bands.map { Double($0) * spec.stepDb },
+                showsDbLabels: false
+            )
+            .frame(height: 56)
+            .accessibilityValue(bands.map { $0 > 0 ? "+\($0)" : "\($0)" }.joined(separator: " "))
         }
     }
 
@@ -118,7 +110,7 @@ struct EqualizerSection: View {
         Button {
             controller.setEqualizerPreset(preset)
         } label: {
-            Text(preset.label)
+            Text(LocalizedStringKey(preset.label))
                 .font(.caption.weight(isSelected ? .semibold : .regular))
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)

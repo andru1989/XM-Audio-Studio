@@ -44,7 +44,7 @@ struct WearDetectionSection: View {
                             set: { controller.setAutomaticPowerOff($0) }
                         )) {
                             ForEach(AutomaticPowerOffMode.allCases) { option in
-                                Text(option.label).tag(option)
+                                Text(LocalizedStringKey(option.label)).tag(option)
                             }
                         }
                         .labelsHidden()
@@ -60,7 +60,7 @@ struct WearDetectionSection: View {
 
     private func pendingRow(_ label: String) -> some View {
         HStack {
-            Text(label)
+            Text(LocalizedStringKey(label))
             Spacer()
             ProgressView().controlSize(.small)
         }

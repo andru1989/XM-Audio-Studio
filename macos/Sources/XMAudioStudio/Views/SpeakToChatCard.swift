@@ -44,7 +44,7 @@ struct SpeakToChatSection: View {
                                 set: { controller.setSpeakToChatConfig(SpeakToChatConfigState(sensitivity: $0, timeout: config.timeout)) }
                             )) {
                                 ForEach(SpeakToChatSensitivity.allCases) { option in
-                                    Text(option.label).tag(option)
+                                    Text(LocalizedStringKey(option.label)).tag(option)
                                 }
                             }
                             .labelsHidden()
@@ -58,7 +58,7 @@ struct SpeakToChatSection: View {
                                 set: { controller.setSpeakToChatConfig(SpeakToChatConfigState(sensitivity: config.sensitivity, timeout: $0)) }
                             )) {
                                 ForEach(SpeakToChatTimeout.allCases) { option in
-                                    Text(option.label).tag(option)
+                                    Text(LocalizedStringKey(option.label)).tag(option)
                                 }
                             }
                             .labelsHidden()

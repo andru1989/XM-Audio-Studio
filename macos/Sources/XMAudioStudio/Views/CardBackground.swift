@@ -8,115 +8,42 @@ extension Color {
     static let brand = Color.accentColor
 }
 
-/// One corner-radius scale for the whole app. Two shapes sit outside it on purpose:
-/// status badges are capsules (battery, "Play here"), and the three-way mode
-/// selectors are circles to match the iconography of Sony's own app. Everything
+/// One corner-radius scale for the whole app (tokens: radius.card / radius.control).
+/// Status badges are capsules and the three-way mode selectors are circles; everything
 /// else uses these two values.
 enum Radius {
-    /// Elevated surfaces. 12 rather than a phone-sized 20: macOS windows are
-    /// denser and large radii make panels look like iOS sheets.
-    static let card: CGFloat = 12
-    /// Chips, wells, and inline controls.
-    static let control: CGFloat = 8
+    static let card: CGFloat = 16
+    static let control: CGFloat = 10
 }
 
-/// Liquid Glass surface where the OS supports it (macOS 26+), with a hand-tuned
-/// glassy material fallback on older systems.
-struct GlassSurface: ViewModifier {
+/// Flat card: uniform fill and a hairline edge. No material, gradient or shadow.
+struct CardSurface: ViewModifier {
     var cornerRadius: CGFloat = Radius.card
 
     func body(content: Content) -> some View {
-        base(content: content)
-            // Specular edge: a hairline that is bright along the top and fades down the
-            // sides, which is how every macOS material catches light. Without it the
-            // card is a flat rectangle of slightly different grey.
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius)
-                    .strokeBorder(
-                        LinearGradient(
-                            colors: [Surface.cardEdgeTop, Surface.cardEdgeBottom],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 1
-                    )
-            )
-            // Elevation. Two shadows rather than one: a tight contact shadow that
-            // separates the card from the panel, and a wider soft one for depth.
-            .shadow(color: Surface.cardShadowContact, radius: 2, y: 1)
-            .shadow(color: Surface.cardShadowAmbient, radius: 14, y: 6)
-    }
-
-    @ViewBuilder
-    private func base(content: Content) -> some View {
-        // `#available` is a runtime check, so it still requires `glassEffect` to exist at
-        // compile time -- which it doesn't on SDKs older than macOS 26. The compiler guard
-        // keeps the project buildable on earlier Xcode versions.
-        #if compiler(>=6.2)
-        if #available(macOS 26.0, *) {
-            content
-                .glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
-        } else {
-            fallbackSurface(content: content)
-        }
-        #else
-        fallbackSurface(content: content)
-        #endif
-    }
-
-    private func fallbackSurface(content: Content) -> some View {
         content
-            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: cornerRadius))
+            .background(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).fill(Surface.card))
+            .overlay(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous).strokeBorder(Surface.cardEdge, lineWidth: 1))
     }
 }
 
 extension View {
-    func glassSurface(cornerRadius: CGFloat = Radius.card) -> some View {
-        modifier(GlassSurface(cornerRadius: cornerRadius))
+    func cardSurface(cornerRadius: CGFloat = Radius.card) -> some View {
+        modifier(CardSurface(cornerRadius: cornerRadius))
     }
 }
 
-/// The selection treatment shared by every pick-one control in the app: mode
-/// selectors, equalizer chips, and the menu bar panel's buttons.
-///
-/// Selected reads as a raised, top-lit button; unselected as a well pressed into
-/// the surface. Keeping it in one place is what stops the panel and the window
-/// drifting into different visual languages, and it means state is a physical
-/// difference rather than only a change of colour.
+/// The selection treatment shared by every pick-one control (mode selectors, EQ chips,
+/// the menu bar panel): selected is a solid accent fill, unselected a quiet neutral one.
+/// Keeping it in one place stops the panel and the window drifting apart visually.
 struct ControlSurface<S: InsettableShape>: ViewModifier {
     let shape: S
     let isSelected: Bool
 
     func body(content: Content) -> some View {
         content
-            .background(
-                shape.fill(
-                    isSelected
-                        ? AnyShapeStyle(
-                            LinearGradient(
-                                colors: [Color.brand, Color.brand.opacity(0.80)],
-                                startPoint: .top,
-                                endPoint: .bottom
-                            )
-                        )
-                        : AnyShapeStyle(Surface.well)
-                )
-                .shadow(color: isSelected ? Surface.pressShadow : .clear, radius: 4, y: 2)
-            )
-            .overlay(
-                shape.strokeBorder(
-                    LinearGradient(
-                        colors: isSelected
-                            // Lit along the top edge, like a key-lit control.
-                            ? [Surface.raisedEdgeTop, Surface.raisedEdgeBottom]
-                            // Dark along the top is what makes a recess read as sunken.
-                            : [Surface.wellEdgeTop, Surface.wellEdgeBottom],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    lineWidth: 1
-                )
-            )
+            .background(shape.fill(isSelected ? AnyShapeStyle(Color.brand) : AnyShapeStyle(Surface.well)))
+            .overlay(shape.strokeBorder(isSelected ? Color.clear : Surface.wellEdge, lineWidth: 1))
     }
 }
 
@@ -126,7 +53,7 @@ extension View {
     }
 }
 
-/// A rounded glass card container. Reserved for groups that genuinely deserve their
+/// A rounded flat card container. Reserved for groups that genuinely deserve their
 /// own elevated surface: related controls that are grouped inside a card use
 /// `CardSection` instead, so secondary settings don't each spawn a panel and flatten
 /// the hierarchy.
@@ -150,7 +77,7 @@ struct Card<Content: View>: View {
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .glassSurface(cornerRadius: Radius.card)
+        .cardSurface(cornerRadius: Radius.card)
         .hoverLift()
     }
 }
@@ -174,7 +101,7 @@ struct SectionLabel: View {
                     .foregroundStyle(Color.brand)
                     .frame(width: 14)
             }
-            Text(title)
+            Text(LocalizedStringKey(title))
                 .font(font)
                 .foregroundStyle(prominent ? .primary : .secondary)
         }
@@ -242,7 +169,7 @@ struct SettingsRow<Control: View>: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Text(label)
+            Text(LocalizedStringKey(label))
             Spacer(minLength: 12)
             control
         }

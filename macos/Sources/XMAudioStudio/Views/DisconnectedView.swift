@@ -71,7 +71,7 @@ struct DisconnectedView: View {
                             }
                         }
                     }
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: Radius.card))
+                    .cardSurface()
                     .padding(.horizontal, 24)
                 }
             }

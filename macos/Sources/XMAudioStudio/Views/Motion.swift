@@ -43,8 +43,7 @@ struct PressableButtonStyle: ButtonStyle {
     }
 }
 
-/// Lifts a surface slightly under the pointer: a touch more elevation and a hair of
-/// scale, so cards feel like objects rather than printed panels.
+/// Acknowledges the pointer with a hair of scale. Flat design: no shadow.
 struct HoverLift: ViewModifier {
     @StateObject private var hover = HoverState()
 
@@ -54,11 +53,6 @@ struct HoverLift: ViewModifier {
     func body(content: Content) -> some View {
         content
             .scaleEffect(hover.isHovering ? scale : 1.0)
-            .shadow(
-                color: Color.black.opacity(hover.isHovering ? shadowOpacity : 0),
-                radius: 18,
-                y: 8
-            )
             .animation(Motion.hover, value: hover.isHovering)
             .onHover { hover.isHovering = $0 }
     }

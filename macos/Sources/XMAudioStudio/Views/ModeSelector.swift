@@ -68,7 +68,7 @@ private struct ModeSelectorButton<Value: Hashable>: View {
                     .frame(width: 54, height: 54)
                     .controlSurface(Circle(), isSelected: isSelected)
 
-                Text(option.title)
+                Text(LocalizedStringKey(option.title))
                     .font(.caption2.weight(isSelected ? .semibold : .regular))
                     .foregroundStyle(isSelected ? Color.primary : Color.secondary)
                     // Cross-fade rather than a hard swap when selection moves.

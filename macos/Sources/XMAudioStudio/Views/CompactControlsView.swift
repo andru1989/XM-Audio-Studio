@@ -152,10 +152,12 @@ struct CompactControlsView: View {
             // enum doesn't contain. The device can report a personalized preset id,
             // and a Picker forced that through `?? .off`, showing "Off" while the
             // headphones were using something else entirely.
-            Menu(currentEqualizerLabel) {
+            Menu {
                 ForEach(EqualizerPreset.allCases) { preset in
-                    Button(preset.label) { controller.setEqualizerPreset(preset) }
+                    Button(LocalizedStringKey(preset.label)) { controller.setEqualizerPreset(preset) }
                 }
+            } label: {
+                Text(LocalizedStringKey(currentEqualizerLabel))
             }
             .menuStyle(.borderlessButton)
             .fixedSize()
@@ -242,7 +244,7 @@ struct CompactControlsView: View {
         } label: {
             VStack(spacing: 3) {
                 Image(systemName: icon).font(.system(size: 13, weight: .medium))
-                Text(label).font(.caption2)
+                Text(LocalizedStringKey(label)).font(.caption2)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 7)

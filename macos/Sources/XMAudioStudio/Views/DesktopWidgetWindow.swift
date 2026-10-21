@@ -22,7 +22,7 @@ struct DesktopWidgetView: View {
                 .padding(6)
                 .help("Close widget")
             }
-            .glassSurface(cornerRadius: 22)
+            .cardSurface(cornerRadius: 22)
             .padding(8)
             .background(WidgetWindowConfigurator())
     }

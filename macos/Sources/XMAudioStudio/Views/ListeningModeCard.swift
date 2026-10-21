@@ -34,7 +34,7 @@ struct ListeningModeSection: View {
                             set: { controller.setBGMRoomSize($0) }
                         )) {
                             ForEach(BGMRoomSize.allCases) { size in
-                                Text(size.label).tag(size)
+                                Text(LocalizedStringKey(size.label)).tag(size)
                             }
                         }
                         .pickerStyle(.segmented)

@@ -4,23 +4,13 @@ import SonyHeadphonesKit
 
 struct ContentView: View {
     @EnvironmentObject private var controller: HeadphonesController
+    @Environment(\.openWindow) private var openWindow
 
     var body: some View {
         ZStack {
-            // A shallow vertical gradient rather than a flat fill: it gives the cards
-            // something to sit against, so they read as layers instead of rectangles
-            // on the same plane. Deliberately only a few percent, and nothing like
-            // the large blurred colour circles this replaced, which read as generic
-            // app decoration rather than as part of a Mac app.
-            LinearGradient(
-                colors: [
-                    Color(nsColor: .windowBackgroundColor),
-                    Color(nsColor: .underPageBackgroundColor),
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            // One flat window colour (design tokens); cards carry the structure.
+            Surface.window
+                .ignoresSafeArea()
 
             Group {
                 switch controller.connectionState {
@@ -42,6 +32,13 @@ struct ContentView: View {
         // No explicit tint: selection follows the user's System Settings accent,
         // which is what every other Mac app does.
         .onAppear {
+            // Developer convenience (screenshots, manual tests): `--studio` / `--widget` open those windows.
+            if CommandLine.arguments.contains("--studio") {
+                openWindow(id: "equalizer-studio")
+            }
+            if CommandLine.arguments.contains("--widget") {
+                openWindow(id: "desktop-widget")
+            }
             // Only connect on a genuinely fresh start. This view re-appears every time
             // the main window is reopened from the menu bar; reconnecting over a live
             // connection tears the session down (and can trip a fresh TCC Bluetooth
