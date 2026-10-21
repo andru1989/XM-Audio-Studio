@@ -1,7 +1,7 @@
 # XM Audio Studio
 
-**Controla y ecualiza tus audífonos Sony WH-1000XM6 desde tu Mac y tu teléfono Android, sin la app
-oficial, sin cuentas y sin internet.**
+**Controla y ecualiza tus audífonos Sony de la serie 1000X (MDR-1000X, WH-1000XM2, XM3, XM4, XM5 y
+XM6) desde tu Mac y tu teléfono Android, sin la app oficial, sin cuentas y sin internet.**
 
 XM Audio Studio es una pareja de aplicaciones nativas (macOS y Android) que se comunican directamente
 por Bluetooth con los audífonos Sony de la serie 1000X para:
@@ -28,9 +28,13 @@ por Bluetooth con los audífonos Sony de la serie 1000X para:
 
 ## Para quién es
 
-Para quien tiene unos WH-1000XM6 (y en el futuro otros modelos 1000X) y quiere controlarlos y
-personalizar su sonido desde el Mac —desde la barra de menús, una ventana o widgets— y desde Android
-—app, Ajustes rápidos o widget—, con más control del ecualizador que la app oficial.
+Para cualquiera que tenga unos audífonos de diadema de la serie Sony 1000X —MDR-1000X, WH-1000XM2,
+WH-1000XM3, WH-1000XM4, WH-1000XM5 o WH-1000XM6— y quiera controlarlos y personalizar su sonido desde
+el Mac (barra de menús, ventana o widgets) y desde Android (app, Ajustes rápidos o widget), con más
+control del ecualizador que la app oficial.
+
+El soporte avanza por modelo: el WH-1000XM6 es el más completo hoy, y los demás modelos se van
+habilitando y validando con hardware real (ver la tabla de compatibilidad).
 
 ## Compatibilidad
 
