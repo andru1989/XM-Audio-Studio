@@ -20,5 +20,6 @@
 - **Transporte** (RFCOMM) ≠ **audio** (A2DP): la app solo usa el canal de control MDR.
 - **Sesión**: una trama en vuelo; adquisición bajo demanda; ver `bluetooth/SESSION-LIFECYCLE.md`.
 - **Adaptadores** por generación (ADR-0005); hoy solo XM6.
-- **Perfiles**: ilimitados en la app (JSON local), uno activo en los audífonos.
+- **Perfiles**: ilimitados en la app (JSON local), uno activo en los audífonos. Desde el formato
+  v2 un perfil puede llevar una escena con el resto de ajustes (`SCENES.md`).
 - **EQ**: dos destinos visibles en la UI — EQ de los audífonos (azul) y DSP local (ámbar, planificado).

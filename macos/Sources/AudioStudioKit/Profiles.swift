@@ -59,6 +59,8 @@ public struct EqProfile: Codable, Equatable, Sendable, Identifiable {
     /// `HeadphoneModel.rawValue`; a profile is only offered for, and applied to, its own model.
     public var model: String
     public var deviceEq: DeviceEqSetting
+    /// Headphone settings applied together with the EQ (format version 2). Nil: an EQ-only profile.
+    public var scene: HeadphoneScene?
     public var sourceCurve: SourceCurve?
     public var source: ProfileSource?
     public var notes: String?
@@ -66,13 +68,14 @@ public struct EqProfile: Codable, Equatable, Sendable, Identifiable {
     public var updatedAt: String?
 
     public init(id: String, name: String, category: ProfileCategory, model: String, deviceEq: DeviceEqSetting,
-                sourceCurve: SourceCurve? = nil, source: ProfileSource? = nil, notes: String? = nil,
+                scene: HeadphoneScene? = nil, sourceCurve: SourceCurve? = nil, source: ProfileSource? = nil, notes: String? = nil,
                 createdAt: String? = nil, updatedAt: String? = nil) {
         self.id = id
         self.name = name
         self.category = category
         self.model = model
         self.deviceEq = deviceEq
+        self.scene = scene
         self.sourceCurve = sourceCurve
         self.source = source
         self.notes = notes
@@ -90,7 +93,11 @@ public struct ProfileFormatError: Error, Equatable, LocalizedError {
 
 public enum ProfileCodec {
     public static let format = "xm-audio-studio.profiles"
-    public static let version = 1
+    /// Version written. Version 1 files (no scenes) are still read.
+    public static let version = 2
+    public static let minVersion = 1
+    /// First version whose profiles may carry a `HeadphoneScene`.
+    public static let sceneVersion = 2
     public static let maxNameLength = 80
 
     struct Export: Codable {
@@ -118,9 +125,14 @@ public enum ProfileCodec {
         guard doc.version <= version else {
             throw ProfileFormatError(message: "Profile file version \(doc.version) is newer than this app supports (\(version))")
         }
+        guard doc.version >= minVersion else { throw ProfileFormatError(message: "Unknown profile file version \(doc.version)") }
         for p in doc.profiles {
+            let label = p.name.trimmingCharacters(in: .whitespaces).isEmpty ? p.id : p.name
+            if p.scene != nil && doc.version < sceneVersion {
+                throw ProfileFormatError(message: "\(label): a scene needs format version \(sceneVersion)")
+            }
             if let reason = validate(p) {
-                throw ProfileFormatError(message: "\(p.name.trimmingCharacters(in: .whitespaces).isEmpty ? p.id : p.name): \(reason)")
+                throw ProfileFormatError(message: "\(label): \(reason)")
             }
         }
         return doc.profiles
@@ -132,7 +144,8 @@ public enum ProfileCodec {
         let name = p.name.trimmingCharacters(in: .whitespaces)
         if name.isEmpty || p.name.count > maxNameLength { return "name must be 1-\(maxNameLength) characters" }
         guard let model = HeadphoneModel(rawValue: p.model) else { return "unknown model '\(p.model)'" }
-        guard let spec = DeviceCatalog.capabilities(model).equalizer else { return "\(model.displayName) has no equalizer" }
+        let capabilities = DeviceCatalog.capabilities(model)
+        guard let spec = capabilities.equalizer else { return "\(model.displayName) has no equalizer" }
         let eq = p.deviceEq
         if (eq.presetCode == nil) == (eq.steps == nil) { return "needs exactly one of presetCode or steps" }
         if let code = eq.presetCode, !spec.presets.contains(where: { Int($0.code) == code }) {
@@ -148,6 +161,7 @@ public enum ProfileCodec {
             guard let range = spec.clearBassRange else { return "\(model.displayName) has no Clear Bass" }
             if !range.contains(cb) { return "Clear Bass must be within \(range.lowerBound)..\(range.upperBound)" }
         }
+        if let scene = p.scene, let reason = HeadphoneScenes.validate(scene, capabilities: capabilities) { return reason }
         return nil
     }
 }

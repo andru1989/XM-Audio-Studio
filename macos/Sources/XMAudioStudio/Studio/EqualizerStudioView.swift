@@ -58,6 +58,7 @@ struct EqualizerStudioView: View {
             NamePromptSheet(prompt: prompt) { name in
                 switch prompt.kind {
                 case .saveAs: studio.saveCurrent(as: name)
+                case .saveScene: studio.saveScene(as: name)
                 case .duplicate(let p): studio.duplicate(p, as: name)
                 case .rename(let p): studio.rename(p, to: name)
                 }
@@ -136,20 +137,29 @@ struct EqualizerStudioView: View {
                 if let category = studio.activeProfile?.category {
                     CategoryBadge(category: category)
                 }
+                if studio.activeProfile?.scene != nil {
+                    SceneBadge()
+                }
                 Spacer()
             }
 
             if studio.deviceCurveNotInLibrary {
-                HStack(spacing: 10) {
-                    Image(systemName: "square.and.arrow.down.on.square")
-                        .foregroundStyle(StudioColor.deviceEq)
-                    Text("Your headphones have a curve that is not in your library yet.")
-                        .font(.callout)
-                    Spacer()
-                    Button("Save to Library…") {
-                        namePrompt = NamePrompt(kind: .saveAs, initial: studio.suggestedImportName)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Image(systemName: "square.and.arrow.down.on.square")
+                            .foregroundStyle(StudioColor.deviceEq)
+                        Text("Your headphones have a curve that is not in your library yet.")
+                            .font(.callout)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    .buttonStyle(.borderedProminent)
+                    HStack(spacing: 8) {
+                        Spacer(minLength: 0)
+                        saveSceneButton
+                        Button("Save to Library…") {
+                            namePrompt = NamePrompt(kind: .saveAs, initial: studio.suggestedImportName)
+                        }
+                        .buttonStyle(.borderedProminent)
+                    }
                     .controlSize(.small)
                 }
                 .padding(10)
@@ -198,20 +208,53 @@ struct EqualizerStudioView: View {
 
             warnings(spec: spec, bands: bands)
 
-            HStack(spacing: 8) {
-                Button("Flat") { studio.resetFlat() }
-                    .disabled(!editable)
-                Button { studio.undo() } label: { Label("Undo", systemImage: "arrow.uturn.backward") }
-                    .keyboardShortcut("z", modifiers: .command)
-                    .disabled(!editable || !studio.canUndo)
-                Button { studio.toggleCompare() } label: { Label("A/B", systemImage: "arrow.left.arrow.right") }
-                    .help("Swap between the current curve and the previous one")
-                    .disabled(!editable || studio.compareWith == nil)
-                Spacer()
-                Button("Save as…") { namePrompt = NamePrompt(kind: .saveAs, initial: "") }
-                    .disabled(controller.equalizer == nil)
+            // One row at the default width; the save buttons drop to a second row in a narrow window.
+            ViewThatFits(in: .horizontal) {
+                HStack(spacing: 8) {
+                    editButtons(editable: editable)
+                    Spacer(minLength: 0)
+                    saveButtons
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) { editButtons(editable: editable) }
+                    HStack(spacing: 8) {
+                        Spacer(minLength: 0)
+                        saveButtons
+                    }
+                }
             }
         }
+    }
+
+    @ViewBuilder
+    private func editButtons(editable: Bool) -> some View {
+        Button("Flat") { studio.resetFlat() }
+            .disabled(!editable)
+        Button { studio.undo() } label: { Label("Undo", systemImage: "arrow.uturn.backward") }
+            .keyboardShortcut("z", modifiers: .command)
+            .disabled(!editable || !studio.canUndo)
+        Button { studio.toggleCompare() } label: { Label("A/B", systemImage: "arrow.left.arrow.right") }
+            .help("Swap between the current curve and the previous one")
+            .disabled(!editable || studio.compareWith == nil)
+    }
+
+    @ViewBuilder
+    private var saveButtons: some View {
+        // Shown in the banner above while the headphones' curve is not in the library.
+        if !studio.deviceCurveNotInLibrary {
+            saveSceneButton
+        }
+        Button("Save as…") { namePrompt = NamePrompt(kind: .saveAs, initial: "") }
+            .disabled(controller.equalizer == nil)
+    }
+
+    /// "Guardar configuración completa": the EQ plus the other headphone settings, as one profile.
+    private var saveSceneButton: some View {
+        Button("Save Full Configuration…") {
+            namePrompt = NamePrompt(kind: .saveScene, initial: studio.suggestedSceneName)
+        }
+        .disabled(!studio.canSaveScene)
+        .help("Keep the EQ and every other setting the headphones report (noise control, listening mode, Speak-to-Chat…) as one profile")
     }
 
     @ViewBuilder
@@ -325,6 +368,7 @@ private struct ProfileSidebar: View {
     @EnvironmentObject private var studio: EqStudioModel
     @Binding var namePrompt: NamePrompt?
     @Binding var showAutoEqInput: Bool
+    @State private var sceneToApply: EqProfile?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -359,18 +403,36 @@ private struct ProfileSidebar: View {
             .padding(10)
         }
         .background(Surface.card)
+        .sheet(item: $sceneToApply) { profile in
+            SceneApplySheet(profile: profile)
+        }
+    }
+
+    /// A scene changes more than the EQ, so it is confirmed first.
+    private func apply(_ profile: EqProfile) {
+        if profile.scene != nil {
+            sceneToApply = profile
+        } else {
+            studio.apply(profile)
+        }
     }
 
     private func row(_ profile: EqProfile) -> some View {
         let active = profile.id == studio.activeProfile?.id
         return Button {
-            studio.apply(profile)
+            apply(profile)
         } label: {
             HStack {
                 Image(systemName: active ? "checkmark.circle.fill" : "circle")
                     .foregroundStyle(active ? StudioColor.deviceEq : Color.secondary.opacity(0.4))
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(profile.name)
+                    HStack(alignment: .firstTextBaseline, spacing: 5) {
+                        Text(profile.name)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if profile.scene != nil {
+                            SceneBadge()
+                        }
+                    }
                     if let notes = profile.notes {
                         Text(notes).font(.caption2).foregroundStyle(.secondary).lineLimit(2)
                     }
@@ -380,9 +442,10 @@ private struct ProfileSidebar: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .disabled(studio.listeningModeBlocksEq)
+        // A scene that sets the listening mode writes the EQ while it is Standard.
+        .disabled(studio.listeningModeBlocksEq && profile.scene?.listeningMode == nil)
         .contextMenu {
-            Button("Apply") { studio.apply(profile) }
+            Button("Apply") { apply(profile) }
             Button("Duplicate…") { namePrompt = NamePrompt(kind: .duplicate(profile), initial: profile.name + " 2") }
             if !profile.isBuiltin {
                 Button("Rename…") { namePrompt = NamePrompt(kind: .rename(profile), initial: profile.name) }
@@ -416,6 +479,7 @@ private struct ProfileSidebar: View {
 struct NamePrompt: Identifiable {
     enum Kind {
         case saveAs
+        case saveScene
         case duplicate(EqProfile)
         case rename(EqProfile)
     }

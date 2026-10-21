@@ -26,8 +26,9 @@ let package = Package(
             ]
         ),
         // Audio maths and profiles: biquads, AutoEq import and fitting, the shared profile
-        // format. No UI and no transport code; it only reads the device catalogue from
-        // SonyHeadphonesKit. Mirrored by android/core (eq, presets).
+        // format. No UI and no transport code; it reads the device catalogue from
+        // SonyHeadphonesKit and, for scenes, the controller's published state and setters
+        // (SceneController.swift). Mirrored by android/core (eq, presets).
         .target(
             name: "AudioStudioKit",
             dependencies: ["SonyHeadphonesKit"],

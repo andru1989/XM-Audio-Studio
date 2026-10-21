@@ -145,11 +145,16 @@ final class EqStudioModel: ObservableObject {
         }
     }
 
+    /// Applies the profile's EQ, and its scene if it has one (the views confirm a scene first,
+    /// listing `sceneChanges(for:)`). Scene and EQ go out as one ordered list of setter calls.
     func apply(_ profile: EqProfile) {
         guard let value = DeviceEqValue(profile.deviceEq) else { return }
         remember(current)
         lastAppliedId = profile.id
-        send(value)
+        guard let scene = profile.scene else { return send(value) }
+        let capabilities = DeviceCatalog.capabilities(model)
+        controller.apply(HeadphoneScenes.intents(scene, current: controller.reportedState, capabilities: capabilities,
+                                                 eq: HeadphoneScenes.eqIntent(profile.deviceEq, capabilities: capabilities)))
     }
 
     /// Live band edit. One undo entry per burst of edits (a drag), committed after a pause.
@@ -220,6 +225,44 @@ final class EqStudioModel: ObservableObject {
                 break
             }
         }
+    }
+
+    // MARK: - Scenes
+
+    /// "Guardar configuración completa" needs the state read from the headphones in this connection.
+    var canSaveScene: Bool { controller.connectionState == .connected && controller.equalizer != nil }
+
+    var suggestedSceneName: String {
+        let date = DateFormatter.localizedString(from: Date(), dateStyle: .short, timeStyle: .none)
+        return String(format: NSLocalizedString("My configuration %@", comment: ""), date)
+    }
+
+    /// Saves the EQ plus every other setting the headphones report as one profile (a scene).
+    func saveScene(as name: String) {
+        guard canSaveScene else { return }
+        attempt {
+            lastAppliedId = try library.saveScene(name: name, modelId: model.rawValue, state: controller.reportedState).id
+        }
+    }
+
+    /// What applying `profile`'s scene would change; empty without a scene.
+    func sceneChanges(for profile: EqProfile) -> [SceneChange] {
+        guard let scene = profile.scene else { return [] }
+        return HeadphoneScenes.changes(scene, current: controller.reportedState, capabilities: DeviceCatalog.capabilities(model))
+    }
+
+    /// Whether applying `profile` leaves a listening mode that turns the headphones' EQ off.
+    func sceneLeavesEqInactive(_ profile: EqProfile) -> Bool {
+        profile.scene.map { HeadphoneScenes.leavesEqInactive($0, current: controller.reportedState) } ?? false
+    }
+
+    /// Short name of a profile's EQ for the confirmation: the Sony preset, or "custom curve".
+    func eqSummary(_ profile: EqProfile) -> String {
+        if let code = profile.deviceEq.presetCode {
+            return spec.presets.first { Int($0.code) == code }.map { NSLocalizedString($0.name, comment: "") }
+                ?? String(format: "0x%02x", code)
+        }
+        return NSLocalizedString("custom curve", comment: "")
     }
 
     func duplicate(_ profile: EqProfile, as name: String) { attempt { try library.duplicate(profile.id, name: name) } }

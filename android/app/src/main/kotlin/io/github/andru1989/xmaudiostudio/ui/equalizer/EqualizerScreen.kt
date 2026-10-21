@@ -60,6 +60,9 @@ import io.github.andru1989.xmaudiostudio.ui.MainViewModel
 import io.github.andru1989.xmaudiostudio.ui.UiState
 import io.github.andru1989.xmaudiostudio.ui.components.SectionCard
 import io.github.andru1989.xmaudiostudio.ui.components.StatusDot
+import io.github.andru1989.xmaudiostudio.ui.scenes.ApplySceneDialog
+import io.github.andru1989.xmaudiostudio.ui.scenes.SaveSceneButton
+import io.github.andru1989.xmaudiostudio.ui.scenes.SceneBadge
 import io.github.andru1989.xmaudiostudio.ui.theme.Studio
 
 private val chartGrid = FrequencyGrid.logSpaced(20.0, 20_000.0, 160)
@@ -75,6 +78,7 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
     val context = LocalContext.current
 
     var nameDialog by remember { mutableStateOf<NameDialog?>(null) }
+    var sceneToApply by remember { mutableStateOf<EqProfile?>(null) }
     var autoEqDialog by rememberSaveable { mutableStateOf(false) }
 
     val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
@@ -119,11 +123,13 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
 
         val importable = eq != null && eq.bands.size == spec.bandCount &&
             (eq.presetCode == EqualizerPreset.CUSTOM.code || vm.isUserPresetFromOfficialApp(snap))
-        if (snap.stateIsLive && importable && state.activeProfile == null) {
+        val showImportBanner = snap.stateIsLive && importable && state.activeProfile == null
+        if (showImportBanner) {
             val suggested = stringResource(R.string.device_curve_name)
             SectionCard {
                 Text(stringResource(R.string.device_curve_not_saved), style = MaterialTheme.typography.bodyMedium)
                 FilledTonalButton(onClick = { vm.saveCurrentAs(suggested) }) { Text(stringResource(R.string.save_to_library)) }
+                SaveSceneButton(state, vm, showDetail = false)
             }
         }
 
@@ -182,6 +188,8 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
                 }
                 FilledTonalButton(onClick = { nameDialog = NameDialog.SaveAs }, enabled = eq != null) { Text(stringResource(R.string.save_as)) }
             }
+            // Shown in the banner above while the headphones' curve is not in the library.
+            if (!showImportBanner) SaveSceneButton(state, vm)
         }
 
         SectionCard(stringResource(R.string.profiles)) {
@@ -193,8 +201,9 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
                     ProfileRow(
                         profile = p,
                         active = p.id == state.activeProfile?.id,
-                        enabled = !listeningBlocksEq,
-                        onApply = { vm.applyProfile(p) },
+                        // A scene that sets the listening mode writes the EQ while it is Standard.
+                        enabled = !listeningBlocksEq || p.scene?.listeningMode != null,
+                        onApply = { if (p.scene != null) sceneToApply = p else vm.applyProfile(p) },
                         onDuplicate = { nameDialog = NameDialog.Duplicate(p) },
                         onRename = { nameDialog = NameDialog.Rename(p) },
                         onDelete = { vm.deleteProfile(p) },
@@ -227,6 +236,7 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
             nameDialog = null
         }
     }
+    sceneToApply?.let { profile -> ApplySceneDialog(profile, state, vm, onDismiss = { sceneToApply = null }) }
     if (autoEqDialog) {
         AutoEqInputDialog(onDismiss = { autoEqDialog = false }) { text, name ->
             autoEqDialog = false
@@ -271,7 +281,10 @@ private fun ProfileRow(
         if (active) Icon(Icons.Filled.Check, null, tint = Studio.colors.deviceEq, modifier = Modifier.size(18.dp)) else Spacer(Modifier.size(18.dp))
         Spacer(Modifier.width(8.dp))
         Column(Modifier.weight(1f)) {
-            Text(profile.name, style = MaterialTheme.typography.bodyLarge)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(profile.name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f, fill = false))
+                if (profile.scene != null) SceneBadge()
+            }
             profile.notes?.let { Text(it, color = Studio.colors.muted, style = MaterialTheme.typography.labelSmall, maxLines = 2) }
         }
         IconButton(onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, null) }

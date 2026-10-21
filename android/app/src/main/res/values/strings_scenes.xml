@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Escenas: perfiles con la configuración completa de los audífonos. Keep values-en/strings_scenes.xml in step. -->
+<resources>
+    <string name="scene_save_full">Guardar configuración completa</string>
+    <string name="scene_save_full_detail">Guarda el ecualizador y los demás ajustes que informan los audífonos (control de ruido, modo de escucha, Hablar para chatear…) como un perfil.</string>
+    <string name="scene_save_needs_live">Conéctate a los audífonos para guardar su configuración actual.</string>
+    <string name="scene_default_name">Mi configuración</string>
+    <string name="scene_saved">Configuración guardada como «%1$s».</string>
+    <string name="scene_badge">Escena</string>
+    <string name="scene_badge_description">Incluye ajustes de los audífonos además del ecualizador</string>
+
+    <string name="scene_apply_title">Aplicar «%1$s»</string>
+    <string name="scene_apply_intro">Este perfil es una escena. Al aplicarlo cambiará:</string>
+    <string name="scene_apply_nothing_else">Los demás ajustes ya coinciden con la escena.</string>
+    <string name="scene_apply_not_live">Estado no leído en vivo: se enviarán todos los ajustes guardados, después de leer los audífonos.</string>
+
+    <string name="scene_change_eq">Ecualizador: %1$s</string>
+    <string name="scene_eq_curve">curva personalizada</string>
+    <string name="scene_change">%1$s: %2$s → %3$s</string>
+    <string name="scene_bgm_room">Sala de Música de fondo</string>
+    <string name="scene_value_on">Activado</string>
+    <string name="scene_value_off">Desactivado</string>
+    <string name="scene_value_unknown">sin leer</string>
+</resources>

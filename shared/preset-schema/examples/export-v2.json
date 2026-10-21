@@ -1,0 +1,108 @@
+{
+  "format": "xm-audio-studio.profiles",
+  "version": 2,
+  "exportedAt": "2026-10-21T12:00:00Z",
+  "profiles": [
+    {
+      "id": "3c2b1a09-8f7e-4d6c-9b5a-4e3d2c1b0a99",
+      "name": "Oficina",
+      "category": "user",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          -1,
+          -1,
+          0,
+          0,
+          1,
+          2,
+          2,
+          1,
+          0,
+          0
+        ]
+      },
+      "scene": {
+        "noiseControl": {
+          "mode": "ambientSound",
+          "level": 12,
+          "focusOnVoice": true
+        },
+        "listeningMode": "standard",
+        "bgmRoomSize": "middle",
+        "speakToChat": true,
+        "pauseWhenTakenOff": true,
+        "autoPowerOff": "whenTakenOff"
+      },
+      "createdAt": "2026-10-21T11:00:00Z",
+      "updatedAt": "2026-10-21T11:00:00Z"
+    },
+    {
+      "id": "7d6c5b4a-3e2f-4a1b-8c9d-0e1f2a3b4c5d",
+      "name": "Avión",
+      "category": "user",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "presetCode": 48
+      },
+      "scene": {
+        "noiseControl": {
+          "mode": "noiseCancelling"
+        },
+        "listeningMode": "cinema",
+        "speakToChat": false
+      },
+      "notes": "Solo se guardó lo que los audífonos informaron.",
+      "createdAt": "2026-10-21T11:10:00Z",
+      "updatedAt": "2026-10-21T11:10:00Z"
+    },
+    {
+      "id": "1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5e",
+      "name": "XM4 en casa",
+      "category": "user",
+      "model": "wh-1000xm4",
+      "deviceEq": {
+        "steps": [
+          1,
+          0,
+          -1,
+          0,
+          2
+        ],
+        "clearBass": 3
+      },
+      "scene": {
+        "noiseControl": {
+          "mode": "ambientSound",
+          "level": 8,
+          "focusOnVoice": false
+        },
+        "speakToChat": false
+      },
+      "createdAt": "2026-10-21T11:20:00Z",
+      "updatedAt": "2026-10-21T11:20:00Z"
+    },
+    {
+      "id": "0f1e2d3c-4b5a-4968-8776-5a4b3c2d1e0f",
+      "name": "Solo curva",
+      "category": "user",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          2,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      },
+      "createdAt": "2026-10-21T11:30:00Z",
+      "updatedAt": "2026-10-21T11:30:00Z"
+    }
+  ]
+}

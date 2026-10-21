@@ -302,7 +302,10 @@ public final class HeadphonesController: ObservableObject {
     /// Queueing every intermediate value would back the queue up for seconds after
     /// the user let go. Only the latest curve is ever in flight, so dragging stays
     /// responsive and the headphones follow within a moment of the slider settling.
-    public func setEqualizerBands(_ bands: [Int]) {
+    ///
+    /// `coalescing: false` queues the curve at once, in order with the commands queued
+    /// around it (applying a scene, where the EQ must land before a listening-mode change).
+    public func setEqualizerBands(_ bands: [Int], coalescing: Bool = true) {
         recordCommand()
         let subtype = equalizer?.subtype ?? 0x04
         // Optimistic, so the sliders track the drag rather than the device's replies.
@@ -313,13 +316,18 @@ public final class HeadphonesController: ObservableObject {
         )
 
         equalizerWriteTask?.cancel()
+        equalizerWriteTask = nil
+        let enqueue = { [unowned self] in
+            self.enqueueCommand(key: "eq") { [unowned self] in
+                [(.command1, SonyCommands.buildEqualizerBandsSet(bands: bands, subtype: self.equalizer?.subtype ?? subtype))]
+            }
+        }
+        guard coalescing else { return enqueue() }
         equalizerWriteTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 120_000_000)
             guard let self, !Task.isCancelled else { return }
             self.equalizerWriteTask = nil
-            self.enqueueCommand(key: "eq") { [unowned self] in
-                [(.command1, SonyCommands.buildEqualizerBandsSet(bands: bands, subtype: self.equalizer?.subtype ?? subtype))]
-            }
+            enqueue()
         }
     }
 
@@ -335,11 +343,13 @@ public final class HeadphonesController: ObservableObject {
         }
     }
 
-    public func setListeningMode(_ mode: ListeningMode) {
+    /// `roomSize` sets the Background Music room in the same write (applying a scene). Without
+    /// it the room is read at send time, so a fresh read wins over a stale UI.
+    public func setListeningMode(_ mode: ListeningMode, roomSize: BGMRoomSize? = nil) {
         listeningMode = mode
+        if let roomSize { bgmRoomSize = roomSize }
         enqueueCommand(key: "listeningMode") { [unowned self] in
-            // The room size is read at send time, so a fresh read wins over a stale UI.
-            let roomSize = self.bgmRoomSize ?? .middle
+            let roomSize = roomSize ?? self.bgmRoomSize ?? .middle
             return [
                 (.command1, SonyCommands.buildBGMModeSet(enabled: mode == .backgroundMusic, roomSize: roomSize)),
                 (.command1, SonyCommands.buildUpmixCinemaSet(enabled: mode == .cinema)),

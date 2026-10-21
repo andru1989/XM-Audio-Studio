@@ -1,0 +1,31 @@
+{
+  "format": "xm-audio-studio.profiles",
+  "version": 2,
+  "profiles": [
+    {
+      "id": "x",
+      "name": "x",
+      "category": "user",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "scene": {
+        "noiseControl": {
+          "mode": "transparency"
+        }
+      }
+    }
+  ]
+}

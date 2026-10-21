@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Scenes: profiles with the headphones' whole configuration. Keep values/strings_scenes.xml in step. -->
+<resources>
+    <string name="scene_save_full">Save full configuration</string>
+    <string name="scene_save_full_detail">Saves the equalizer and the other settings the headphones report (noise control, listening mode, Speak-to-Chat…) as one profile.</string>
+    <string name="scene_save_needs_live">Connect to the headphones to save their current configuration.</string>
+    <string name="scene_default_name">My configuration</string>
+    <string name="scene_saved">Configuration saved as “%1$s”.</string>
+    <string name="scene_badge">Scene</string>
+    <string name="scene_badge_description">Includes headphone settings besides the equalizer</string>
+
+    <string name="scene_apply_title">Apply “%1$s”</string>
+    <string name="scene_apply_intro">This profile is a scene. Applying it changes:</string>
+    <string name="scene_apply_nothing_else">The other settings already match the scene.</string>
+    <string name="scene_apply_not_live">State not read live: every saved setting is sent, after the headphones are read.</string>
+
+    <string name="scene_change_eq">Equalizer: %1$s</string>
+    <string name="scene_eq_curve">custom curve</string>
+    <string name="scene_change">%1$s: %2$s → %3$s</string>
+    <string name="scene_bgm_room">Background music room</string>
+    <string name="scene_value_on">On</string>
+    <string name="scene_value_off">Off</string>
+    <string name="scene_value_unknown">not read</string>
+</resources>

@@ -231,3 +231,21 @@
 "Widgets" = "Widgets";
 "To add a widget, Control-click the desktop, choose Edit Widgets and search for XM Audio Studio. Widget buttons connect to the headphones when needed." = "Para añadir un widget, haz clic con el botón secundario en el escritorio, elige «Editar widgets» y busca XM Audio Studio. Los botones del widget se conectan a los audífonos cuando hace falta.";
 "This build doesn't include the desktop widgets. Build the app with Scripts/build_xcode.sh to get them." = "Esta compilación no incluye los widgets de escritorio. Compila la app con Scripts/build_xcode.sh para tenerlos.";
+/* Escenas: perfiles con la configuración completa de los audífonos. */
+"Save Full Configuration…" = "Guardar configuración completa…";
+"Save Full Configuration" = "Guardar configuración completa";
+"Keep the EQ and every other setting the headphones report (noise control, listening mode, Speak-to-Chat…) as one profile" = "Guarda el ecualizador y los demás ajustes que informan los audífonos (control de ruido, modo de escucha, Hablar para chatear…) como un perfil";
+"My configuration %@" = "Mi configuración %@";
+"Scene" = "Escena";
+"Includes headphone settings besides the equalizer" = "Incluye ajustes de los audífonos además del ecualizador";
+"Scene: includes headphone settings besides the equalizer" = "Escena: incluye ajustes de los audífonos además del ecualizador";
+"Apply “%@”" = "Aplicar «%@»";
+"This profile is a scene. Applying it changes:" = "Este perfil es una escena. Al aplicarlo cambiará:";
+"Equalizer: %@" = "Ecualizador: %@";
+"custom curve" = "curva personalizada";
+"The other settings already match the scene." = "Los demás ajustes ya coinciden con la escena.";
+"State not read live: every saved setting is sent after the headphones are read." = "Estado no leído en vivo: se enviarán todos los ajustes guardados, después de leer los audífonos.";
+"Background Music room" = "Sala de Música de fondo";
+"Enabled" = "Activado";
+"Disabled" = "Desactivado";
+"not read" = "sin leer";

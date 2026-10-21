@@ -37,6 +37,7 @@ import io.github.andru1989.xmaudiostudio.ui.MainViewModel
 import io.github.andru1989.xmaudiostudio.ui.UiState
 import io.github.andru1989.xmaudiostudio.ui.components.SectionCard
 import io.github.andru1989.xmaudiostudio.ui.components.Segmented
+import io.github.andru1989.xmaudiostudio.ui.scenes.SaveSceneButton
 import io.github.andru1989.xmaudiostudio.ui.theme.Studio
 
 @Composable
@@ -138,6 +139,8 @@ fun SettingsScreen(state: UiState, vm: MainViewModel, requestPermission: () -> U
                         vm.setAutoPowerOff(if (it) AutomaticPowerOffMode.WHEN_TAKEN_OFF else AutomaticPowerOffMode.OFF)
                     }
                 }
+                // These settings plus the EQ, saved as one profile (a scene) in the library.
+                if (caps.equalizer != null) SaveSceneButton(state, vm)
             }
 
             val devices = s.devices

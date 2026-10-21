@@ -2,6 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/andru1989/xm-audio-studio/shared/preset-schema/profiles.schema.json",
   "title": "XM Audio Studio profile export",
+  "description": "Version 2 adds the optional per-profile 'scene' (headphone settings beyond the EQ). Version 1 files stay valid and importable; the apps write version 2.",
   "type": "object",
   "required": [
     "format",
@@ -14,7 +15,10 @@
       "const": "xm-audio-studio.profiles"
     },
     "version": {
-      "const": 1
+      "enum": [
+        1,
+        2
+      ]
     },
     "exportedAt": {
       "type": "string"
@@ -87,6 +91,9 @@
             }
           }
         },
+        "scene": {
+          "$ref": "#/$defs/scene"
+        },
         "sourceCurve": {
           "description": "The parametric curve the steps were fitted to (AutoEq import). Kept for comparison and the future DSP mode.",
           "type": "object",
@@ -157,6 +164,89 @@
           "type": "string"
         }
       }
+    },
+    "scene": {
+      "description": "Headphone settings captured with the profile (version 2+). Every field is optional: only what the headphones reported is captured. The apps reject a field the profile's model does not support (capabilities in shared/protocol-spec/models.json).",
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "noiseControl": {
+          "type": "object",
+          "required": [
+            "mode"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "enum": [
+                "noiseCancelling",
+                "ambientSound",
+                "off"
+              ]
+            },
+            "level": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "description": "Ambient sound level; also limited by the model's ambientLevelRange."
+            },
+            "focusOnVoice": {
+              "type": "boolean"
+            }
+          }
+        },
+        "listeningMode": {
+          "enum": [
+            "standard",
+            "backgroundMusic",
+            "cinema"
+          ]
+        },
+        "bgmRoomSize": {
+          "enum": [
+            "small",
+            "middle",
+            "large"
+          ]
+        },
+        "speakToChat": {
+          "type": "boolean"
+        },
+        "pauseWhenTakenOff": {
+          "type": "boolean"
+        },
+        "autoPowerOff": {
+          "enum": [
+            "whenTakenOff",
+            "off"
+          ]
+        }
+      }
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "version": {
+            "const": 1
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "profiles": {
+            "items": {
+              "not": {
+                "required": [
+                  "scene"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

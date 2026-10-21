@@ -42,10 +42,25 @@ struct EqualizerSection: View {
                             Text("Active profile")
                                 .font(.caption2)
                                 .foregroundStyle(.secondary)
-                            Text(studio.activeProfile?.name ?? NSLocalizedString("Custom (unsaved)", comment: ""))
-                                .font(.callout.weight(.medium))
+                            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                                Text(studio.activeProfile?.name ?? NSLocalizedString("Custom (unsaved)", comment: ""))
+                                    .font(.callout.weight(.medium))
+                                    .fixedSize(horizontal: false, vertical: true)
+                                if studio.activeProfile?.scene != nil {
+                                    SceneBadge()
+                                }
+                            }
                         }
                         Spacer()
+                        // Icon only here, so the dashboard keeps its height; the banner below
+                        // shows it with its label while the headphones' curve is not in the library.
+                        if !studio.deviceCurveNotInLibrary {
+                            saveSceneButton
+                                .labelStyle(.iconOnly)
+                                .buttonStyle(.borderless)
+                                .controlSize(.small)
+                                .accessibilityLabel("Save Full Configuration")
+                        }
                         Button("Equalizer Studio…") {
                             openWindow(id: "equalizer-studio")
                             NSApp.activate(ignoringOtherApps: true)
@@ -54,19 +69,24 @@ struct EqualizerSection: View {
                     }
 
                     if studio.deviceCurveNotInLibrary {
-                        HStack(spacing: 8) {
-                            Image(systemName: "square.and.arrow.down.on.square")
-                                .foregroundStyle(Color.brand)
-                            Text("Your headphones have a curve that is not in your library yet.")
-                                .font(.caption)
-                                .fixedSize(horizontal: false, vertical: true)
-                            Spacer(minLength: 4)
-                            Button("Save to Library") {
-                                studio.saveCurrent(as: studio.suggestedImportName)
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                Image(systemName: "square.and.arrow.down.on.square")
+                                    .foregroundStyle(Color.brand)
+                                Text("Your headphones have a curve that is not in your library yet.")
+                                    .font(.caption)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
-                            .buttonStyle(.borderedProminent)
+                            HStack(spacing: 6) {
+                                Spacer(minLength: 0)
+                                saveSceneButton
+                                Button("Save to Library") {
+                                    studio.saveCurrent(as: studio.suggestedImportName)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .help("Keep the curve the headphones have now as a profile in this app")
+                            }
                             .controlSize(.small)
-                            .help("Keep the curve the headphones have now as a profile in this app")
                         }
                         .padding(8)
                         .background(RoundedRectangle(cornerRadius: Radius.control, style: .continuous).fill(Surface.well))
@@ -87,12 +107,25 @@ struct EqualizerSection: View {
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
+
                 }
                 .animation(Motion.transition, value: isCustomActive)
             } else {
                 LoadingRow()
             }
         }
+    }
+
+    /// "Guardar configuración completa" from the dashboard: saved at once under a dated name
+    /// (like "Save to Library"); rename it in the Equalizer Studio.
+    private var saveSceneButton: some View {
+        Button {
+            studio.saveScene(as: studio.suggestedSceneName)
+        } label: {
+            Label("Save Full Configuration", systemImage: "square.and.arrow.down.on.square")
+        }
+        .disabled(!studio.canSaveScene)
+        .help("Keep the EQ and every other setting the headphones report (noise control, listening mode, Speak-to-Chat…) as one profile")
     }
 
     // MARK: - Custom curve summary

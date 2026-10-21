@@ -64,6 +64,8 @@ data class EqProfile(
     /** [HeadphoneModel.id]; a profile is only offered for, and applied to, its own model. */
     val model: String,
     val deviceEq: DeviceEqSetting,
+    /** Headphone settings applied together with the EQ (format version 2). Null: an EQ-only profile. */
+    val scene: HeadphoneScene? = null,
     val sourceCurve: SourceCurve? = null,
     val source: ProfileSource? = null,
     val notes: String? = null,
@@ -89,7 +91,11 @@ class ProfileFormatException(message: String) : Exception(message)
 
 object ProfileCodec {
     const val FORMAT = "xm-audio-studio.profiles"
-    const val VERSION = 1
+    /** Version written. Version 1 files (no scenes) are still read. */
+    const val VERSION = 2
+    const val MIN_VERSION = 1
+    /** First version whose profiles may carry a [HeadphoneScene]. */
+    const val SCENE_VERSION = 2
     const val MAX_NAME_LENGTH = 80
 
     private val json = Json {
@@ -112,7 +118,13 @@ object ProfileCodec {
         }
         if (doc.format != FORMAT) throw ProfileFormatException("Unknown format '${doc.format}'")
         if (doc.version > VERSION) throw ProfileFormatException("Profile file version ${doc.version} is newer than this app supports ($VERSION)")
-        doc.profiles.forEach { p -> validate(p)?.let { throw ProfileFormatException("${p.name.ifBlank { p.id }}: $it") } }
+        if (doc.version < MIN_VERSION) throw ProfileFormatException("Unknown profile file version ${doc.version}")
+        doc.profiles.forEach { p ->
+            if (p.scene != null && doc.version < SCENE_VERSION) {
+                throw ProfileFormatException("${p.name.ifBlank { p.id }}: a scene needs format version $SCENE_VERSION")
+            }
+            validate(p)?.let { throw ProfileFormatException("${p.name.ifBlank { p.id }}: $it") }
+        }
         return doc.profiles
     }
 
@@ -121,7 +133,8 @@ object ProfileCodec {
         if (p.id.isBlank()) return "missing id"
         if (p.name.isBlank() || p.name.length > MAX_NAME_LENGTH) return "name must be 1-$MAX_NAME_LENGTH characters"
         val model = HeadphoneModel.fromId(p.model) ?: return "unknown model '${p.model}'"
-        val spec = DeviceCatalog.capabilities(model).equalizer ?: return "${model.displayName} has no equalizer"
+        val capabilities = DeviceCatalog.capabilities(model)
+        val spec = capabilities.equalizer ?: return "${model.displayName} has no equalizer"
         val eq = p.deviceEq
         if ((eq.presetCode == null) == (eq.steps == null)) return "needs exactly one of presetCode or steps"
         eq.presetCode?.let { code ->
@@ -135,6 +148,7 @@ object ProfileCodec {
             val range = spec.clearBassRange ?: return "${model.displayName} has no Clear Bass"
             if (cb !in range) return "Clear Bass must be within $range"
         }
+        p.scene?.let { scene -> HeadphoneScenes.validate(scene, capabilities)?.let { return it } }
         return null
     }
 }

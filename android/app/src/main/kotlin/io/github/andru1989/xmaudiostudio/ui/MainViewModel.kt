@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.andru1989.xmaudiostudio.AppContainer
+import io.github.andru1989.xmaudiostudio.R
 import io.github.andru1989.xmaudiostudio.XmAudioStudioApp
 import io.github.andru1989.xmaudiostudio.bluetooth.PairedDevice
 import io.github.andru1989.xmaudiostudio.bluetooth.PairedDevices
@@ -19,10 +20,13 @@ import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
 import io.github.andru1989.xmaudiostudio.core.presets.AutoEqImporter
 import io.github.andru1989.xmaudiostudio.core.presets.DeviceEqSetting
 import io.github.andru1989.xmaudiostudio.core.presets.EqProfile
+import io.github.andru1989.xmaudiostudio.core.presets.HeadphoneScenes
 import io.github.andru1989.xmaudiostudio.core.presets.ProfileCategory
 import io.github.andru1989.xmaudiostudio.core.presets.ProfileFormatException
 import io.github.andru1989.xmaudiostudio.core.presets.ProfileSource
+import io.github.andru1989.xmaudiostudio.core.presets.SceneChange
 import io.github.andru1989.xmaudiostudio.core.presets.SourceCurve
+import io.github.andru1989.xmaudiostudio.core.session.ConnectionPhase
 import io.github.andru1989.xmaudiostudio.core.session.DeviceTarget
 import io.github.andru1989.xmaudiostudio.core.session.HeadphoneSession
 import io.github.andru1989.xmaudiostudio.core.session.SessionSnapshot
@@ -211,11 +215,31 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         setting.steps?.let { session.execute(DeviceCommand.SetEqualizerBands(it, clearBass = setting.clearBass ?: neutralClearBass())) }
     }
 
+    /** Applies the profile's EQ, and its scene if it has one (after the UI showed [sceneChanges]). */
     fun applyProfile(profile: EqProfile) {
         remember(currentSetting())
         settings.lastAppliedProfileId = profile.id
-        send(profile.deviceEq)
+        val scene = profile.scene
+        val caps = _ui.value.snapshot.capabilities
+        if (scene == null || caps == null) {
+            send(profile.deviceEq)
+            return
+        }
+        // Scene and EQ in one ordered list: the EQ lands while the listening mode is Standard.
+        HeadphoneScenes.commands(scene, _ui.value.snapshot.state, caps, HeadphoneScenes.eqCommand(profile.deviceEq, caps))
+            .forEach(session::execute)
     }
+
+    /** What applying [profile]'s scene would change, for the confirmation; empty without a scene. */
+    fun sceneChanges(profile: EqProfile): List<SceneChange> {
+        val scene = profile.scene ?: return emptyList()
+        val caps = _ui.value.snapshot.capabilities ?: return emptyList()
+        return HeadphoneScenes.changes(scene, _ui.value.snapshot.state, caps)
+    }
+
+    /** Whether applying [profile] leaves the headphones in a listening mode that turns their EQ off. */
+    fun sceneLeavesEqInactive(profile: EqProfile): Boolean =
+        profile.scene?.let { HeadphoneScenes.leavesEqInactive(it, _ui.value.snapshot.state) } ?: false
 
     /** Live band edit while dragging; the session coalesces writes (one in flight at a time). */
     fun setBand(index: Int, step: Int) {
@@ -326,6 +350,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             else -> return@attempt
         }
         settings.lastAppliedProfileId = saved.id
+    }
+
+    /** "Guardar configuración completa" is offered only for state read live from the headphones. */
+    fun canSaveScene(snap: SessionSnapshot = _ui.value.snapshot): Boolean =
+        snap.phase == ConnectionPhase.CONNECTED && snap.stateIsLive && snap.state.equalizer != null
+
+    /** Saves the EQ plus every other setting the headphones report as one profile (a scene). */
+    fun saveScene(name: String) = attempt {
+        if (!canSaveScene()) return@attempt
+        val saved = library.saveScene(name, modelId(), _ui.value.snapshot.state)
+        settings.lastAppliedProfileId = saved.id
+        _ui.update { it.copy(message = getApplication<Application>().getString(R.string.scene_saved, saved.name)) }
     }
 
     fun duplicateProfile(profile: EqProfile, name: String) = attempt { library.duplicate(profile.id, name) }
