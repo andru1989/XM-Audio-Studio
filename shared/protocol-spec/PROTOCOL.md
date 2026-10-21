@@ -63,12 +63,71 @@ La familia de protocolo la fija el UUID al que se conecta; el init la confirma.
 Presets EQ XM6: `00` Off, `30` Heavy, `31` Clear, `32` Hard, `33` Soft, `A0` Custom, `A1+` ajustes de
 usuario. Con BGM o Cine activos el EQ queda deshabilitado por el firmware.
 
-## 5. Diferencias por generación (para adaptadores futuros)
+## 5. Otras generaciones (adaptadores implementados, **sin probar en hardware**)
 
-- **XM5** (v2): NC `0x17`; EQ tipo `0x00`, 6 bytes `[ClearBass, 400, 1k, 2.5k, 6.3k, 16k]`, `wire = g + 10`, ±10.
-- **XM2/XM3/XM4** (v1): tablas de opcodes y polaridad **distintas** (v1: `01` = activado).
-  **v1 `0x22` = apagar**. Batería `10 00`. EQ tipo `0x01`, 6 bytes, ±10.
-- **MDR-1000X**: sin capturas públicas.
+Solo Android usa estos adaptadores (`Xm5Adapter`, `MdrV1Adapter`); macOS tiene los mismos códecs
+(`Xm5Commands`, `MdrV1Commands`) cubiertos por los fixtures, pero su controlador sigue hablando solo con
+el XM6. Fixtures: `events-xm5.json`/`commands-xm5.json`, `events-v1.json`/`commands-v1.json`.
+Evidencia y lo que falta por modelo: [`docs/compatibility/OTHER-MODELS.md`](../../docs/compatibility/OTHER-MODELS.md).
+
+Leyenda adicional: **CAP** = la misma disposición aparece en una captura real de un modelo hermano
+(XM3 fw 4.5.2 o WF-1000XM5 fw 6.1.0, pruebas de mos9527, MIT); **REF‑HW** = un cliente MIT informa que
+funciona en ese modelo (sony-device-center: XM4 fw 3.0.1, XM5 fw 2.3.1), sin captura publicada.
+
+### 5.1 Ecualizador de 6 bytes (Clear Bass + 5 bandas), XM3/XM4 (v1) y XM5 (v2)
+
+Los opcodes EQEBB `56/57/58/59` coinciden en v1 y v2; solo cambia el tipo: **v1 `0x01`**, **XM5 `0x00`**.
+
+| Mensaje | Bytes | Evid. |
+|---|---|---|
+| GET | `56 <tipo>` | CAP |
+| RET / NTFY | `57/59 <tipo> <preset> 06 <ClearBass> <400> <1k> <2.5k> <6.3k> <16k>`; cada byte = pasos + 10 (−10…+10) | CAP (XM3 `57 01 00 06 0a…`, WF-XM5 `57 00 a0 06 14 0b 0a 0d 09 0c`) |
+| Elegir preset | `58 <tipo> <preset> 00` (sin bandas) | REF‑HW |
+| Curva | `58 <tipo> A0 06 <ClearBass+10> <banda+10 ×5>`; se rechaza (no se envía) si no hay exactamente 5 bandas | REF‑HW |
+| Capacidad | `50 <tipo> 01` → `51 <tipo> 06 15 <n> (<id> <len> <nombre>)*` (6 valores, 21 pasos) | CAP (XM3) |
+
+Frecuencias 400/1k/2.5k/6.3k/16k Hz: leídas del propio XM3 (`5B 01 06 10 0000 01 0190 01 03E8 01 09C4 01 189C 01 3E80`);
+supuestas en XM4/XM5. Presets: `00` Off, `10`–`17` Bright…Speech, `A0` Manual, `A1`/`A2` ajustes de usuario (lista
+leída del XM3; supuesta en XM4/XM5). Clear Bass ausente en el comando → la app reescribe el valor leído.
+
+### 5.2 WH-1000XM5 (MDR v2, tabla 1)
+
+| Función | GET | RET / NTFY | SET | Evid. |
+|---|---|---|---|---|
+| Batería | `22 00` | `23/25 00 nivel carga` (también `08`) | — | REF‑HW (igual que XM6) |
+| NC/Ambiente | `66 17` | `67/69 17 upd efecto modo voz nivel` — **exactamente 7 B** | `68 17 01 efecto modo voz nivel(1–20)` | CAP (WF-XM5 `67 17 01 00 01 00 14`) · REF‑HW |
+| EQ | §5.1, tipo `0x00` | | | CAP · REF‑HW |
+| Speak-to-Chat | `F6 0C` | `F7/F9 0C off 01` (invertido) | `F8 0C off 01` | CAP (WF-XM5 `F7 0C 01 01`) · REF‑HW |
+| Config. STC | `FA 0C` | `FB/FD 0C sens tiempo` | `FC 0C sens tiempo` | CAP (WF-XM5 `FB 0C 00 00`) |
+
+Lecturas tras conectar: `04 01`, `04 02`, `66 17`, `22 00`, `F6 0C`, `FA 0C`, `56 00`, `50 00 01`.
+**No implementado** (no documentado para el WH-1000XM5): apagado automático, pausa al quitarse, modos de
+escucha, multipunto. El decodificador ignora `0x19`, `0x17` de 8 bytes y EQ `0x04`.
+
+### 5.3 MDR v1: WH-1000XM4 / XM3 / XM2 (tabla 1, tipo de frame `0C`)
+
+**v1 `0x22` = COMMON_SET_POWER_OFF**: ningún constructor lo produce y el adaptador descarta incluso un
+`Raw` de desarrollo que empiece por `22`. Polaridad v1: `01` = activado. Init: respuesta de **4 bytes**
+(`01 00 40 10` en el XM3 fw 4.5.2); si llega una de 8 bytes la sesión aborta antes de escribir.
+
+| Función | GET | RET / NTFY | SET | Evid. |
+|---|---|---|---|---|
+| Batería | `10 00` | `11/13 00 nivel carga` (carga `01`; `F0` = desconocido) | — | CAP (XM3 `11 00 64 00`) |
+| NC/Ambiente | `66 02` | `67/69 02 efecto tipoNC valorNC tipoASM asmId nivel` (8 B) | `68 02 <00 off / 11 on> 01 <02 NC / 00 ambiente> 01 <voz> <nivel; 0 en NC>` | CAP (XM3 RET/NTFY) · REF‑HW (setter de sony-device-center/Plutoberth/mos9527) |
+| EQ | §5.1, tipo `0x01` | | | CAP · REF‑HW (XM4) |
+| Speak-to-Chat (solo XM4) | `F6 05` | `F7 05 00 v` · `F9 05 01 v`; `xx = 02` (sesión activa) ⇒ activado | `F8 05 01 <00/01>` | REF‑HW (on/off en XM4) |
+| Config. STC (solo XM4) | `FA 05` | `FB/FD 05 00 sens vozEnfocada tiempo` | `FC 05 00 sens vozEnfocada tiempo` | REF (tablas); al activar se reenvía primero la config. leída (o Auto/no/Estándar) como hace sony-device-center |
+
+Campos NC v1: efecto `00` off, `01` on, `10` ajustando (no se toma como confirmado), `11` ajuste terminado;
+valorNC `00` = ambiente, `01` single (reducción de viento, se muestra como NC), `02` dual = NC; asmId `01` = voz.
+Lecturas tras conectar: `04 01`, `04 02`, `10 00`, `66 02`, `56 01`, `50 01 01` (+ `F6 05`, `FA 05` en el XM4).
+**No implementado**: apagado automático (`F6/F7 04`, SET `FC 04 01 activo seleccionado`; capturado en el XM3
+pero el modelo de la app solo admite 0x10/0x11), pausa al quitarse (`FC 03 00 v`, sin evidencia en hardware),
+tabla 2 (guía de voz, emparejamientos), VPT/posición de sonido.
+
+### 5.4 MDR-1000X
+
+Sin capturas públicas ni adaptador: la app no le envía ningún byte.
 
 ## 6. Prohibido
 
