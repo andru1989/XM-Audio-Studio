@@ -3,7 +3,7 @@ package io.github.andru1989.xmaudiostudio.core.eq
 import kotlin.math.abs
 import kotlin.math.log10
 import kotlin.math.max
-import kotlin.math.roundToInt
+import kotlin.math.floor
 import kotlin.math.sqrt
 
 /**
@@ -134,7 +134,8 @@ object GraphicEqFitter {
         }
 
         // Discrete refinement on the exact response.
-        val steps = IntArray(bands) { k -> (x[k] / model.stepDb).roundToInt().coerceIn(model.minStep, model.maxStep) }
+        // floor(v + 0.5): identical tie-breaking to the Swift port.
+        val steps = IntArray(bands) { k -> floor(x[k] / model.stepDb + 0.5).toInt().coerceIn(model.minStep, model.maxStep) }
         var best = objective(model, steps, targetDb, frequencies, weights, regularization, sampleRate)
         var improved = true
         var passes = 0
