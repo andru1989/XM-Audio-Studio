@@ -43,6 +43,7 @@ Actualizado: 2026-10-21. Niveles (encargo §15):
 | Perfiles ilimitados, duplicar, renombrar, borrar | — | SIM (tests) | SIM (tests) |
 | Exportar / importar perfiles (formato compartido) | — | SIM | SIM |
 | Deshacer, A/B | — | SIM | SIM (emulador) |
+| Escenas: perfil con configuración completa (EQ + ruido + modo de escucha + STC + pausa + apagado) | — | SIM | SIM |
 | Guardar en la app la curva/ajuste de usuario que ya tienen los audífonos | — | **HW** (detección del ajuste de Sound Connect) | SIM |
 | AutoEQ interno (ParametricEQ/GraphicEQ → 10 bandas) | — | SIM (vectores) | SIM (vectores) |
 | Gráfica de respuesta (predicción) | — | SIM | SIM |

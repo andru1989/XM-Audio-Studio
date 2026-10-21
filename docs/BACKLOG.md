@@ -11,8 +11,7 @@ Actualizado: 2026-10-21. Estado detallado en `compatibility/FEATURE-STATUS.md`.
 4. ~~macOS: leer estado real antes de escribir~~ — hecho (0.2.0).
 5. ~~`ControlSurfaceObserver` con notificaciones documentadas~~ — hecho; falta test automatizado de AppKit.
 6. ~~valueChangeStatus en arrastre~~ — hecho.
-7. Escenas: guardar/aplicar la configuración completa (ANC, nivel, modo de escucha, STC, EQ) como perfil,
-   extendiendo `shared/preset-schema` (v2).
+7. ~~Escenas~~ — hechas (formato v2). Pendiente: sensibilidad/tiempo de STC, fuente multipunto y DSP local en la escena; deshacer escena completa.
 8. Tests de UI: Compose UI tests (Android) y snapshot/XCUITest básicos (macOS).
 9. ~~CI~~ — workflow creado; se ejecutará cuando el repo esté en GitHub.
 
