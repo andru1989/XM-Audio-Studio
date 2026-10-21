@@ -19,6 +19,13 @@ enum Opcode {
     static let initRequest: UInt8 = 0x00
     static let initReply: UInt8 = 0x01
 
+    /// Same bytes on MDR v1 and v2: `04 01` model name, `04 02` firmware version.
+    static let deviceInfoGet: UInt8 = 0x04
+    static let deviceInfoRet: UInt8 = 0x05
+
+    static let equalizerCapabilityGet: UInt8 = 0x50
+    static let equalizerCapabilityRet: UInt8 = 0x51
+
     static let ambientSoundControlGet: UInt8 = 0x66
     static let ambientSoundControlRet: UInt8 = 0x67
     static let ambientSoundControlSet: UInt8 = 0x68
@@ -86,6 +93,11 @@ enum Subtype {
     static let speakToChatEnabled: UInt8 = 0x0c
     static let speakToChatConfig: UInt8 = 0x0c
     static let automaticPowerOffDuration: UInt8 = 0x05
+    static let deviceInfoModelName: UInt8 = 0x01
+    static let deviceInfoFirmware: UInt8 = 0x02
+    static let batterySingle: UInt8 = 0x00
+    static let batterySingleWithThreshold: UInt8 = 0x08
+    static let equalizerPresetAndErrorCode: UInt8 = 0x04
 }
 
 func boolFromByte(_ b: UInt8) -> Bool? {

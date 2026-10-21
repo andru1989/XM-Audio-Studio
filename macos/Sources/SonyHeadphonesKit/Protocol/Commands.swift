@@ -30,6 +30,30 @@ public enum SonyCommands {
         }
     }
 
+    // MARK: - Identification (identical on MDR v1 and v2)
+
+    public static func buildModelNameGet() -> [UInt8] {
+        [Opcode.deviceInfoGet, Subtype.deviceInfoModelName]
+    }
+
+    public static func buildFirmwareVersionGet() -> [UInt8] {
+        [Opcode.deviceInfoGet, Subtype.deviceInfoFirmware]
+    }
+
+    /// `05 <01|02> <len> <ASCII>`. Returns the info type and its printable text.
+    public static func decodeDeviceInfo(_ payload: [UInt8]) -> (UInt8, String)? {
+        guard payload.count >= 3, payload[0] == Opcode.deviceInfoRet else { return nil }
+        let type = payload[1]
+        guard type == Subtype.deviceInfoModelName || type == Subtype.deviceInfoFirmware else { return nil }
+        let length = Int(payload[2])
+        guard length > 0, payload.count >= 3 + length else { return nil }
+        let bytes = payload[3..<(3 + length)]
+        guard bytes.allSatisfy({ (0x20...0x7e).contains($0) }),
+              let text = String(bytes: bytes, encoding: .ascii)?.trimmingCharacters(in: .whitespaces),
+              !text.isEmpty else { return nil }
+        return (type, text)
+    }
+
     // MARK: - Ambient Sound Control
 
     public static func buildAmbientSoundGet(subtype: UInt8 = 0x15) -> [UInt8] {
@@ -117,8 +141,12 @@ public enum SonyCommands {
         [Opcode.batteryLevelRequest, 0x00] // 0x00 = SINGLE battery type
     }
 
+    /// Type 0x00 `<level> <charging>` or 0x08 `<level> <charging> <threshold>`; the
+    /// threshold variant is what some XM6 firmware may report (unverified).
     public static func decodeBattery(_ payload: [UInt8]) -> BatteryStatus? {
-        guard payload.count >= 4, payload[1] == 0x00 else { return nil }
+        guard payload.count >= 4,
+              payload[1] == Subtype.batterySingle || payload[1] == Subtype.batterySingleWithThreshold,
+              payload[2] <= 100 else { return nil }
         return BatteryStatus(level: Int(payload[2]), isCharging: payload[3] == 1)
     }
 
@@ -190,6 +218,29 @@ public enum SonyCommands {
 
     static func isEqualizerReply(opcode: UInt8) -> Bool {
         opcode == Opcode.equalizerRet || opcode == Opcode.equalizerNotify
+    }
+
+    /// Capability query in English (`lang` 0x01): lets the headphones confirm their
+    /// band and step counts instead of us assuming them.
+    public static func buildEqualizerCapabilityGet(subtype: UInt8 = 0x04) -> [UInt8] {
+        [Opcode.equalizerCapabilityGet, subtype, 0x01]
+    }
+
+    /// `51 <type> <bands> <steps> <presetCount> (<id> <nameLen> <name>)*`. Names are often empty.
+    public static func decodeEqualizerCapability(_ payload: [UInt8]) -> EqualizerCapability? {
+        guard payload.count >= 5, payload[0] == Opcode.equalizerCapabilityRet else { return nil }
+        let subtype = payload[1]
+        // Type 0x03 carries an extra step byte before the preset list; not used by the 1000X line.
+        guard subtype != 0x03 else { return nil }
+        var presets: [UInt8] = []
+        var i = 5
+        for _ in 0..<Int(payload[4]) {
+            guard i + 2 <= payload.count else { return nil }
+            presets.append(payload[i])
+            i += 2 + Int(payload[i + 1])
+        }
+        guard i <= payload.count else { return nil }
+        return EqualizerCapability(subtype: subtype, bandCount: Int(payload[2]), stepCount: Int(payload[3]), presetCodes: presets)
     }
 
     // MARK: - Listening Mode (Standard / Background Music / Cinema)

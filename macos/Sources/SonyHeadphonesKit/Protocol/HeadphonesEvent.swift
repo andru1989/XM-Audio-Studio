@@ -13,6 +13,9 @@ public enum HeadphonesEvent: Sendable {
     case bgmMode(enabled: Bool, roomSize: BGMRoomSize)
     case upmixCinema(Bool)
     case deviceList([MultipointDevice])
+    case modelName(String)
+    case firmwareVersion(String)
+    case equalizerCapability(EqualizerCapability)
 }
 
 /// Dispatches an incoming payload to the right decoder.
@@ -39,6 +42,13 @@ public enum SonyEventDecoder {
 
         if opcode == Opcode.initReply {
             return .protocolInfo(SonyCommands.protocolVersion(fromInitReplyPayload: payload))
+        }
+        if opcode == Opcode.deviceInfoRet {
+            guard let (type, text) = SonyCommands.decodeDeviceInfo(payload) else { return nil }
+            return type == Subtype.deviceInfoModelName ? .modelName(text) : .firmwareVersion(text)
+        }
+        if opcode == Opcode.equalizerCapabilityRet {
+            return SonyCommands.decodeEqualizerCapability(payload).map { .equalizerCapability($0) }
         }
         if SonyCommands.isAmbientSoundReply(opcode: opcode),
            let state = SonyCommands.decodeAmbientSound(payload) {

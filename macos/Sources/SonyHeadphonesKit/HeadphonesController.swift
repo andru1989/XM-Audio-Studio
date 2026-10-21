@@ -27,6 +27,11 @@ public final class HeadphonesController: ObservableObject {
     @Published public private(set) var listeningMode: ListeningMode?
     @Published public private(set) var bgmRoomSize: BGMRoomSize?
     @Published public private(set) var devices: [MultipointDevice]?
+    /// What the headphones report about themselves (`04 01` / `04 02`); nil until answered.
+    @Published public private(set) var reportedModelName: String?
+    @Published public private(set) var firmwareVersion: String?
+    /// Band/step counts confirmed by the headphones (`50 04 01`), when they answer it.
+    @Published public private(set) var equalizerCapability: EqualizerCapability?
 
     /// Raw BGM/cinema flags as last reported; listeningMode is derived from them.
     private var bgmEnabled = false
@@ -237,10 +242,10 @@ public final class HeadphonesController: ObservableObject {
 
     // MARK: - Raw access (developer tooling)
 
-    /// Called for every decoded inbound message; used by the XM6Probe tool.
+    /// Called for every decoded inbound message; used by the XMAudioProbe tool.
     public var rawMessageHandler: ((SonyMessageType, [UInt8]) -> Void)?
 
-    /// Queues a raw payload; used by the XM6Probe tool to verify command layouts.
+    /// Queues a raw payload; used by the XMAudioProbe tool to verify command layouts.
     public func sendRaw(_ payload: [UInt8], type: SonyMessageType = .command1) {
         enqueueCommand(payload, type: type)
     }
@@ -523,6 +528,12 @@ public final class HeadphonesController: ObservableObject {
             updateListeningMode()
         case .deviceList(let list):
             devices = list
+        case .modelName(let name):
+            reportedModelName = name
+        case .firmwareVersion(let version):
+            firmwareVersion = version
+        case .equalizerCapability(let capability):
+            equalizerCapability = capability
         }
     }
 
@@ -545,6 +556,8 @@ public final class HeadphonesController: ObservableObject {
     private func requestFullState() {
         // XM6 firmware 3.0.0 reports real state on 0x19; 0x17 can be a placeholder.
         // Keep the older queries for firmware using those layouts.
+        enqueue(SonyCommands.buildModelNameGet())
+        enqueue(SonyCommands.buildFirmwareVersionGet())
         enqueue(SonyCommands.buildAmbientSoundGet(subtype: 0x15))
         enqueue(SonyCommands.buildAmbientSoundGet(subtype: 0x17))
         enqueue(SonyCommands.buildAmbientSoundGet(subtype: 0x19))
@@ -556,6 +569,7 @@ public final class HeadphonesController: ObservableObject {
         // XM6 answers EQ inquired type 0x04; 0x00 kept as a fallback for other firmware.
         enqueue(SonyCommands.buildEqualizerGet(subtype: 0x04))
         enqueue(SonyCommands.buildEqualizerGet(subtype: 0x00))
+        enqueue(SonyCommands.buildEqualizerCapabilityGet())
         enqueue(SonyCommands.buildBGMModeGet())
         enqueue(SonyCommands.buildUpmixCinemaGet())
         enqueue(SonyCommands.buildDeviceListGet(), type: .command2)

@@ -1,0 +1,344 @@
+{
+  "schema": "xm-audio-studio.protocol-events/1",
+  "note": "expect == null means the payload must not decode to any event",
+  "cases": [
+    {
+      "name": "init reply, 8 bytes (v2)",
+      "source": "capture: WF-1000XM5 / XM5",
+      "messageType": "command1",
+      "payload": "01 00 03 00 00 00 00 00",
+      "expect": {
+        "event": "protocolInfo",
+        "version": "v2"
+      }
+    },
+    {
+      "name": "init reply, 4 bytes (v1)",
+      "source": "capture: WH-1000XM3 4.5.2",
+      "messageType": "command1",
+      "payload": "01 00 40 10",
+      "expect": {
+        "event": "protocolInfo",
+        "version": "v1"
+      }
+    },
+    {
+      "name": "ambient 0x19 noise cancelling",
+      "source": "layout: XM6 fw 3.x (Anneo22 captures)",
+      "messageType": "command1",
+      "payload": "67 19 01 01 00 00 0c 00 00",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "noiseCancelling",
+        "focusOnVoice": false,
+        "level": 12,
+        "subtype": 25,
+        "isUpdate": true,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "ambient 0x19 notify, ambient + voice",
+      "source": "layout: XM6 fw 3.x",
+      "messageType": "command1",
+      "payload": "69 19 01 01 01 01 14 01 00",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "ambientSound",
+        "focusOnVoice": true,
+        "level": 20,
+        "subtype": 25,
+        "isUpdate": true,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "ambient 0x17 zero-update placeholder",
+      "source": "XM6 fw 3.0.0 behaviour",
+      "messageType": "command1",
+      "payload": "67 17 00 00 00 00 00 00",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "off",
+        "focusOnVoice": false,
+        "level": 0,
+        "subtype": 23,
+        "isUpdate": false,
+        "hasWindNoiseByte": true
+      }
+    },
+    {
+      "name": "ambient 0x17 seven bytes, effect off",
+      "source": "capture: WF-1000XM5",
+      "messageType": "command1",
+      "payload": "67 17 01 00 01 00 14",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "off",
+        "focusOnVoice": false,
+        "level": 20,
+        "subtype": 23,
+        "isUpdate": true,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "ambient 0x15 noise cancelling",
+      "source": "reference layout",
+      "messageType": "command1",
+      "payload": "67 15 01 01 00 00 14",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "noiseCancelling",
+        "focusOnVoice": false,
+        "level": 20,
+        "subtype": 21,
+        "isUpdate": true,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "ambient unknown subtype rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "67 99 01 01 00 00 14",
+      "expect": null
+    },
+    {
+      "name": "ambient 0x19 with wrong length rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "67 19 01 01 00 00 0c",
+      "expect": null
+    },
+    {
+      "name": "battery single, charging",
+      "source": "reference layout",
+      "messageType": "command1",
+      "payload": "23 00 50 01",
+      "expect": {
+        "event": "battery",
+        "level": 80,
+        "charging": true
+      }
+    },
+    {
+      "name": "battery with threshold (type 0x08)",
+      "source": "reference layout, unverified on XM6",
+      "messageType": "command1",
+      "payload": "25 08 3c 00 1e",
+      "expect": {
+        "event": "battery",
+        "level": 60,
+        "charging": false
+      }
+    },
+    {
+      "name": "battery level above 100 rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "23 00 c8 00",
+      "expect": null
+    },
+    {
+      "name": "eq XM6 10-band reply",
+      "source": "capture: XM6 btsnoop (sony-device-center tests)",
+      "messageType": "command1",
+      "payload": "57 04 a0 0a 07 07 07 07 06 06 07 08 08 08",
+      "expect": {
+        "event": "equalizer",
+        "presetCode": 160,
+        "bands": [
+          1,
+          1,
+          1,
+          1,
+          0,
+          0,
+          1,
+          2,
+          2,
+          2
+        ],
+        "subtype": 4
+      }
+    },
+    {
+      "name": "eq XM6 notify",
+      "source": "capture: XM6 btsnoop",
+      "messageType": "command1",
+      "payload": "59 04 20 0a 00 04 08 09 07 05 07 09 06 04",
+      "expect": {
+        "event": "equalizer",
+        "presetCode": 32,
+        "bands": [
+          -6,
+          -2,
+          2,
+          3,
+          1,
+          -1,
+          1,
+          3,
+          0,
+          -2
+        ],
+        "subtype": 4
+      }
+    },
+    {
+      "name": "eq XM5-style 6 bytes (clear bass + 5)",
+      "source": "capture: WF-1000XM5",
+      "messageType": "command1",
+      "payload": "57 00 a0 06 14 0b 0a 0d 09 0c",
+      "expect": {
+        "event": "equalizer",
+        "presetCode": 160,
+        "bands": [
+          10,
+          1,
+          0,
+          3,
+          -1,
+          2
+        ],
+        "subtype": 0
+      }
+    },
+    {
+      "name": "eq capability 10 bands / 13 steps",
+      "source": "reference layout",
+      "messageType": "command1",
+      "payload": "51 04 0a 0d 02 30 00 a0 00",
+      "expect": {
+        "event": "eqCapability",
+        "subtype": 4,
+        "bandCount": 10,
+        "stepCount": 13,
+        "presetCodes": [
+          48,
+          160
+        ]
+      }
+    },
+    {
+      "name": "bgm mode on, large room (inverted flag)",
+      "source": "reference layout",
+      "messageType": "command1",
+      "payload": "e7 09 00 02",
+      "expect": {
+        "event": "bgmMode",
+        "enabled": true,
+        "roomSize": "large"
+      }
+    },
+    {
+      "name": "upmix cinema off",
+      "source": "reference layout",
+      "messageType": "command1",
+      "payload": "e9 04 01",
+      "expect": {
+        "event": "upmixCinema",
+        "enabled": false
+      }
+    },
+    {
+      "name": "speak-to-chat enabled (inverted flag)",
+      "source": "reference layout",
+      "messageType": "command1",
+      "payload": "f7 0c 00 01",
+      "expect": {
+        "event": "speakToChatEnabled",
+        "enabled": true
+      }
+    },
+    {
+      "name": "speak-to-chat config",
+      "source": "reference layout",
+      "messageType": "command1",
+      "payload": "fb 0c 01 02",
+      "expect": {
+        "event": "speakToChatConfig",
+        "sensitivity": "high",
+        "timeout": "long"
+      }
+    },
+    {
+      "name": "auto power off when taken off",
+      "source": "verified on XM6 (upstream probe)",
+      "messageType": "command1",
+      "payload": "27 05 10 00",
+      "expect": {
+        "event": "automaticPowerOff",
+        "mode": "whenTakenOff"
+      }
+    },
+    {
+      "name": "pause when taken off disabled",
+      "source": "verified on XM6 (upstream capture)",
+      "messageType": "command1",
+      "payload": "f7 01 01",
+      "expect": {
+        "event": "pauseWhenTakenOff",
+        "enabled": false
+      }
+    },
+    {
+      "name": "multipoint device list",
+      "source": "layout verified on XM6 (upstream capture)",
+      "messageType": "command2",
+      "payload": "37 02 02 41 41 3a 42 42 3a 43 43 3a 44 44 3a 45 45 3a 30 31 02 00 00 00 0b 4d 61 63 42 6f 6f 6b 20 50 72 6f 41 41 3a 42 42 3a 43 43 3a 44 44 3a 45 45 3a 30 32 01 00 00 00 05 50 69 78 65 6c 02",
+      "expect": {
+        "event": "deviceList",
+        "devices": [
+          {
+            "mac": "AA:BB:CC:DD:EE:01",
+            "name": "MacBook Pro",
+            "connected": true,
+            "playback": true
+          },
+          {
+            "mac": "AA:BB:CC:DD:EE:02",
+            "name": "Pixel",
+            "connected": true,
+            "playback": false
+          }
+        ]
+      }
+    },
+    {
+      "name": "model name",
+      "source": "layout from WH-1000XM3 capture",
+      "messageType": "command1",
+      "payload": "05 01 0a 57 48 2d 31 30 30 30 58 4d 36",
+      "expect": {
+        "event": "modelName",
+        "name": "WH-1000XM6"
+      }
+    },
+    {
+      "name": "firmware version",
+      "source": "layout from WH-1000XM3 capture",
+      "messageType": "command1",
+      "payload": "05 02 05 33 2e 31 2e 35",
+      "expect": {
+        "event": "firmwareVersion",
+        "version": "3.1.5"
+      }
+    },
+    {
+      "name": "unknown opcode ignored",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "99 00",
+      "expect": null
+    },
+    {
+      "name": "table-1 opcode on table 2 ignored",
+      "source": "negative",
+      "messageType": "command2",
+      "payload": "23 00 50 01",
+      "expect": null
+    }
+  ]
+}

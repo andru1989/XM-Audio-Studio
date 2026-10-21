@@ -44,3 +44,18 @@ public struct EqualizerState: Equatable, Sendable {
         self.subtype = subtype
     }
 }
+
+/// Reply to the EQ capability query (`50 <type> 01`).
+public struct EqualizerCapability: Equatable, Sendable {
+    public var subtype: UInt8
+    public var bandCount: Int
+    public var stepCount: Int
+    public var presetCodes: [UInt8]
+
+    public init(subtype: UInt8, bandCount: Int, stepCount: Int, presetCodes: [UInt8]) {
+        self.subtype = subtype
+        self.bandCount = bandCount
+        self.stepCount = stepCount
+        self.presetCodes = presetCodes
+    }
+}

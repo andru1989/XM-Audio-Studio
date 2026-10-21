@@ -1,0 +1,206 @@
+{
+  "schema": "xm-audio-studio.protocol-commands/1",
+  "cases": [
+    {
+      "command": "init",
+      "args": {},
+      "payload": "00 00",
+      "source": "spec"
+    },
+    {
+      "command": "modelNameGet",
+      "args": {},
+      "payload": "04 01",
+      "source": "spec"
+    },
+    {
+      "command": "firmwareVersionGet",
+      "args": {},
+      "payload": "04 02",
+      "source": "spec"
+    },
+    {
+      "command": "ambientSoundGet",
+      "args": {
+        "subtype": 25
+      },
+      "payload": "66 19",
+      "source": "spec"
+    },
+    {
+      "command": "ambientSoundSet",
+      "args": {
+        "mode": "noiseCancelling",
+        "focusOnVoice": false,
+        "level": 15,
+        "subtype": 25,
+        "hasWindNoiseByte": false
+      },
+      "payload": "68 17 01 01 00 00 0f",
+      "source": "0x19 state is written as 0x17 (verified on XM6 fw 3.0.0 by Anneo22)"
+    },
+    {
+      "command": "ambientSoundSet",
+      "args": {
+        "mode": "ambientSound",
+        "focusOnVoice": false,
+        "level": 0,
+        "subtype": 21,
+        "hasWindNoiseByte": false
+      },
+      "payload": "68 15 01 01 01 00 01",
+      "source": "level is written as 1..20"
+    },
+    {
+      "command": "ambientSoundSet",
+      "args": {
+        "mode": "off",
+        "focusOnVoice": false,
+        "level": 10,
+        "subtype": 23,
+        "hasWindNoiseByte": true
+      },
+      "payload": "68 17 01 00 00 02 00 0a",
+      "source": "wind byte kept for 8-byte 0x17 dialect"
+    },
+    {
+      "command": "batteryGet",
+      "args": {},
+      "payload": "22 00",
+      "source": "spec"
+    },
+    {
+      "command": "equalizerGet",
+      "args": {
+        "subtype": 4
+      },
+      "payload": "56 04",
+      "source": "spec"
+    },
+    {
+      "command": "equalizerCapabilityGet",
+      "args": {},
+      "payload": "50 04 01",
+      "source": "spec"
+    },
+    {
+      "command": "equalizerPresetSet",
+      "args": {
+        "code": 49,
+        "subtype": 4
+      },
+      "payload": "58 04 31 00",
+      "source": "spec"
+    },
+    {
+      "command": "equalizerBandsSet",
+      "args": {
+        "bands": [
+          3,
+          2,
+          1,
+          0,
+          -1,
+          -2,
+          -3,
+          0,
+          0,
+          0
+        ],
+        "subtype": 4
+      },
+      "payload": "58 04 a0 0a 09 08 07 06 05 04 03 06 06 06",
+      "source": "echoed byte-for-byte by a live XM6"
+    },
+    {
+      "command": "equalizerBandsSet",
+      "args": {
+        "bands": [
+          9,
+          -9,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "subtype": 4
+      },
+      "payload": "58 04 a0 0a 0c 00 06 06 06 06 06 06 06 06",
+      "source": "gains clamp to -6..+6"
+    },
+    {
+      "command": "bgmModeSet",
+      "args": {
+        "enabled": true,
+        "roomSize": "large"
+      },
+      "payload": "e8 09 00 02",
+      "source": "spec"
+    },
+    {
+      "command": "upmixCinemaSet",
+      "args": {
+        "enabled": false
+      },
+      "payload": "e8 04 01",
+      "source": "spec"
+    },
+    {
+      "command": "speakToChatEnabledSet",
+      "args": {
+        "enabled": true
+      },
+      "payload": "f8 0c 00 01",
+      "source": "spec"
+    },
+    {
+      "command": "speakToChatConfigSet",
+      "args": {
+        "sensitivity": "low",
+        "timeout": "off"
+      },
+      "payload": "fc 0c 02 03",
+      "source": "spec"
+    },
+    {
+      "command": "automaticPowerOffSet",
+      "args": {
+        "mode": "off"
+      },
+      "payload": "28 05 11 00",
+      "source": "verified on XM6 (upstream probe)"
+    },
+    {
+      "command": "pauseWhenTakenOffGet",
+      "args": {},
+      "payload": "f6 01",
+      "source": "spec"
+    },
+    {
+      "command": "pauseWhenTakenOffSet",
+      "args": {
+        "enabled": false
+      },
+      "payload": "f8 01 01",
+      "source": "spec"
+    },
+    {
+      "command": "deviceListGet",
+      "args": {},
+      "payload": "36 02",
+      "source": "spec"
+    },
+    {
+      "command": "sourceSwitchSet",
+      "args": {
+        "mac": "AA:BB:CC:DD:EE:01"
+      },
+      "payload": "3c 01 41 41 3a 42 42 3a 43 43 3a 44 44 3a 45 45 3a 30 31",
+      "source": "spec"
+    }
+  ]
+}

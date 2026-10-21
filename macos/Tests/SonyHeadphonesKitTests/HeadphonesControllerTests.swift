@@ -50,6 +50,15 @@ final class HeadphonesControllerTests: XCTestCase {
         await settle()
     }
 
+    /// ACKs queued state queries until `payload` is the one in flight. The identity
+    /// queries (04 01 / 04 02) go out first, so tests must not rely on fixed positions.
+    private func ackUntil(_ connection: TestConnection, sent payload: [UInt8], limit: Int = 10) async {
+        for _ in 0..<limit where connection.payloads.last != payload {
+            connection.ack()
+            await settle()
+        }
+    }
+
     private func drain(_ connection: TestConnection) async {
         for _ in 0..<20 {
             connection.ack()
@@ -158,8 +167,7 @@ final class HeadphonesControllerTests: XCTestCase {
             defer { controller.disconnect() }
             controller.setControlSurface(UUID(), visible: true)
             await handshake(connection)
-            connection.ack()
-            await settle()
+            await ackUntil(connection, sent: [0x66, 0x17])
             XCTAssertEqual(connection.payloads.last, [0x66, 0x17])
             connection.reply([0x67, 0x17, 0, 0, 0, 0, 0])
             await settle()
