@@ -37,9 +37,12 @@ public enum SpeakToChatTimeout: UInt8, CaseIterable, Sendable, Identifiable {
 public struct SpeakToChatConfigState: Equatable, Sendable {
     public var sensitivity: SpeakToChatSensitivity
     public var timeout: SpeakToChatTimeout
+    /// MDR v1 (WH-1000XM4) carries a "voice focus" flag in the same message; nil on v2.
+    public var voiceFocus: Bool?
 
-    public init(sensitivity: SpeakToChatSensitivity, timeout: SpeakToChatTimeout) {
+    public init(sensitivity: SpeakToChatSensitivity, timeout: SpeakToChatTimeout, voiceFocus: Bool? = nil) {
         self.sensitivity = sensitivity
         self.timeout = timeout
+        self.voiceFocus = voiceFocus
     }
 }

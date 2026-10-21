@@ -42,7 +42,8 @@ data class HeadphoneState(
     fun apply(event: MdrEvent): HeadphoneState = when (event) {
         is MdrEvent.ProtocolInfo -> copy(protocolVersion = event.version)
         // XM6 firmware 3.0.0 answers 0x17 reads with a zero-update placeholder; the
-        // real state arrives on 0x19, so placeholders must not overwrite it.
+        // real state arrives on 0x19, so placeholders must not overwrite it. On the XM5
+        // (0x17 is its real type) update=0 means "slider still moving"; the commit follows.
         is MdrEvent.AmbientSound ->
             if (event.state.subtype == 0x17 && !event.state.isUpdate) this else copy(ambientSound = event.state)
         is MdrEvent.Battery -> copy(battery = event.status)
@@ -68,15 +69,20 @@ data class HeadphoneState(
         )
         is DeviceCommand.SetEqualizerPreset ->
             copy(equalizer = (equalizer ?: EqualizerState(command.code)).copy(presetCode = command.code))
-        is DeviceCommand.SetEqualizerBands ->
-            copy(equalizer = (equalizer ?: EqualizerState(0xa0)).copy(presetCode = 0xa0, bands = command.steps))
+        is DeviceCommand.SetEqualizerBands -> {
+            val current = equalizer ?: EqualizerState(0xa0)
+            copy(equalizer = current.copy(presetCode = 0xa0, bands = command.steps, clearBass = command.clearBass ?: current.clearBass))
+        }
         is DeviceCommand.SetListeningMode -> copy(
             bgmEnabled = command.mode == ListeningMode.BACKGROUND_MUSIC,
             cinemaEnabled = command.mode == ListeningMode.CINEMA,
         )
         is DeviceCommand.SetBgmRoomSize -> copy(bgmRoomSize = command.roomSize)
         is DeviceCommand.SetSpeakToChat -> copy(speakToChatEnabled = command.enabled)
-        is DeviceCommand.SetSpeakToChatConfig -> copy(speakToChatConfig = command.config)
+        is DeviceCommand.SetSpeakToChatConfig -> copy(
+            // v1's voice-focus byte is not edited by the UI; keep the value the device reported.
+            speakToChatConfig = command.config.copy(voiceFocus = command.config.voiceFocus ?: speakToChatConfig?.voiceFocus),
+        )
         is DeviceCommand.SetAutomaticPowerOff -> copy(automaticPowerOff = command.mode)
         is DeviceCommand.SetPauseWhenTakenOff -> copy(pauseWhenTakenOff = command.enabled)
         is DeviceCommand.SwitchPlayback -> copy(

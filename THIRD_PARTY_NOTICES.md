@@ -32,9 +32,9 @@ XM Audio Studio incorpora o se basa en el trabajo siguiente. Se conservan los av
 | Proyecto | Licencia | Uso |
 |---|---|---|
 | [Gadgetbridge](https://codeberg.org/Freeyourgadget/Gadgetbridge) | AGPL-3.0-or-later | Solo hechos de protocolo (interoperabilidad). XM6 Control declara que sus layouts se leyeron de Gadgetbridge. |
-| [mos9527/SonyHeadphonesClient](https://github.com/mos9527/SonyHeadphonesClient) | MIT | Tablas de protocolo v1/v2, identificación, NCASM 0x17/0x19, EQ. Reutilizable con aviso. |
-| [Plutoberth/SonyHeadphonesClient](https://github.com/Plutoberth/SonyHeadphonesClient) | MIT | Referencia histórica. |
-| [marconvcm/sony-device-center](https://github.com/marconvcm/sony-device-center) | MIT | Capturas XM6 del EQ (fw 3.1.5). |
+| [mos9527/SonyHeadphonesClient](https://github.com/mos9527/SonyHeadphonesClient) | MIT | Tablas de protocolo v1/v2, identificación, NCASM 0x17/0x19, EQ. Payloads de sus capturas WH-1000XM3 fw 4.5.2 y WF-1000XM5 fw 6.1.0 en `shared/protocol-fixtures/*-v1.json` y `*-xm5.json`. Reutilizable con aviso. |
+| [Plutoberth/SonyHeadphonesClient](https://github.com/Plutoberth/SonyHeadphonesClient) | MIT | Referencia histórica (setter NC/ASM v1). |
+| [marconvcm/sony-device-center](https://github.com/marconvcm/sony-device-center) | MIT | Capturas XM6 del EQ (fw 3.1.5); notas de hardware XM4 (fw 3.0.1) y XM5 (fw 2.3.1) usadas como evidencia de los adaptadores v1/XM5. |
 | [shellingtonshreyas/xm6-macos-controller](https://github.com/shellingtonshreyas/xm6-macos-controller) | GPL-3.0 | Solo referencia. |
 | [ibatra/sony-headphones-client](https://github.com/ibatra/sony-headphones-client) | MIT declarado sin texto | Solo referencia. |
 | [ParaEQ](https://github.com/wabsto1/ParaEQ) | MIT | Diseño del futuro motor DSP macOS (ADR-0008). Aún no incorporado. |

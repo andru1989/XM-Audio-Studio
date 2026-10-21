@@ -1,0 +1,127 @@
+{
+  "schema": "xm-audio-studio.protocol-commands/1",
+  "encoder": "xm5",
+  "note": "WH-1000XM5 (MDR v2) builders. payload == null means the builder must refuse. Write layouts from sony-device-center ProtocolV2.cpp (MIT; reported working on its maintainer's WH-1000XM5 fw 2.3.1) and mos9527's v2 structs; none was tested by this project.",
+  "cases": [
+    {
+      "command": "ambientSoundGet",
+      "args": {},
+      "payload": "66 17",
+      "source": "v2 NCASM type 0x17 (sony-device-center XM5; WF-1000XM5 capture of the reply)"
+    },
+    {
+      "command": "ambientSoundSet",
+      "args": {
+        "mode": "noiseCancelling",
+        "focusOnVoice": false,
+        "level": 15
+      },
+      "payload": "68 17 01 01 00 00 0f",
+      "source": "sony-device-center ProtocolV2.cpp setter: 68 17 01 <effect> <0 NC/1 ambient> <voice> <level>"
+    },
+    {
+      "command": "ambientSoundSet",
+      "args": {
+        "mode": "ambientSound",
+        "focusOnVoice": true,
+        "level": 10
+      },
+      "payload": "68 17 01 01 01 01 0a",
+      "source": "sony-device-center ProtocolV2.cpp setter"
+    },
+    {
+      "command": "ambientSoundSet",
+      "args": {
+        "mode": "off",
+        "focusOnVoice": false,
+        "level": 0
+      },
+      "payload": "68 17 01 00 00 00 01",
+      "source": "effect off; level is written as 1..20"
+    },
+    {
+      "command": "batteryGet",
+      "args": {},
+      "payload": "22 00",
+      "source": "v2 POWER_GET_STATUS battery (same as XM6)"
+    },
+    {
+      "command": "equalizerGet",
+      "args": {},
+      "payload": "56 00",
+      "source": "v2 EQEBB type 0x00 PRESET_EQ (sony-device-center XM5)"
+    },
+    {
+      "command": "equalizerCapabilityGet",
+      "args": {},
+      "payload": "50 00 01",
+      "source": "v2 EQEBB_GET_CAPABILITY type 0x00, English"
+    },
+    {
+      "command": "equalizerPresetSet",
+      "args": {
+        "code": 22
+      },
+      "payload": "58 00 16 00",
+      "source": "sony-device-center ProtocolV2.cpp (preset, no band bytes)"
+    },
+    {
+      "command": "equalizerBandsSet",
+      "args": {
+        "bands": [
+          1,
+          0,
+          3,
+          -1,
+          2
+        ],
+        "clearBass": 10
+      },
+      "payload": "58 00 a0 06 14 0b 0a 0d 09 0c",
+      "source": "sony-device-center ProtocolV2.cpp; same bytes as the WF-1000XM5 captured reply"
+    },
+    {
+      "command": "equalizerBandsSet",
+      "args": {
+        "bands": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "clearBass": 0
+      },
+      "payload": null,
+      "source": "only five bands are accepted"
+    },
+    {
+      "command": "speakToChatEnabledGet",
+      "args": {},
+      "payload": "f6 0c",
+      "source": "v2 SYSTEM type 0x0C (WF-1000XM5 capture of the reply)"
+    },
+    {
+      "command": "speakToChatEnabledSet",
+      "args": {
+        "enabled": true
+      },
+      "payload": "f8 0c 00 01",
+      "source": "inverted on v2 (00 = on), same as XM6"
+    },
+    {
+      "command": "speakToChatConfigGet",
+      "args": {},
+      "payload": "fa 0c",
+      "source": "v2 SYSTEM_GET_EXT_PARAM 0x0C (WF-1000XM5 capture of the reply)"
+    },
+    {
+      "command": "speakToChatConfigSet",
+      "args": {
+        "sensitivity": "low",
+        "timeout": "off"
+      },
+      "payload": "fc 0c 02 03",
+      "source": "same as XM6"
+    }
+  ]
+}

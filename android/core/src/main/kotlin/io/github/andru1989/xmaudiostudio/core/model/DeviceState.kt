@@ -52,7 +52,15 @@ enum class SpeakToChatTimeout(val code: Int) {
     }
 }
 
-data class SpeakToChatConfig(val sensitivity: SpeakToChatSensitivity, val timeout: SpeakToChatTimeout)
+data class SpeakToChatConfig(
+    val sensitivity: SpeakToChatSensitivity,
+    val timeout: SpeakToChatTimeout,
+    /**
+     * MDR v1 (WH-1000XM4) carries a "voice focus" flag in the same message; null on v2, whose
+     * message has no such byte. Kept so that a write never clobbers the value read from the device.
+     */
+    val voiceFocus: Boolean? = null,
+)
 
 /** XM6 accepts only these two auto-power-off values (verified upstream by probe). */
 enum class AutomaticPowerOffMode(val code: Int) {
@@ -76,8 +84,13 @@ data class EqualizerState(
     val presetCode: Int,
     /** Band gains in device steps, low frequency first, wire offset already removed. */
     val bands: List<Int> = emptyList(),
-    /** EQEBB inquired type the device used (XM6: 0x04); echoed on writes. */
+    /** EQEBB inquired type the device used (XM6: 0x04, XM5: 0x00, MDR v1: 0x01); echoed on writes. */
     val subtype: Int = 0x04,
+    /**
+     * Clear Bass in device steps (offset removed) on the 5-band models (XM3-XM5), where it is
+     * the first of the six band bytes. Null on models without it (XM6).
+     */
+    val clearBass: Int? = null,
 ) {
     val preset: EqualizerPreset? get() = EqualizerPreset.fromCode(presetCode)
 }

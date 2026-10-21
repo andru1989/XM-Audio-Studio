@@ -205,7 +205,8 @@ class HeadphoneSessionTest {
     @Test
     fun modelsWithoutAdapterAreNeverContacted() = runTest {
         val r = rig()
-        r.session.selectTarget(DeviceTarget("11:22:33:44:55:66", "WH-1000XM4", HeadphoneModel.WH_1000XM4))
+        // The MDR-1000X is the one model without an adapter (no public capture exists).
+        r.session.selectTarget(DeviceTarget("11:22:33:44:55:66", "MDR-1000X", HeadphoneModel.MDR_1000X))
         r.session.setSurfaceVisible("main", true)
         settle()
         assertEquals(ConnectionPhase.FAILED, r.snapshot.phase)

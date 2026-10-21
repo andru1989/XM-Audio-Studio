@@ -24,8 +24,11 @@ sealed interface DeviceCommand {
         override val coalesceKey get() = "eq"
     }
 
-    /** Custom curve in device steps, low band first. */
-    data class SetEqualizerBands(val steps: List<Int>) : DeviceCommand {
+    /**
+     * Custom curve in device steps, low band first. [clearBass] (steps) only applies to models
+     * whose [EqualizerSpec.clearBassRange] is set; null keeps the value the device reported.
+     */
+    data class SetEqualizerBands(val steps: List<Int>, val clearBass: Int? = null) : DeviceCommand {
         override val coalesceKey get() = "eq"
     }
 

@@ -51,6 +51,9 @@
     <string name="eq_preset_active">Sony preset active: %1$s. Move a band to switch to a custom curve.</string>
     <string name="eq_unverified_freqs">Band frequencies not verified on the device</string>
     <string name="eq_clip_risk">+%1$d dB boost: possible clipping with heavily compressed music.</string>
+    <string name="clear_bass">Clear Bass</string>
+    <string name="clear_bass_note">Clear Bass is a separate control of the headphones; the chart does not include it.</string>
+    <string name="model_untested">%1$s · not tested with hardware (experimental)</string>
     <string name="profiles">Profiles</string>
     <string name="reset_flat">Flat</string>
     <string name="undo">Undo</string>

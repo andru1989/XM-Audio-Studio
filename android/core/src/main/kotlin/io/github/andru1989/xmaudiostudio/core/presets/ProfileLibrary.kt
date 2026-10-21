@@ -46,7 +46,7 @@ class ProfileLibrary(
 
     fun find(id: String): EqProfile? = BuiltinProfiles.all.firstOrNull { it.id == id } ?: userProfiles.firstOrNull { it.id == id }
 
-    /** Saves a custom curve as a new user profile. */
+    /** Saves a custom curve as a new user profile. [clearBass] only for models that have it (XM3-XM5). */
     fun saveCurve(
         name: String,
         modelId: String,
@@ -55,9 +55,11 @@ class ProfileLibrary(
         sourceCurve: SourceCurve? = null,
         source: ProfileSource? = null,
         notes: String? = null,
+        clearBass: Int? = null,
     ): EqProfile {
         val stamp = now()
-        val profile = EqProfile(newId(), name.trim(), category, modelId, DeviceEqSetting(steps = steps), sourceCurve, source, notes, stamp, stamp)
+        val setting = DeviceEqSetting(steps = steps, clearBass = clearBass)
+        val profile = EqProfile(newId(), name.trim(), category, modelId, setting, sourceCurve, source, notes, stamp, stamp)
         return add(profile)
     }
 
@@ -73,8 +75,12 @@ class ProfileLibrary(
 
     fun rename(id: String, name: String): EqProfile = update(id) { it.copy(name = name.trim()) }
 
-    fun updateSteps(id: String, steps: List<Int>): EqProfile =
-        update(id) { it.copy(deviceEq = DeviceEqSetting(steps = steps), category = if (it.category == ProfileCategory.MEASURED) ProfileCategory.USER else it.category) }
+    fun updateSteps(id: String, steps: List<Int>, clearBass: Int? = null): EqProfile = update(id) {
+        it.copy(
+            deviceEq = DeviceEqSetting(steps = steps, clearBass = clearBass),
+            category = if (it.category == ProfileCategory.MEASURED) ProfileCategory.USER else it.category,
+        )
+    }
 
     fun delete(id: String) {
         require(!id.startsWith(EqProfile.BUILTIN_PREFIX)) { "Built-in profiles cannot be deleted" }

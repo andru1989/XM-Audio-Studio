@@ -73,6 +73,20 @@ class ProfileTest {
     }
 
     @Test
+    fun fiveBandModelsKeepClearBassAndOtherModelsRefuseIt() {
+        val lib = library()
+        val saved = lib.saveCurve("XM4", "wh-1000xm4", listOf(1, 0, -3, 2, 10), clearBass = 3)
+        assertEquals(3, saved.deviceEq.clearBass)
+        lib.updateSteps(saved.id, listOf(0, 0, 0, 0, 1), clearBass = -10)
+        assertEquals(-10, ProfileLibrary(ProfileStore(tmp.root.resolve("profiles.json"))).userProfiles.single().deviceEq.clearBass)
+        assertTrue("XM6 has no Clear Bass", runCatching { lib.saveCurve("x", "wh-1000xm6", List(10) { 0 }, clearBass = 1) }.isFailure)
+        assertTrue("five bands on a 10-band model", runCatching { lib.saveCurve("x", "wh-1000xm6", List(5) { 0 }) }.isFailure)
+        assertTrue("Clear Bass range", runCatching { lib.saveCurve("x", "wh-1000xm5", List(5) { 0 }, clearBass = 11) }.isFailure)
+        // The AutoEQ fit works for any band count.
+        assertEquals(5, AutoEqImporter.fit("GraphicEQ: 20 0; 1000 0; 2000 -3; 4000 -3; 8000 0; 20000 0", HeadphoneModel.WH_1000XM5).fit.steps.size)
+    }
+
+    @Test
     fun importNeverOverwritesExistingProfiles() {
         val lib = library()
         val exported = lib.exportText(listOf("builtin.gaming"))

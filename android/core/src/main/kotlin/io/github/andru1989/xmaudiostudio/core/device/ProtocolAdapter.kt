@@ -16,6 +16,9 @@ class Outgoing(val type: MessageType, val payload: ByteArray)
  * (transport, ACKs, lifecycle) is shared; only adapters differ per generation.
  */
 interface ProtocolAdapter {
+    /** The `adapter` id in shared/protocol-spec/models.json. */
+    val id: String
+
     val expectedProtocol: ProtocolVersion
 
     /** Reads issued after every (re)connect, before any pending intent is written. */
@@ -27,16 +30,22 @@ interface ProtocolAdapter {
     fun decode(type: MessageType, payload: ByteArray): MdrEvent?
 
     companion object {
-        /** Adapters that exist today. Models without one are never sent a single byte. */
+        /**
+         * Adapters that exist today. Models without one (MDR-1000X: no public capture) are never
+         * sent a single byte. Only the XM6 has been exercised on real hardware by this project.
+         */
         fun forModel(model: HeadphoneModel): ProtocolAdapter? = when (model) {
             HeadphoneModel.WH_1000XM6 -> Xm6Adapter
-            else -> null
+            HeadphoneModel.WH_1000XM5 -> Xm5Adapter
+            HeadphoneModel.WH_1000XM4, HeadphoneModel.WH_1000XM3, HeadphoneModel.WH_1000XM2 -> MdrV1Adapter(model)
+            HeadphoneModel.MDR_1000X -> null
         }
     }
 }
 
 /** WH-1000XM6 (MDR v2). Byte layouts in shared/protocol-spec/PROTOCOL.md. */
 object Xm6Adapter : ProtocolAdapter {
+    override val id = "xm6"
     override val expectedProtocol = ProtocolVersion.V2
 
     private fun c1(payload: ByteArray) = Outgoing(MessageType.COMMAND_1, payload)
