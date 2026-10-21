@@ -2,9 +2,12 @@ package io.github.andru1989.xmaudiostudio.core.protocol
 
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundMode
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundState
+import io.github.andru1989.xmaudiostudio.core.model.AudioCodec
+import io.github.andru1989.xmaudiostudio.core.model.AudioStreamType
 import io.github.andru1989.xmaudiostudio.core.model.AutomaticPowerOffMode
 import io.github.andru1989.xmaudiostudio.core.model.BatteryStatus
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
+import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerCapability
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerPreset
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerState
@@ -214,6 +217,75 @@ object MdrCommands {
     }
 
     fun isAudioParamReply(opcode: Int) = opcode == Opcode.AUDIO_RET || opcode == Opcode.AUDIO_NOTIFY
+
+    // endregion
+    // region Bluetooth connection priority (AUDIO family, inquired type 0x05)
+    //
+    // Layouts verified live on an XM6 fw 3.1.5 by Anneo22/xm6-control (Apache-2.0):
+    // capability `e1 05 03 00 01 02 00`, reply `e7 05 <mode>`, notify `e9 05 <mode> <stream>`.
+
+    fun connectionPriorityCapabilityGet(): ByteArray = bytes(Opcode.AUDIO_CAPABILITY_GET, Subtype.CONNECTION_PRIORITY)
+
+    fun connectionPriorityGet(): ByteArray = bytes(Opcode.AUDIO_GET, Subtype.CONNECTION_PRIORITY)
+
+    /**
+     * `e8 05 <mode> 01`. The trailing 0x01 is required: three-byte writes and a 0x00 trailer were
+     * ignored live. Null for a priority that is not writable (low latency is advertised but
+     * rejected), so it can never be sent. Changing it may briefly drop the Bluetooth audio.
+     */
+    fun connectionPrioritySet(priority: ConnectionPriority): ByteArray? {
+        if (!priority.isWritable) return null
+        return bytes(Opcode.AUDIO_SET, Subtype.CONNECTION_PRIORITY, priority.code, 0x01)
+    }
+
+    /**
+     * `e1 05 <count> <modes…> <exclusiveCount>`. Rejects a wrong count, unknown or repeated modes,
+     * and a non-empty exclusive list (only the captured empty one is understood).
+     */
+    fun decodeConnectionPriorityCapability(p: ByteArray): List<ConnectionPriority>? {
+        if (p.size < 4 || p.u(0) != Opcode.AUDIO_CAPABILITY_RET || p.u(1) != Subtype.CONNECTION_PRIORITY) return null
+        val count = p.u(2)
+        if (p.size != count + 4 || p.u(p.size - 1) != 0x00) return null
+        val priorities = mutableListOf<ConnectionPriority>()
+        for (i in 0 until count) {
+            val priority = ConnectionPriority.fromCode(p.u(3 + i)) ?: return null
+            if (priority in priorities) return null
+            priorities += priority
+        }
+        return priorities
+    }
+
+    /**
+     * Reply `e7 05 <mode>` (exactly 3 bytes; no stream, so the second value is null) or notify
+     * `e9 05 <mode> <switchingStream>` (exactly 4 bytes).
+     */
+    fun decodeConnectionPriority(p: ByteArray): Pair<ConnectionPriority, AudioStreamType?>? {
+        if (p.size < 3 || p.u(1) != Subtype.CONNECTION_PRIORITY) return null
+        val stream: AudioStreamType? = when (p.u(0)) {
+            Opcode.AUDIO_RET -> if (p.size == 3) null else return null
+            Opcode.AUDIO_NOTIFY -> if (p.size == 4) AudioStreamType.fromCode(p.u(3)) ?: return null else return null
+            else -> return null
+        }
+        val priority = ConnectionPriority.fromCode(p.u(2)) ?: return null
+        return priority to stream
+    }
+
+    // endregion
+    // region Audio codec (COMMON status, type 0x02). mos9527 reference; not captured on an XM6.
+
+    fun audioCodecGet(): ByteArray = bytes(Opcode.COMMON_STATUS_GET, Subtype.AUDIO_CODEC)
+
+    /**
+     * `13 02 <codec>` or notify `15 02 <codec>`, exactly 3 bytes. Returns the raw codec byte:
+     * values outside [AudioCodec] are reported as unknown, not rejected and not guessed.
+     */
+    fun decodeAudioCodec(p: ByteArray): Int? {
+        if (p.size != 3 || p.u(1) != Subtype.AUDIO_CODEC) return null
+        if (p.u(0) != Opcode.COMMON_STATUS_RET && p.u(0) != Opcode.COMMON_STATUS_NOTIFY) return null
+        return p.u(2)
+    }
+
+    fun isCommonStatusReply(opcode: Int) = opcode == Opcode.COMMON_STATUS_RET || opcode == Opcode.COMMON_STATUS_NOTIFY
 
     // endregion
     // region Multipoint device list and playback source switch (COMMAND_2)

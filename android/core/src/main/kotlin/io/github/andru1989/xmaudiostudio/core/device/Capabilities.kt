@@ -36,7 +36,11 @@ enum class Feature(val id: String) {
     EQ_PRESETS("eqPresets"),
     EQ_CUSTOM_BANDS("eqCustomBands"),
     MULTIPOINT_LIST("multipointList"),
-    PLAYBACK_SOURCE_SWITCH("playbackSourceSwitch");
+    PLAYBACK_SOURCE_SWITCH("playbackSourceSwitch"),
+    /** "Priorizar calidad de sonido / conexión estable" (AUDIO type 0x05). */
+    CONNECTION_PRIORITY("connectionPriority"),
+    /** Read-only codec indicator (`12 02`). */
+    AUDIO_CODEC("audioCodec");
 
     companion object {
         fun fromId(id: String) = entries.first { it.id == id }

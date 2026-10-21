@@ -3,7 +3,10 @@ package io.github.andru1989.xmaudiostudio.core.session
 import io.github.andru1989.xmaudiostudio.core.device.DeviceCommand
 import io.github.andru1989.xmaudiostudio.core.device.HeadphoneModel
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundMode
+import io.github.andru1989.xmaudiostudio.core.model.AudioCodec
+import io.github.andru1989.xmaudiostudio.core.model.AudioStreamType
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
+import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.ListeningMode
 import io.github.andru1989.xmaudiostudio.core.protocol.MessageType
 import io.github.andru1989.xmaudiostudio.core.protocol.bytes
@@ -69,7 +72,7 @@ class HeadphoneSessionTest {
         assertEquals(ConnectionPhase.CONNECTED, r.snapshot.phase)
         val payloads = r.device.received.filter { it.type != MessageType.ACK }.map { it.payload }
         val writeIndex = payloads.indexOfFirst { it.u(0) == 0x58 }
-        val lastRead = payloads.indexOfLast { it.u(0) in setOf(0x04, 0x22, 0x26, 0x36, 0x50, 0x56, 0x66, 0xe6, 0xf6, 0xfa) }
+        val lastRead = payloads.indexOfLast { it.u(0) in setOf(0x04, 0x12, 0x22, 0x26, 0x36, 0x50, 0x56, 0x66, 0xe0, 0xe6, 0xf6, 0xfa) }
         assertTrue("state must be read before writing ($lastRead < $writeIndex)", lastRead in 0 until writeIndex)
         assertEquals("58 04 a0 0a 09 08 07 06 05 04 03 06 06 06", payloads[writeIndex].toHex())
         assertEquals(listOf(3, 2, 1, 0, -1, -2, -3, 0, 0, 0), r.device.eqBands)
@@ -238,6 +241,43 @@ class HeadphoneSessionTest {
         assertFalse(r.device.isOpen)
         settle(60_000)
         assertEquals("a still-visible surface does not reacquire by itself", 1, r.device.openCount)
+    }
+
+    @Test
+    fun connectionPriorityIsWrittenAfterTheStateReadAndConfirmedByTheNotify() = runTest {
+        val r = rig()
+        r.session.selectTarget(xm6)
+        r.session.execute(DeviceCommand.SetConnectionPriority(ConnectionPriority.STABLE_CONNECTION))
+        settle()
+
+        assertEquals(ConnectionPhase.CONNECTED, r.snapshot.phase)
+        val payloads = r.device.received.filter { it.type != MessageType.ACK }.map { it.payload.toHex() }
+        val write = payloads.indexOf("e8 05 01 01")
+        assertTrue("priority read before writing", payloads.indexOf("e6 05") in 0 until write)
+        assertTrue("capability read before writing", payloads.indexOf("e0 05") in 0 until write)
+        assertTrue("codec read before writing", payloads.indexOf("12 02") in 0 until write)
+        assertEquals(0x01, r.device.connectionPriority)
+        // The simulator's notify (e9 05 01 02) reports the new priority over classic Bluetooth.
+        val s = r.snapshot.state
+        assertEquals(ConnectionPriority.STABLE_CONNECTION, s.connectionPriority)
+        assertEquals(AudioStreamType.CLASSIC, s.audioStream)
+        assertEquals(listOf(ConnectionPriority.SOUND_QUALITY, ConnectionPriority.STABLE_CONNECTION, ConnectionPriority.LOW_LATENCY), s.connectionPriorities)
+        assertEquals(AudioCodec.LDAC, s.audioCodec)
+    }
+
+    @Test
+    fun lowLatencyIsNeverWrittenAndDoesNotStallLaterIntents() = runTest {
+        val r = rig()
+        r.session.selectTarget(xm6)
+        r.session.setSurfaceVisible("main", true)
+        settle()
+        r.session.execute(DeviceCommand.SetConnectionPriority(ConnectionPriority.LOW_LATENCY))
+        r.session.execute(DeviceCommand.SetPauseWhenTakenOff(false))
+        settle()
+        assertTrue(r.device.received.none { it.payload.size >= 2 && it.payload.u(0) == 0xe8 && it.payload.u(1) == 0x05 })
+        assertEquals(ConnectionPriority.SOUND_QUALITY, r.snapshot.state.connectionPriority)
+        assertEquals(false, r.device.pauseWhenTakenOff)
+        assertEquals(0, r.snapshot.pendingCommands)
     }
 
     @Test

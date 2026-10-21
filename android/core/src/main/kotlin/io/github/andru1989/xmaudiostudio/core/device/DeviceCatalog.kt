@@ -2,8 +2,10 @@ package io.github.andru1989.xmaudiostudio.core.device
 
 import io.github.andru1989.xmaudiostudio.core.device.Feature.AMBIENT_LEVEL
 import io.github.andru1989.xmaudiostudio.core.device.Feature.AMBIENT_SOUND
+import io.github.andru1989.xmaudiostudio.core.device.Feature.AUDIO_CODEC
 import io.github.andru1989.xmaudiostudio.core.device.Feature.AUTO_POWER_OFF
 import io.github.andru1989.xmaudiostudio.core.device.Feature.BATTERY
+import io.github.andru1989.xmaudiostudio.core.device.Feature.CONNECTION_PRIORITY
 import io.github.andru1989.xmaudiostudio.core.device.Feature.EQ_CUSTOM_BANDS
 import io.github.andru1989.xmaudiostudio.core.device.Feature.EQ_PRESETS
 import io.github.andru1989.xmaudiostudio.core.device.Feature.FOCUS_ON_VOICE
@@ -104,6 +106,10 @@ object DeviceCatalog {
                 EQ_CUSTOM_BANDS to VERIFIED_HARDWARE,
                 MULTIPOINT_LIST to VERIFIED_HARDWARE,
                 PLAYBACK_SOURCE_SWITCH to PENDING_HARDWARE,
+                // e0/e6/e8 05 layouts captured live on an XM6 fw 3.1.5 (Anneo22/xm6-control).
+                CONNECTION_PRIORITY to VERIFIED_HARDWARE,
+                // `12 02` from mos9527's tables; never captured on an XM6.
+                AUDIO_CODEC to PENDING_HARDWARE,
             ),
             equalizer = xm6Equalizer,
             ambientLevelRange = 1..20,
@@ -114,7 +120,7 @@ object DeviceCatalog {
             features = levels(
                 PENDING_HARDWARE,
                 BATTERY, NOISE_CANCELLING, AMBIENT_SOUND, AMBIENT_LEVEL, FOCUS_ON_VOICE, SPEAK_TO_CHAT, EQ_CUSTOM_BANDS,
-            ) + levels(EXPERIMENTAL, EQ_PRESETS) + planned(WEAR_DETECTION, AUTO_POWER_OFF),
+            ) + levels(EXPERIMENTAL, EQ_PRESETS) + planned(WEAR_DETECTION, AUTO_POWER_OFF, CONNECTION_PRIORITY, AUDIO_CODEC),
             equalizer = fiveBandEq,
             ambientLevelRange = 1..20,
         ),
@@ -124,7 +130,7 @@ object DeviceCatalog {
             features = levels(
                 PENDING_HARDWARE,
                 BATTERY, NOISE_CANCELLING, AMBIENT_SOUND, AMBIENT_LEVEL, FOCUS_ON_VOICE, EQ_PRESETS, EQ_CUSTOM_BANDS,
-            ) + levels(EXPERIMENTAL, SPEAK_TO_CHAT) + planned(WEAR_DETECTION, AUTO_POWER_OFF),
+            ) + levels(EXPERIMENTAL, SPEAK_TO_CHAT) + planned(WEAR_DETECTION, AUTO_POWER_OFF, CONNECTION_PRIORITY, AUDIO_CODEC),
             equalizer = fiveBandEq,
             ambientLevelRange = 1..20,
         ),
@@ -135,7 +141,7 @@ object DeviceCatalog {
             features = levels(
                 PENDING_HARDWARE,
                 BATTERY, NOISE_CANCELLING, AMBIENT_SOUND, AMBIENT_LEVEL, FOCUS_ON_VOICE,
-            ) + levels(EXPERIMENTAL, EQ_PRESETS, EQ_CUSTOM_BANDS) + planned(AUTO_POWER_OFF),
+            ) + levels(EXPERIMENTAL, EQ_PRESETS, EQ_CUSTOM_BANDS) + planned(AUTO_POWER_OFF, CONNECTION_PRIORITY, AUDIO_CODEC),
             equalizer = xm3Equalizer,
             ambientLevelRange = 1..20,
         ),
@@ -145,7 +151,7 @@ object DeviceCatalog {
             features = levels(
                 EXPERIMENTAL,
                 BATTERY, NOISE_CANCELLING, AMBIENT_SOUND, AMBIENT_LEVEL, FOCUS_ON_VOICE, EQ_PRESETS, EQ_CUSTOM_BANDS,
-            ),
+            ) + planned(CONNECTION_PRIORITY, AUDIO_CODEC),
             equalizer = fiveBandEq,
             ambientLevelRange = 1..20,
         ),

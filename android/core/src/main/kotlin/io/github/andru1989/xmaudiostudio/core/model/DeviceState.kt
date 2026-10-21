@@ -111,3 +111,49 @@ data class DeviceInfo(val modelName: String? = null, val firmwareVersion: String
 
 /** EQ capability reply (50 <type> 01): lets the device confirm band and step counts. */
 data class EqualizerCapability(val subtype: Int, val bandCount: Int, val stepCount: Int, val presetCodes: List<Int>)
+
+/**
+ * Bluetooth connection priority (AUDIO family, inquired type 0x05), as the official app labels it.
+ * A preference, not a report of the active codec. Layout verified live on an XM6 (fw 3.1.5) by
+ * Anneo22/xm6-control.
+ */
+enum class ConnectionPriority(val code: Int) {
+    SOUND_QUALITY(0x00), STABLE_CONNECTION(0x01), LOW_LATENCY(0x02);
+
+    /**
+     * Only these two writes were accepted live. The XM6 advertises low latency but ignores a
+     * write of it, so it is shown read-only when reported and never sent.
+     */
+    val isWritable: Boolean get() = this != LOW_LATENCY
+
+    companion object {
+        fun fromCode(code: Int) = entries.firstOrNull { it.code == code }
+    }
+}
+
+/** The `switchingStream` byte of a connection-priority notification (`e9 05 <mode> <stream>`). */
+enum class AudioStreamType(val code: Int) {
+    NONE(0x00), LE_AUDIO(0x01), CLASSIC(0x02);
+
+    companion object {
+        fun fromCode(code: Int) = entries.firstOrNull { it.code == code }
+    }
+}
+
+/**
+ * Codec byte of `13 02 <codec>` (mos9527 reference tables; not captured on an XM6 yet). Bytes
+ * outside this table are kept raw by [io.github.andru1989.xmaudiostudio.core.protocol.MdrEvent.AudioCodecReport]
+ * and shown as "unknown (0x..)", never guessed.
+ */
+enum class AudioCodec(val code: Int, val displayName: String) {
+    SBC(0x01, "SBC"),
+    AAC(0x02, "AAC"),
+    LDAC(0x10, "LDAC"),
+    APTX(0x20, "aptX"),
+    APTX_HD(0x21, "aptX HD"),
+    LC3(0x30, "LC3");
+
+    companion object {
+        fun fromCode(code: Int) = entries.firstOrNull { it.code == code }
+    }
+}

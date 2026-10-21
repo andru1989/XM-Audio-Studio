@@ -7,6 +7,7 @@ import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundMode
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundState
 import io.github.andru1989.xmaudiostudio.core.model.AutomaticPowerOffMode
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
+import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatSensitivity
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatTimeout
@@ -14,6 +15,7 @@ import io.github.andru1989.xmaudiostudio.core.protocol.CanonicalEvents.canonical
 import io.github.andru1989.xmaudiostudio.core.protocol.CanonicalEvents.lowerCamel
 import io.github.andru1989.xmaudiostudio.core.protocol.CanonicalEvents.normalise
 import io.github.andru1989.xmaudiostudio.core.str
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -74,6 +76,12 @@ class EventCommandConformanceTest {
         "pauseWhenTakenOffSet" -> MdrCommands.pauseWhenTakenOffSet(a["enabled"]!!.bool)
         "deviceListGet" -> MdrCommands.deviceListGet()
         "sourceSwitchSet" -> MdrCommands.sourceSwitchSet(a["mac"]!!.str)
+        "connectionPriorityCapabilityGet" -> MdrCommands.connectionPriorityCapabilityGet()
+        "connectionPriorityGet" -> MdrCommands.connectionPriorityGet()
+        "connectionPrioritySet" -> MdrCommands.connectionPrioritySet(
+            ConnectionPriority.entries.first { lowerCamel(it.name) == a["priority"]!!.str },
+        )
+        "audioCodecGet" -> MdrCommands.audioCodecGet()
         else -> error("fixture command not mapped: $name")
     }
 
@@ -83,7 +91,9 @@ class EventCommandConformanceTest {
         for (case in cases.map { it.jsonObject }) {
             val name = case["command"]!!.str
             val payload = build(name, case["args"]!!.jsonObject)
-            assertEquals("$name ${case["args"]}", case["payload"]!!.str, payload?.toHex())
+            // null: the builder must refuse (e.g. low latency, which the XM6 does not accept).
+            val expected = case["payload"]!!.let { if (it is JsonNull) null else it.str }
+            assertEquals("$name ${case["args"]}", expected, payload?.toHex())
         }
     }
 }

@@ -3,6 +3,7 @@ package io.github.andru1989.xmaudiostudio.core.device
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundMode
 import io.github.andru1989.xmaudiostudio.core.model.AutomaticPowerOffMode
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
+import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.ListeningMode
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
 import io.github.andru1989.xmaudiostudio.core.protocol.MessageType
@@ -54,6 +55,14 @@ sealed interface DeviceCommand {
 
     data class SetPauseWhenTakenOff(val enabled: Boolean) : DeviceCommand {
         override val coalesceKey get() = "pause"
+    }
+
+    /**
+     * Bluetooth connection priority. Only [ConnectionPriority.isWritable] values the headphones
+     * offer are encoded; anything else is dropped without sending a byte. May briefly drop the audio.
+     */
+    data class SetConnectionPriority(val priority: ConnectionPriority) : DeviceCommand {
+        override val coalesceKey get() = "priority"
     }
 
     data class SwitchPlayback(val macAddress: String) : DeviceCommand {

@@ -43,7 +43,8 @@ object Xm5Adapter : ProtocolAdapter {
         is DeviceCommand.Raw -> listOf(Outgoing(command.type, command.payload))
         // Not documented for the WH-1000XM5: nothing is sent.
         is DeviceCommand.SetListeningMode, is DeviceCommand.SetBgmRoomSize, is DeviceCommand.SetAutomaticPowerOff,
-        is DeviceCommand.SetPauseWhenTakenOff, is DeviceCommand.SwitchPlayback -> emptyList()
+        is DeviceCommand.SetPauseWhenTakenOff, is DeviceCommand.SwitchPlayback,
+        is DeviceCommand.SetConnectionPriority -> emptyList()
     }
 
     override fun decode(type: MessageType, payload: ByteArray): MdrEvent? = Xm5EventDecoder.decode(payload, type)

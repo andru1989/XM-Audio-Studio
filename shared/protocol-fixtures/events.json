@@ -339,6 +339,237 @@
       "messageType": "command2",
       "payload": "23 00 50 01",
       "expect": null
+    },
+    {
+      "name": "connection priority capability (quality, stable, low latency)",
+      "source": "live XM6 fw 3.1.5 capture (Anneo22/xm6-control 493360f/a6bbd2a/c3fd178)",
+      "messageType": "command1",
+      "payload": "e1 05 03 00 01 02 00",
+      "expect": {
+        "event": "connectionPriorityCapability",
+        "priorities": [
+          "soundQuality",
+          "stableConnection",
+          "lowLatency"
+        ]
+      }
+    },
+    {
+      "name": "connection priority capability, empty list",
+      "source": "edge case: an empty list means no priorities, not invented defaults",
+      "messageType": "command1",
+      "payload": "e1 05 00 00",
+      "expect": {
+        "event": "connectionPriorityCapability",
+        "priorities": []
+      }
+    },
+    {
+      "name": "connection priority capability, wrong count rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "e1 05 04 00 01 02 00",
+      "expect": null
+    },
+    {
+      "name": "connection priority capability, unknown mode rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "e1 05 03 00 01 03 00",
+      "expect": null
+    },
+    {
+      "name": "connection priority capability, duplicate mode rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "e1 05 03 00 01 01 00",
+      "expect": null
+    },
+    {
+      "name": "connection priority capability, exclusive list rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "e1 05 03 00 01 02 01 00",
+      "expect": null
+    },
+    {
+      "name": "connection priority reply, sound quality",
+      "source": "live XM6 fw 3.1.5 capture (Anneo22/xm6-control 493360f/a6bbd2a/c3fd178)",
+      "messageType": "command1",
+      "payload": "e7 05 00",
+      "expect": {
+        "event": "connectionPriority",
+        "priority": "soundQuality"
+      }
+    },
+    {
+      "name": "connection priority reply, low latency (read-only)",
+      "source": "layout: live XM6 fw 3.1.5 capture (Anneo22/xm6-control 493360f/a6bbd2a/c3fd178)",
+      "messageType": "command1",
+      "payload": "e7 05 02",
+      "expect": {
+        "event": "connectionPriority",
+        "priority": "lowLatency"
+      }
+    },
+    {
+      "name": "connection priority reply with trailing byte rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "e7 05 00 00",
+      "expect": null
+    },
+    {
+      "name": "connection priority reply, unknown mode rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "e7 05 03",
+      "expect": null
+    },
+    {
+      "name": "connection priority notify, stable, no stream switch",
+      "source": "live XM6 fw 3.1.5 capture (Anneo22/xm6-control 493360f/a6bbd2a/c3fd178)",
+      "messageType": "command1",
+      "payload": "e9 05 01 00",
+      "expect": {
+        "event": "connectionPriority",
+        "priority": "stableConnection",
+        "switchingStream": "none"
+      }
+    },
+    {
+      "name": "connection priority notify, quality over LE Audio",
+      "source": "layout: live XM6 fw 3.1.5 capture (Anneo22/xm6-control 493360f/a6bbd2a/c3fd178)",
+      "messageType": "command1",
+      "payload": "e9 05 00 01",
+      "expect": {
+        "event": "connectionPriority",
+        "priority": "soundQuality",
+        "switchingStream": "leAudio"
+      }
+    },
+    {
+      "name": "connection priority notify, stable over classic",
+      "source": "layout: live XM6 fw 3.1.5 capture (Anneo22/xm6-control 493360f/a6bbd2a/c3fd178)",
+      "messageType": "command1",
+      "payload": "e9 05 01 02",
+      "expect": {
+        "event": "connectionPriority",
+        "priority": "stableConnection",
+        "switchingStream": "classic"
+      }
+    },
+    {
+      "name": "connection priority notify without stream rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "e9 05 01",
+      "expect": null
+    },
+    {
+      "name": "connection priority notify, unknown stream rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "e9 05 01 03",
+      "expect": null
+    },
+    {
+      "name": "connection priority notify, five bytes rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "e9 05 01 00 00",
+      "expect": null
+    },
+    {
+      "name": "audio codec LDAC",
+      "source": "reference: mos9527/SonyHeadphonesClient tables (not captured on XM6)",
+      "messageType": "command1",
+      "payload": "13 02 10",
+      "expect": {
+        "event": "audioCodec",
+        "codec": "ldac",
+        "code": 16
+      }
+    },
+    {
+      "name": "audio codec AAC (notify)",
+      "source": "reference: mos9527/SonyHeadphonesClient tables (not captured on XM6)",
+      "messageType": "command1",
+      "payload": "15 02 02",
+      "expect": {
+        "event": "audioCodec",
+        "codec": "aac",
+        "code": 2
+      }
+    },
+    {
+      "name": "audio codec SBC",
+      "source": "reference: mos9527/SonyHeadphonesClient tables (not captured on XM6)",
+      "messageType": "command1",
+      "payload": "13 02 01",
+      "expect": {
+        "event": "audioCodec",
+        "codec": "sbc",
+        "code": 1
+      }
+    },
+    {
+      "name": "audio codec aptX",
+      "source": "reference: mos9527/SonyHeadphonesClient tables (not captured on XM6)",
+      "messageType": "command1",
+      "payload": "13 02 20",
+      "expect": {
+        "event": "audioCodec",
+        "codec": "aptx",
+        "code": 32
+      }
+    },
+    {
+      "name": "audio codec aptX HD",
+      "source": "reference: mos9527/SonyHeadphonesClient tables (not captured on XM6)",
+      "messageType": "command1",
+      "payload": "13 02 21",
+      "expect": {
+        "event": "audioCodec",
+        "codec": "aptxHd",
+        "code": 33
+      }
+    },
+    {
+      "name": "audio codec LC3",
+      "source": "reference: mos9527/SonyHeadphonesClient tables (not captured on XM6)",
+      "messageType": "command1",
+      "payload": "13 02 30",
+      "expect": {
+        "event": "audioCodec",
+        "codec": "lc3",
+        "code": 48
+      }
+    },
+    {
+      "name": "audio codec outside the table kept as unknown",
+      "source": "reference: mos9527/SonyHeadphonesClient tables (not captured on XM6)",
+      "messageType": "command1",
+      "payload": "13 02 99",
+      "expect": {
+        "event": "audioCodec",
+        "codec": "unknown",
+        "code": 153
+      }
+    },
+    {
+      "name": "audio codec with wrong length rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "13 02 10 00",
+      "expect": null
+    },
+    {
+      "name": "audio codec, other status type rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "13 01 10",
+      "expect": null
     }
   ]
 }
