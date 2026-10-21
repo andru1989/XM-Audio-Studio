@@ -1,0 +1,479 @@
+{
+  "schema": "xm-audio-studio.models/1",
+  "levels": {
+    "verified-hardware": "byte layout confirmed by a live capture on this model",
+    "pending-hardware": "from references only; needs a hardware test",
+    "verified-simulation": "covered by simulation only",
+    "experimental": "implemented, may not work",
+    "planned": "model has it, no adapter yet",
+    "unsupported": "not available"
+  },
+  "note": "Levels describe protocol evidence for the model, not app test status (see docs/compatibility/FEATURE-STATUS.md). Frequencies marked frequenciesVerified=false are client labels, not device-reported values.",
+  "models": [
+    {
+      "id": "wh-1000xm6",
+      "displayName": "WH-1000XM6",
+      "namePatterns": [
+        "WH-1000XM6"
+      ],
+      "protocol": "mdr-v2",
+      "adapter": "xm6",
+      "features": {
+        "battery": "verified-hardware",
+        "noiseCancelling": "verified-hardware",
+        "ambientSound": "verified-hardware",
+        "ambientLevel": "verified-hardware",
+        "focusOnVoice": "pending-hardware",
+        "listeningMode": "pending-hardware",
+        "speakToChat": "pending-hardware",
+        "wearDetection": "verified-hardware",
+        "autoPowerOff": "verified-hardware",
+        "eqPresets": "verified-hardware",
+        "eqCustomBands": "verified-hardware",
+        "multipointList": "verified-hardware",
+        "playbackSourceSwitch": "pending-hardware"
+      },
+      "equalizer": {
+        "bandCount": 10,
+        "bandFrequenciesHz": [
+          31,
+          63,
+          125,
+          250,
+          500,
+          1000,
+          2000,
+          4000,
+          8000,
+          16000
+        ],
+        "frequenciesVerified": false,
+        "minStep": -6,
+        "maxStep": 6,
+        "wireOffset": 6,
+        "stepDb": 1.0,
+        "clearBass": null,
+        "presets": [
+          {
+            "code": 0,
+            "name": "Off"
+          },
+          {
+            "code": 48,
+            "name": "Heavy"
+          },
+          {
+            "code": 49,
+            "name": "Clear"
+          },
+          {
+            "code": 50,
+            "name": "Hard"
+          },
+          {
+            "code": 51,
+            "name": "Soft"
+          },
+          {
+            "code": 160,
+            "name": "Custom"
+          }
+        ]
+      },
+      "ambientLevel": {
+        "min": 1,
+        "max": 20
+      }
+    },
+    {
+      "id": "wh-1000xm5",
+      "displayName": "WH-1000XM5",
+      "namePatterns": [
+        "WH-1000XM5"
+      ],
+      "protocol": "mdr-v2",
+      "adapter": null,
+      "features": {
+        "battery": "planned",
+        "noiseCancelling": "planned",
+        "ambientSound": "planned",
+        "ambientLevel": "planned",
+        "focusOnVoice": "planned",
+        "speakToChat": "planned",
+        "wearDetection": "planned",
+        "autoPowerOff": "planned",
+        "eqPresets": "planned",
+        "eqCustomBands": "planned"
+      },
+      "equalizer": {
+        "bandCount": 5,
+        "bandFrequenciesHz": [
+          400,
+          1000,
+          2500,
+          6300,
+          16000
+        ],
+        "frequenciesVerified": false,
+        "minStep": -10,
+        "maxStep": 10,
+        "wireOffset": 10,
+        "stepDb": 1.0,
+        "clearBass": {
+          "minStep": -10,
+          "maxStep": 10
+        },
+        "presets": [
+          {
+            "code": 0,
+            "name": "Off"
+          },
+          {
+            "code": 16,
+            "name": "Bright"
+          },
+          {
+            "code": 17,
+            "name": "Excited"
+          },
+          {
+            "code": 18,
+            "name": "Mellow"
+          },
+          {
+            "code": 19,
+            "name": "Relaxed"
+          },
+          {
+            "code": 20,
+            "name": "Vocal"
+          },
+          {
+            "code": 21,
+            "name": "Treble Boost"
+          },
+          {
+            "code": 22,
+            "name": "Bass Boost"
+          },
+          {
+            "code": 23,
+            "name": "Speech"
+          },
+          {
+            "code": 160,
+            "name": "Manual"
+          },
+          {
+            "code": 161,
+            "name": "Custom 1"
+          },
+          {
+            "code": 162,
+            "name": "Custom 2"
+          }
+        ]
+      },
+      "ambientLevel": {
+        "min": 1,
+        "max": 20
+      }
+    },
+    {
+      "id": "wh-1000xm4",
+      "displayName": "WH-1000XM4",
+      "namePatterns": [
+        "WH-1000XM4"
+      ],
+      "protocol": "mdr-v1",
+      "adapter": null,
+      "features": {
+        "battery": "planned",
+        "noiseCancelling": "planned",
+        "ambientSound": "planned",
+        "ambientLevel": "planned",
+        "focusOnVoice": "planned",
+        "speakToChat": "planned",
+        "wearDetection": "planned",
+        "autoPowerOff": "planned",
+        "eqPresets": "planned",
+        "eqCustomBands": "planned"
+      },
+      "equalizer": {
+        "bandCount": 5,
+        "bandFrequenciesHz": [
+          400,
+          1000,
+          2500,
+          6300,
+          16000
+        ],
+        "frequenciesVerified": false,
+        "minStep": -10,
+        "maxStep": 10,
+        "wireOffset": 10,
+        "stepDb": 1.0,
+        "clearBass": {
+          "minStep": -10,
+          "maxStep": 10
+        },
+        "presets": [
+          {
+            "code": 0,
+            "name": "Off"
+          },
+          {
+            "code": 16,
+            "name": "Bright"
+          },
+          {
+            "code": 17,
+            "name": "Excited"
+          },
+          {
+            "code": 18,
+            "name": "Mellow"
+          },
+          {
+            "code": 19,
+            "name": "Relaxed"
+          },
+          {
+            "code": 20,
+            "name": "Vocal"
+          },
+          {
+            "code": 21,
+            "name": "Treble Boost"
+          },
+          {
+            "code": 22,
+            "name": "Bass Boost"
+          },
+          {
+            "code": 23,
+            "name": "Speech"
+          },
+          {
+            "code": 160,
+            "name": "Manual"
+          },
+          {
+            "code": 161,
+            "name": "Custom 1"
+          },
+          {
+            "code": 162,
+            "name": "Custom 2"
+          }
+        ]
+      },
+      "ambientLevel": {
+        "min": 1,
+        "max": 20
+      }
+    },
+    {
+      "id": "wh-1000xm3",
+      "displayName": "WH-1000XM3",
+      "namePatterns": [
+        "WH-1000XM3"
+      ],
+      "protocol": "mdr-v1",
+      "adapter": null,
+      "features": {
+        "battery": "planned",
+        "noiseCancelling": "planned",
+        "ambientSound": "planned",
+        "ambientLevel": "planned",
+        "focusOnVoice": "planned",
+        "autoPowerOff": "planned",
+        "eqPresets": "planned",
+        "eqCustomBands": "planned"
+      },
+      "equalizer": {
+        "bandCount": 5,
+        "bandFrequenciesHz": [
+          400,
+          1000,
+          2500,
+          6300,
+          16000
+        ],
+        "frequenciesVerified": false,
+        "minStep": -10,
+        "maxStep": 10,
+        "wireOffset": 10,
+        "stepDb": 1.0,
+        "clearBass": {
+          "minStep": -10,
+          "maxStep": 10
+        },
+        "presets": [
+          {
+            "code": 0,
+            "name": "Off"
+          },
+          {
+            "code": 16,
+            "name": "Bright"
+          },
+          {
+            "code": 17,
+            "name": "Excited"
+          },
+          {
+            "code": 18,
+            "name": "Mellow"
+          },
+          {
+            "code": 19,
+            "name": "Relaxed"
+          },
+          {
+            "code": 20,
+            "name": "Vocal"
+          },
+          {
+            "code": 21,
+            "name": "Treble Boost"
+          },
+          {
+            "code": 22,
+            "name": "Bass Boost"
+          },
+          {
+            "code": 23,
+            "name": "Speech"
+          },
+          {
+            "code": 160,
+            "name": "Manual"
+          },
+          {
+            "code": 161,
+            "name": "Custom 1"
+          },
+          {
+            "code": 162,
+            "name": "Custom 2"
+          }
+        ]
+      },
+      "ambientLevel": {
+        "min": 1,
+        "max": 20
+      }
+    },
+    {
+      "id": "wh-1000xm2",
+      "displayName": "WH-1000XM2",
+      "namePatterns": [
+        "WH-1000XM2"
+      ],
+      "protocol": "mdr-v1",
+      "adapter": null,
+      "features": {
+        "battery": "planned",
+        "noiseCancelling": "planned",
+        "ambientSound": "planned",
+        "ambientLevel": "planned",
+        "focusOnVoice": "planned",
+        "eqPresets": "planned",
+        "eqCustomBands": "planned"
+      },
+      "equalizer": {
+        "bandCount": 5,
+        "bandFrequenciesHz": [
+          400,
+          1000,
+          2500,
+          6300,
+          16000
+        ],
+        "frequenciesVerified": false,
+        "minStep": -10,
+        "maxStep": 10,
+        "wireOffset": 10,
+        "stepDb": 1.0,
+        "clearBass": {
+          "minStep": -10,
+          "maxStep": 10
+        },
+        "presets": [
+          {
+            "code": 0,
+            "name": "Off"
+          },
+          {
+            "code": 16,
+            "name": "Bright"
+          },
+          {
+            "code": 17,
+            "name": "Excited"
+          },
+          {
+            "code": 18,
+            "name": "Mellow"
+          },
+          {
+            "code": 19,
+            "name": "Relaxed"
+          },
+          {
+            "code": 20,
+            "name": "Vocal"
+          },
+          {
+            "code": 21,
+            "name": "Treble Boost"
+          },
+          {
+            "code": 22,
+            "name": "Bass Boost"
+          },
+          {
+            "code": 23,
+            "name": "Speech"
+          },
+          {
+            "code": 160,
+            "name": "Manual"
+          },
+          {
+            "code": 161,
+            "name": "Custom 1"
+          },
+          {
+            "code": 162,
+            "name": "Custom 2"
+          }
+        ]
+      },
+      "ambientLevel": {
+        "min": 1,
+        "max": 20
+      }
+    },
+    {
+      "id": "mdr-1000x",
+      "displayName": "MDR-1000X",
+      "namePatterns": [
+        "MDR-1000X"
+      ],
+      "protocol": "unknown",
+      "adapter": null,
+      "features": {
+        "battery": "planned",
+        "noiseCancelling": "planned",
+        "ambientSound": "planned"
+      },
+      "equalizer": null,
+      "ambientLevel": {
+        "min": 1,
+        "max": 20
+      }
+    }
+  ]
+}
