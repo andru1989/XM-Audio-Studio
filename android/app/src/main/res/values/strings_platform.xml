@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Quick Settings tile and home-screen widget (Etapa 6). Keep values-en/strings_platform.xml in step. -->
+<resources>
+    <string name="tile_label">Control de ruido</string>
+    <string name="widget_label">Control de ruido XM</string>
+    <string name="widget_description">Modelo, batería y modo de ruido de tus audífonos, con botones de Cancelación, Ambiente y Desactivado.</string>
+
+    <string name="noise_mode_nc">Cancelación de ruido</string>
+    <string name="noise_mode_ambient">Ambiente</string>
+    <string name="noise_mode_off">Desactivado</string>
+    <string name="noise_mode_unknown">Modo sin leer</string>
+
+    <string name="widget_button_nc">Cancelación</string>
+    <string name="widget_button_ambient">Ambiente</string>
+    <string name="widget_button_off">Desactivado</string>
+    <string name="widget_button_nc_description">Activar Cancelación de ruido</string>
+    <string name="widget_button_ambient_description">Activar Ambiente</string>
+    <string name="widget_button_off_description">Desactivar el control de ruido</string>
+
+    <string name="platform_model_demo">%1$s (demo)</string>
+    <string name="platform_model_line">%1$s · %2$s</string>
+    <string name="platform_battery">%1$d %%</string>
+    <string name="platform_battery_charging">%1$d %% · cargando</string>
+
+    <string name="platform_status_live">En vivo</string>
+    <string name="platform_status_connecting">Conectando…</string>
+    <string name="platform_status_last_known">Último estado conocido · %1$s</string>
+    <string name="platform_status_unknown">Toca un modo para conectar</string>
+    <string name="platform_status_failed">No se pudo conectar</string>
+    <string name="platform_status_yielded">En uso por otro dispositivo</string>
+    <string name="platform_no_device">Elige tus audífonos en la app</string>
+    <string name="platform_unsupported">Modelo aún no compatible</string>
+    <string name="platform_permission">Concede el permiso de Bluetooth en la app</string>
+
+    <!-- Widget picker preview only (Android 12+ renders the layout with these texts). -->
+    <string name="widget_preview_battery">72 %</string>
+    <string name="widget_preview_status">WH-1000XM6 · En vivo</string>
+
+    <!-- Tile subtitles must stay short. -->
+    <string name="tile_sub_last_known">Último estado</string>
+    <string name="tile_sub_tap">Toca para conectar</string>
+    <string name="tile_sub_failed">Sin conexión</string>
+    <string name="tile_sub_yielded">En otro dispositivo</string>
+    <string name="tile_sub_no_device">Sin audífonos</string>
+    <string name="tile_sub_unsupported">No compatible</string>
+    <string name="tile_sub_permission">Falta permiso</string>
+</resources>

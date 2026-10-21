@@ -29,6 +29,40 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Long-press on the Quick Settings tile opens the app. -->
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE_PREFERENCES" />
+            </intent-filter>
         </activity>
+
+        <!-- Etapa 6: platform surfaces. They share the app's process-wide session; no foreground
+             service (docs/android/BACKGROUND.md). -->
+        <service
+            android:name=".platform.NoiseControlTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_noise_cancelling"
+            android:label="@string/tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name=".platform.NoiseWidgetProvider"
+            android:exported="true"
+            android:label="@string/widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/noise_widget_info" />
+        </receiver>
+
+        <!-- Widget buttons only (explicit PendingIntents); never reachable from other apps. -->
+        <receiver
+            android:name=".platform.NoiseControlReceiver"
+            android:exported="false" />
     </application>
 </manifest>

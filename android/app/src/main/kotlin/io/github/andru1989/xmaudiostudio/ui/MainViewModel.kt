@@ -3,6 +3,7 @@ package io.github.andru1989.xmaudiostudio.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.andru1989.xmaudiostudio.AppContainer
 import io.github.andru1989.xmaudiostudio.XmAudioStudioApp
 import io.github.andru1989.xmaudiostudio.bluetooth.PairedDevice
 import io.github.andru1989.xmaudiostudio.bluetooth.PairedDevices
@@ -91,16 +92,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _ui.update { it.copy(devices = PairedDevices.list(getApplication())) }
     }
 
-    private fun restoreTarget() {
-        if (settings.demoMode) {
-            session.selectTarget(DeviceTarget(DEMO_ADDRESS, "WH-1000XM6 (demo)", HeadphoneModel.WH_1000XM6))
-            return
-        }
-        val address = settings.selectedAddress ?: return
-        val name = settings.selectedName ?: address
-        val model = settings.modelOverride?.let(HeadphoneModel::fromId) ?: HeadphoneModel.fromBluetoothName(name) ?: return
-        session.selectTarget(DeviceTarget(address, name, model))
-    }
+    /** Same rule as the tile and the widget, which may have created the process (AppContainer). */
+    private fun restoreTarget() = container.restoreSavedTarget()
 
     /** [modelOverride] is set when the user confirms the model of a renamed device. */
     fun selectDevice(device: PairedDevice, modelOverride: HeadphoneModel? = null) {
@@ -363,7 +356,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // endregion
 
     companion object {
-        const val DEMO_ADDRESS = "00:00:00:00:DE:40"
+        const val DEMO_ADDRESS = AppContainer.DEMO_ADDRESS
         private const val SURFACE_ID = "main-activity"
         private const val MAX_HISTORY = 30
     }
