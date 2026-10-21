@@ -70,6 +70,40 @@ public final class ProfileLibrary {
                                  notes: notes, createdAt: stamp, updatedAt: stamp))
     }
 
+    /// "Guardar configuración completa": saves what the headphones report now as one profile, the EQ
+    /// (custom curve, Sony preset, or the bands of a Sound Connect user setting) plus the `HeadphoneScene`
+    /// of every other setting the model supports and the headphones reported. Mirrors Kotlin `saveScene`.
+    @discardableResult
+    public func saveScene(name: String, modelId: String, state: ReportedHeadphoneState) throws -> EqProfile {
+        guard let model = HeadphoneModel(rawValue: modelId) else { throw ProfileFormatError(message: "unknown model '\(modelId)'") }
+        let capabilities = DeviceCatalog.capabilities(model)
+        guard let (eq, notes) = Self.captureEq(state, spec: capabilities.equalizer) else {
+            throw ProfileFormatError(message: "The headphones have not reported their equalizer yet")
+        }
+        let stamp = now()
+        return try add(EqProfile(id: newId(), name: name.trimmingCharacters(in: .whitespaces), category: .user, model: modelId,
+                                 deviceEq: eq, scene: HeadphoneScenes.capture(state, capabilities: capabilities),
+                                 notes: notes, createdAt: stamp, updatedAt: stamp))
+    }
+
+    public static let soundConnectNote = "Importado de un ajuste de usuario de Sound Connect (preset 0x%02x)."
+
+    /// The EQ the headphones report, as a profile setting, with a note for a Sound Connect user setting.
+    static func captureEq(_ state: ReportedHeadphoneState, spec: EqualizerSpec?) -> (DeviceEqSetting, String?)? {
+        guard let eq = state.equalizer, let spec else { return nil }
+        let clearBass = spec.clearBassRange == nil ? nil : eq.clearBass
+        if eq.presetCode == EqualizerPreset.custom.rawValue {
+            guard eq.bands.count == spec.bandCount else { return nil }
+            return (DeviceEqSetting(steps: eq.bands, clearBass: clearBass), nil)
+        }
+        if spec.presets.contains(where: { $0.code == eq.presetCode }) {
+            return (DeviceEqSetting(presetCode: Int(eq.presetCode)), nil)
+        }
+        // A Sound Connect user setting: keep its curve as a custom profile.
+        guard eq.bands.count == spec.bandCount else { return nil }
+        return (DeviceEqSetting(steps: eq.bands, clearBass: clearBass), String(format: soundConnectNote, eq.presetCode))
+    }
+
     @discardableResult
     public func duplicate(_ id: String, name: String) throws -> EqProfile {
         guard var copy = find(id) else { throw ProfileFormatError(message: "No profile \(id)") }
