@@ -157,3 +157,6 @@
 "Settings…" = "Ajustes…";
 "Imported from a Sound Connect user setting (preset 0x%02x)." = "Importado de un ajuste de usuario de Sound Connect (preset 0x%02x).";
 "Product photos © Sony Corporation, taken from sony.com for personal use; they are not covered by the project licence." = "Fotos de producto © Sony Corporation, tomadas de sony.com para uso personal; no forman parte de la licencia del proyecto.";
+"Widgets" = "Widgets";
+"To add a widget, Control-click the desktop, choose Edit Widgets and search for XM Audio Studio. Widget buttons connect to the headphones when needed." = "Para añadir un widget, haz clic con el botón secundario en el escritorio, elige «Editar widgets» y busca XM Audio Studio. Los botones del widget se conectan a los audífonos cuando hace falta.";
+"This build doesn't include the desktop widgets. Build the app with Scripts/build_xcode.sh to get them." = "Esta compilación no incluye los widgets de escritorio. Compila la app con Scripts/build_xcode.sh para tenerlos.";

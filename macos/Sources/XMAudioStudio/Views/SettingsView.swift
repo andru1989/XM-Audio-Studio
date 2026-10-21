@@ -18,6 +18,17 @@ struct SettingsView: View {
                     Text(error).font(.caption).foregroundStyle(StudioColor.warning)
                 }
             }
+            Section("Widgets") {
+                if WidgetBridge.widgetsAvailable {
+                    Text("To add a widget, Control-click the desktop, choose Edit Widgets and search for XM Audio Studio. Widget buttons connect to the headphones when needed.")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("This build doesn't include the desktop widgets. Build the app with Scripts/build_xcode.sh to get them.")
+                        .font(.caption).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
             Section("Headphones") {
                 Toggle("Release the headphones when I'm not using the app", isOn: $settings.releaseWhenIdle)
                 Text("Releases the control connection after all windows and panels have been closed for a short time.")

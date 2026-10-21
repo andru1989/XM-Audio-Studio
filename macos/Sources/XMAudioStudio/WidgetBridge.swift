@@ -60,6 +60,9 @@ final class WidgetBridge: ObservableObject {
     private var reloadTask: Task<Void, Never>?
     private var pumpTask: Task<Void, Never>?
     private var lastReload = Date.distantPast
+    /// Keeps App Nap away while a widget tap is being handled (see `holdActivity`).
+    private var activity: NSObjectProtocol?
+    private var activityEndTask: Task<Void, Never>?
 
     init(
         controller: HeadphonesController,
@@ -75,8 +78,10 @@ final class WidgetBridge: ObservableObject {
         self.timing = timing
         self.profileName = profileName
         self.reloadWidgets = reloadWidgets
-        // Start from what the previous run left (last known values, never "live").
+        // Start from what the previous run left (last known values, never "live"), unless
+        // it came from the other mode: simulated values must not pass for real ones.
         var initial = store?.readSnapshot() ?? WidgetSnapshot()
+        if initial.isDemo != isDemo { initial = WidgetSnapshot() }
         initial.link = .offline
         initial.pendingActions = []
         initial.isDemo = isDemo
@@ -127,6 +132,7 @@ final class WidgetBridge: ObservableObject {
 
     func submit(_ commands: [WidgetCommand]) {
         guard !commands.isEmpty else { return }
+        holdActivity()
         for command in commands {
             Self.log.info("Widget command \(String(describing: command.action), privacy: .public)")
             // Only the latest tap per kind matters (NC then Ambient = Ambient).
@@ -248,6 +254,34 @@ final class WidgetBridge: ObservableObject {
         pumpTask?.cancel()
         pumpTask = nil
         schedulePublish()
+        releaseActivitySoon()
+    }
+
+    /// A widget tap usually reaches an app with no visible window, which macOS puts in App
+    /// Nap: timers are coalesced by seconds, so connect/ACK timeouts, the EQ debounce and
+    /// the snapshot debounce all stall (observed with the demo transport, whose replies are
+    /// timer-driven). The tap is user-initiated work, so say so until it's done.
+    private func holdActivity() {
+        activityEndTask?.cancel()
+        activityEndTask = nil
+        guard activity == nil else { return }
+        activity = ProcessInfo.processInfo.beginActivity(options: .userInitiated, reason: "Applying a widget command")
+    }
+
+    /// Keeps the activity a little longer so the headphones' reply to the write and the
+    /// final snapshot/reload go out on time too.
+    private func releaseActivitySoon() {
+        guard activity != nil, activityEndTask == nil else { return }
+        let delay = UInt64((timing.minReloadInterval + 2) * 1_000_000_000)
+        activityEndTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: delay)
+            guard let self, !Task.isCancelled else { return }
+            self.activityEndTask = nil
+            guard self.pending.isEmpty else { return }
+            self.publishNow()
+            if let activity = self.activity { ProcessInfo.processInfo.endActivity(activity) }
+            self.activity = nil
+        }
     }
 
     /// Re-checks pending commands on a timer as well, so grace periods and the deadline

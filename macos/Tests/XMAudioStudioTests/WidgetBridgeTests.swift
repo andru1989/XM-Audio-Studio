@@ -41,7 +41,7 @@ final class WidgetBridgeTests: XCTestCase {
         return controller
     }
 
-    private func waitUntil(_ what: String, timeout: TimeInterval = 5, _ condition: () -> Bool) async throws {
+    private func waitUntil(_ what: String, timeout: TimeInterval = 10, _ condition: () -> Bool) async throws {
         let end = Date().addingTimeInterval(timeout)
         while !condition() {
             if Date() > end { XCTFail("Timed out waiting for \(what)"); return }
@@ -117,6 +117,40 @@ final class WidgetBridgeTests: XCTestCase {
         XCTAssertEqual(snapshot.batteryLevel, 72)
         XCTAssertEqual(snapshot.noiseMode, .noiseCancelling)
         XCTAssertNotNil(snapshot.observedAt)
+    }
+
+    func testCommandAfterIdleReleaseReconnects() async throws {
+        let controller = releasedDemoController()
+        let bridge = makeBridge(controller)
+        bridge.submit([WidgetCommand(action: .setNoiseMode(.ambientSound))])
+        try await waitUntil("first command applied") { controller.ambientSound?.mode == .ambientSound }
+        try await Task.sleep(nanoseconds: 300_000_000) // let the write's ACK arrive
+
+        controller.disconnect() // what the idle timer does after 20 s
+        try await waitUntil("released snapshot") { self.store.readSnapshot()?.link == .released }
+
+        bridge.submit([WidgetCommand(action: .setNoiseMode(.off))])
+        try await waitUntil("second command applied after reconnecting") { controller.ambientSound?.mode == .off }
+        XCTAssertEqual(bridge.lastOutcome?.result, .sent)
+    }
+
+    func testCommandLeftWhileTheAppWasClosedRunsAtStart() async throws {
+        // The widget launched the app; the command was written before the bridge existed.
+        try store.post(WidgetCommand(action: .applyEqPreset(.soft)))
+        let controller = releasedDemoController()
+        let bridge = makeBridge(controller)
+        try await waitUntil("applied at startup") { controller.equalizer?.presetCode == EqualizerPreset.soft.rawValue }
+        XCTAssertEqual(bridge.lastOutcome?.result, .sent, "\(String(describing: bridge.lastOutcome)) \(controller.connectionState)")
+        XCTAssertTrue(store.queuedCommands(maxAge: 60).isEmpty)
+    }
+
+    func testLastKnownValuesDoNotCrossDemoAndRealMode() throws {
+        try store.writeSnapshot(WidgetSnapshot(link: .released, batteryLevel: 72, noiseMode: .ambientSound, isDemo: true))
+        let real = WidgetBridge(controller: HeadphonesController.demo(), store: store, isDemo: false)
+        XCTAssertNil(real.makeSnapshot().batteryLevel, "demo values must not show up as the real headphones'")
+        let demo = WidgetBridge(controller: HeadphonesController.demo(), store: store, isDemo: true)
+        XCTAssertEqual(demo.makeSnapshot().batteryLevel, 72)
+        XCTAssertEqual(demo.makeSnapshot().link, .offline, "never starts as live")
     }
 
     func testNoPairedHeadsetFailsInsteadOfWaiting() async throws {

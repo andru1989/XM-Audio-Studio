@@ -71,9 +71,13 @@ struct HeadphonesProvider: TimelineProvider {
 
     static func entries(now: Date) -> [HeadphonesEntry] {
         let store = WidgetStore.appGroup(requireEntitlement: false)
-        let snapshot = store?.readSnapshot()
+        var snapshot = store?.readSnapshot()
         let queued = store?.queuedCommands(maxAge: commandMaxAge, now: now) ?? []
         let running = !NSRunningApplication.runningApplications(withBundleIdentifier: AppGroup.appBundleIdentifier).isEmpty
+        // A crashed or killed app never wrote "appClosed": don't keep calling its values live.
+        if !running, snapshot != nil, snapshot?.link != .offline {
+            snapshot?.link = .appClosed
+        }
 
         // Change points: when each queued tap stops counting as pending, when a failure
         // message stops showing.
