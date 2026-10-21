@@ -1,0 +1,11 @@
+# Build artifacts
+.build/
+*.xcodeproj
+DerivedData/
+
+# macOS
+.DS_Store
+
+# Generated at build time from headphones.png (or from vector artwork when no photo
+# is present), so it does not need to be checked in.
+Sources/XM6Control/Resources/AppIcon.icns
