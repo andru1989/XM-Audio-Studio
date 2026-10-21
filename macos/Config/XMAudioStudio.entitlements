@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The app is not sandboxed (IOBluetooth RFCOMM). It claims the App Group only to
+	     share the widget snapshot and command mailbox with the sandboxed extension.
+	     macOS-style ID: the team prefix authorises it without a provisioning profile.
+	     Keep in sync with AppGroup.identifier (Sources/WidgetBridgeKit/AppGroup.swift). -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>P5M226DH69.group.io.github.andru1989.xmaudiostudio</string>
+	</array>
+</dict>
+</plist>
