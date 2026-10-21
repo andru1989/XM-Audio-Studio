@@ -78,7 +78,6 @@ struct Card<Content: View>: View {
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .cardSurface(cornerRadius: Radius.card)
-        .hoverLift()
     }
 }
 
