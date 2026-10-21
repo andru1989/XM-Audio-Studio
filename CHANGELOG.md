@@ -15,6 +15,9 @@
   (`Scripts/build_xcode.sh`) e IPC por App Group que encola los toques hasta leer el estado real.
 - Perfiles v2 (Escenas): «Guardar configuración completa» guarda EQ + control de ruido, modo de escucha,
   sala BGM, Hablar para chatear, pausa y apagado automático; aplicar pide confirmación. Los archivos v1 se siguen importando.
+- Prioridad de conexión Bluetooth (calidad de sonido / conexión estable) y códec actual, con tipo de
+  conexión (clásico / LE Audio), en macOS y Android (WH-1000XM6). Baja latencia solo se muestra.
+- Android: segmentos de igual altura; botones del ecualizador en filas en lugar de scroll horizontal.
 - CI (GitHub Actions), `.dmg`, APK de versión firmado con clave local, guía de instalación, problemas conocidos.
 - Prueba automática de escrituras con restauración: `tools/hardware/xm6_write_test.py`.
 

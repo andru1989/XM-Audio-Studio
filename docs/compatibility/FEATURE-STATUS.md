@@ -35,7 +35,9 @@ Actualizado: 2026-10-21. Niveles (encargo §15):
 | Hablar para chatear + configuración | PEND | SIM | SIM |
 | Pausa al quitarse | HW‑up | **HW** lectura · PEND escritura | SIM |
 | Apagado automático (10/11) | HW‑up | **HW** lectura · PEND escritura | SIM |
-| Lista multipunto | HW‑up | **HW** | SIM |
+| Lista multipunto | HW‑up | **HW** |
+| Prioridad de conexión (calidad de sonido / conexión estable; baja latencia solo lectura) | HW‑up (Anneo22, fw 3.1.5) | SIM | SIM |
+| Códec actual y tipo de conexión (clásico / LE Audio) | REF | SIM | SIM | SIM |
 | Cambiar fuente de reproducción | PEND | SIM | SIM |
 | EQ presets Sony (00, 30–33) | HW‑up | SIM | SIM |
 | EQ 10 bandas −6…+6 | HW‑up | SIM | SIM |
