@@ -1,5 +1,19 @@
 # Registro de cambios
 
+## 0.2.0 — 2026-10-21 (en curso)
+- macOS lee el estado real antes de escribir (intenciones codificadas tras la lectura, fusionadas por tipo)
+  y nunca escribe al conectar (eliminado el forzado de "cancelación de ruido nivel 15" de upstream).
+- Detección de ventanas visibles con notificaciones documentadas de AppKit (oclusión, Spaces, minimizar).
+- Nivel de ambiente con estado "en curso"/"confirmado" como la app oficial (ambas plataformas).
+- Android: mosaico de Ajustes rápidos y widget de control de ruido sobre la sesión compartida
+  (lectura antes de escribir, liberación a 20 s, último estado conocido persistido).
+- Adaptadores XM5 (v2) y MDR v1 (XM4/XM3/XM2) en Android con fixtures y salvaguarda contra `0x22`;
+  Clear Bass en el modelo de EQ; códecs equivalentes en Swift.
+- macOS: EQ avanzado (beta, apagado por defecto) — EQ paramétrico local vía process tap de Core Audio,
+  margen automático, limitador, A/B y aviso de doble corrección (captura en vivo sin probar).
+- CI (GitHub Actions), `.dmg`, APK de versión firmado con clave local, guía de instalación, problemas conocidos.
+- Prueba automática de escrituras con restauración: `tools/hardware/xm6_write_test.py`.
+
 ## 0.1.0 — 2026-10-21 (primera entrega, sin validación en hardware)
 
 ### Monorepo y base
