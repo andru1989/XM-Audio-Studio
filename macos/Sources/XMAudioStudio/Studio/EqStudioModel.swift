@@ -45,6 +45,9 @@ final class EqStudioModel: ObservableObject {
     private let library: ProfileLibrary
     private var history: [DeviceEqValue] = []
     private var editOrigin: DeviceEqValue?
+    /// The last band curve this app wrote. A curve the headphones report that equals it is
+    /// our own edit, not something to "bring into the library".
+    private var appWrittenBands: [Int]?
     private var editCommitTask: Task<Void, Never>?
     private static let maxHistory = 30
     private static let lastAppliedKey = "lastAppliedProfileId"
@@ -116,6 +119,9 @@ final class EqStudioModel: ObservableObject {
     /// The headphones hold a custom curve (read from them, or set in Sound Connect) that is
     /// not in the library yet: offer to bring it into the app.
     var deviceCurveNotInLibrary: Bool {
+        // Only curves that came from the headphones (read on connect, or changed from the
+        // phone): never while dragging, never for the curve this app just wrote.
+        guard editOrigin == nil, reportedBands != appWrittenBands else { return false }
         guard controller.connectionState == .connected, activeProfile == nil, reportedBands != nil else { return false }
         if case .bands = current { return true }
         return isUserPresetFromOfficialApp
@@ -141,6 +147,7 @@ final class EqStudioModel: ObservableObject {
         case .preset(let code):
             if let preset = EqualizerPreset(rawValue: code) { controller.setEqualizerPreset(preset) }
         case .bands(let bands):
+            appWrittenBands = bands
             controller.setEqualizerBands(bands)
         }
     }
@@ -151,6 +158,7 @@ final class EqStudioModel: ObservableObject {
         guard let value = DeviceEqValue(profile.deviceEq) else { return }
         remember(current)
         lastAppliedId = profile.id
+        if let steps = profile.deviceEq.steps { appWrittenBands = steps }
         guard let scene = profile.scene else { return send(value) }
         let capabilities = DeviceCatalog.capabilities(model)
         controller.apply(HeadphoneScenes.intents(scene, current: controller.reportedState, capabilities: capabilities,
@@ -163,6 +171,7 @@ final class EqStudioModel: ObservableObject {
         var updated = bands
         updated[index] = step
         lastAppliedId = nil
+        appWrittenBands = updated
         controller.setEqualizerBands(updated)
         editCommitTask?.cancel()
         editCommitTask = Task { [weak self] in
@@ -176,6 +185,7 @@ final class EqStudioModel: ObservableObject {
     func resetFlat() {
         remember(current)
         lastAppliedId = "builtin.flat"
+        appWrittenBands = Array(repeating: 0, count: spec.bandCount)
         controller.setEqualizerBands(Array(repeating: 0, count: spec.bandCount))
     }
 

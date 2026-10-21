@@ -123,7 +123,7 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
 
         val importable = eq != null && eq.bands.size == spec.bandCount &&
             (eq.presetCode == EqualizerPreset.CUSTOM.code || vm.isUserPresetFromOfficialApp(snap))
-        val showImportBanner = snap.stateIsLive && importable && state.activeProfile == null
+        val showImportBanner = snap.stateIsLive && importable && state.activeProfile == null && vm.isCurveFromHeadphones(eq!!.bands)
         if (showImportBanner) {
             val suggested = stringResource(R.string.device_curve_name)
             SectionCard {

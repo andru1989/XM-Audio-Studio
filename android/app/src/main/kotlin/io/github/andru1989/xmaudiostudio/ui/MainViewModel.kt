@@ -70,6 +70,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val history = ArrayDeque<DeviceEqSetting>()
     private var compareWith: DeviceEqSetting? = null
     private var dragOrigin: DeviceEqSetting? = null
+    /** The last band curve this app wrote; a reported curve equal to it is our own edit. */
+    private var appWrittenBands: List<Int>? = null
     private var snapshotJob: Job? = null
     private var surfaceVisible = false
 
@@ -212,6 +214,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun send(setting: DeviceEqSetting) {
         setting.presetCode?.let { session.execute(DeviceCommand.SetEqualizerPreset(it)) }
+        setting.steps?.let { appWrittenBands = it }
         setting.steps?.let { session.execute(DeviceCommand.SetEqualizerBands(it, clearBass = setting.clearBass ?: neutralClearBass())) }
     }
 
@@ -219,6 +222,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun applyProfile(profile: EqProfile) {
         remember(currentSetting())
         settings.lastAppliedProfileId = profile.id
+        profile.deviceEq.steps?.let { appWrittenBands = it }
         val scene = profile.scene
         val caps = _ui.value.snapshot.capabilities
         if (scene == null || caps == null) {
@@ -249,6 +253,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             ?: List(_ui.value.snapshot.capabilities?.equalizer?.bandCount ?: return) { 0 }
         val updated = bands.toMutableList().also { it[index] = step }
         settings.lastAppliedProfileId = null
+        appWrittenBands = updated
         // Clear Bass (5-band models) is left as the headphones report it.
         session.execute(DeviceCommand.SetEqualizerBands(updated))
     }
@@ -263,6 +268,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         session.execute(DeviceCommand.SetEqualizerBands(bands, clearBass = step))
     }
 
+    /**
+     * Whether [bands] (as reported) should be offered for import: only curves that came from
+     * the headphones, never while a drag is in progress or for the curve this app just wrote.
+     */
+    fun isCurveFromHeadphones(bands: List<Int>): Boolean = dragOrigin == null && bands != appWrittenBands
+
     fun finishBandEdit() {
         remember(dragOrigin)
         dragOrigin = null
@@ -272,6 +283,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val count = _ui.value.snapshot.capabilities?.equalizer?.bandCount ?: return
         remember(currentSetting())
         settings.lastAppliedProfileId = "builtin.flat"
+        appWrittenBands = List(count) { 0 }
         session.execute(DeviceCommand.SetEqualizerBands(List(count) { 0 }, clearBass = neutralClearBass()))
     }
 
