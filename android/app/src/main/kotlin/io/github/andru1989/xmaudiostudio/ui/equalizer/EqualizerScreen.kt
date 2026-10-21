@@ -137,7 +137,19 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
             Text(stringResource(R.string.eq_prediction_note), color = c.muted, style = MaterialTheme.typography.labelSmall)
             if (!spec.frequenciesVerified) Text(stringResource(R.string.eq_unverified_freqs), color = c.muted, style = MaterialTheme.typography.labelSmall)
 
+            val clearBassRange = spec.clearBassRange
             Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.SpaceBetween) {
+                // 5-band models (XM3-XM5): Clear Bass is its own control, sent with the bands.
+                if (clearBassRange != null) {
+                    VerticalFader(
+                        value = (eq?.clearBass ?: 0).coerceIn(clearBassRange),
+                        range = clearBassRange,
+                        label = stringResource(R.string.clear_bass),
+                        enabled = editable,
+                        onChange = vm::setClearBass,
+                        onFinish = vm::finishBandEdit,
+                    )
+                }
                 spec.bandFrequenciesHz.forEachIndexed { i, f ->
                     VerticalFader(
                         value = steps[i],
@@ -149,6 +161,7 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
                     )
                 }
             }
+            if (clearBassRange != null) Text(stringResource(R.string.clear_bass_note), color = c.muted, style = MaterialTheme.typography.labelSmall)
             when {
                 listeningBlocksEq -> Text(stringResource(R.string.eq_disabled_listening), color = c.warning, style = MaterialTheme.typography.bodySmall)
                 eq != null && eq.presetCode != EqualizerPreset.CUSTOM.code -> {
