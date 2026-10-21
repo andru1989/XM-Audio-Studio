@@ -37,7 +37,8 @@ La familia de protocolo la fija el UUID al que se conecta; el init la confirma.
    Si la familia no es la esperada para el modelo → abortar sin escribir nada.
 2. Lecturas: `04 01` modelo, `04 02` firmware, `66 15`/`66 17`/`66 19` NC/ambiente, `22 00`
    batería, `F6 0C` speak-to-chat, `FA 0C` config. STC, `26 05` apagado automático, `F6 01` pausa al
-   quitarse, `56 04` y `56 00` EQ, `50 04 01` capacidad EQ, `E6 09` BGM, `E6 04` cine, tabla 2 `36 02` multipunto.
+   quitarse, `56 04` y `56 00` EQ, `50 04 01` capacidad EQ, `E6 09` BGM, `E6 04` cine, `E0 05` y `E6 05`
+   prioridad de conexión, `12 02` códec, tabla 2 `36 02` multipunto.
 3. Solo después se envían intenciones del usuario.
 
 ## 4. Comandos WH-1000XM6 (MDR v2, tabla 1 salvo indicación)
@@ -53,6 +54,9 @@ La familia de protocolo la fija el UUID al que se conecta; el init la confirma.
 | Capacidad EQ | `50 04 01` | `51 04 nBandas nPasos nPresets (id lenNombre nombre)*` | — | confirma 10/13 en hardware (?) | REF |
 | Música de fondo | `E6 09` | `E7/E9 09 off sala` | `E8 09 off sala` | **invertido: 00 = activado**; sala 00/01/02 | REF |
 | Cine (upmix) | `E6 04` | `E7/E9 04 off` | `E8 04 off` | invertido | REF |
+| Prioridad de conexión: opciones | `E0 05` | `E1 05 n modo×n nExclusivos` | — | captura `E1 05 03 00 01 02 00`; se rechaza cuenta errónea, modo desconocido o repetido y lista exclusiva no vacía | HW (Anneo22, fw 3.1.5) |
+| Prioridad de conexión | `E6 05` | `E7 05 modo` (3 B) · `E9 05 modo flujo` (4 B) | `E8 05 modo 01` | modo `00` calidad de sonido, `01` conexión estable, `02` baja latencia; flujo `00` ninguno, `01` LE Audio, `02` clásico. Solo se escriben `00`/`01` (con 3 bytes o cola `00` el XM6 lo ignora); `02` se anuncia pero se rechaza → solo lectura. Cambiarla puede cortar el audio un momento | HW (Anneo22, fw 3.1.5) |
+| Códec de audio | `12 02` | `13 02 códec` · `15 02 códec` (3 B) | — | `01` SBC, `02` AAC, `10` LDAC, `20` aptX, `21` aptX HD, `30` LC3; otro valor = desconocido (se muestra el byte). Sin captura en XM6 | REF (mos9527) |
 | Speak-to-Chat | `F6 0C` | `F7/F9 0C off 01` | `F8 0C off 01` | invertido | REF |
 | Config. STC | `FA 0C` | `FB/FD 0C sens tiempo` | `FC 0C sens tiempo` | sens 00 auto/01 alta/02 baja; tiempo 00–03 | REF |
 | Apagado automático | `26 05` | `27/29 05 modo 00` | `28 05 modo 00` | solo `10` (al quitarse) y `11` (nunca); **no** usar `F8 05` (palabra de activación) | HW |

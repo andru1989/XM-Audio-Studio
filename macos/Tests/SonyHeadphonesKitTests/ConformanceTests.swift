@@ -107,8 +107,27 @@ final class ConformanceTests: XCTestCase {
             dict = ["event": "modelName", "name": name]
         case .firmwareVersion(let version):
             dict = ["event": "firmwareVersion", "version": version]
+        case .connectionPriorityCapability(let priorities):
+            dict = ["event": "connectionPriorityCapability", "priorities": priorities.map { canonical($0) }]
+        case .connectionPriority(let priority, let stream):
+            var d: [String: Any] = ["event": "connectionPriority", "priority": canonical(priority)]
+            if let stream {
+                d["switchingStream"] = [AudioStreamType.unspecified: "none", .leAudio: "leAudio", .classic: "classic"][stream]!
+            }
+            dict = d
+        case .audioCodec(let codec):
+            let names: [AudioCodec: String] = [.sbc: "sbc", .aac: "aac", .ldac: "ldac", .aptX: "aptx", .aptXHD: "aptxHd", .lc3: "lc3"]
+            dict = ["event": "audioCodec", "codec": names[codec] ?? "unknown", "code": Int(codec.code)]
         }
         return dict as NSDictionary
+    }
+
+    static func canonical(_ priority: ConnectionPriority) -> String {
+        switch priority {
+        case .soundQuality: return "soundQuality"
+        case .stableConnection: return "stableConnection"
+        case .lowLatency: return "lowLatency"
+        }
     }
 
     func testEventsDecodeIdenticallyToAndroid() throws {
@@ -166,6 +185,12 @@ final class ConformanceTests: XCTestCase {
         case "pauseWhenTakenOffSet": return SonyCommands.buildPauseWhenTakenOffSet(bool("enabled"))
         case "deviceListGet": return SonyCommands.buildDeviceListGet()
         case "sourceSwitchSet": return SonyCommands.buildSourceSwitchSet(macAddress: a["mac"] as! String)
+        case "connectionPriorityCapabilityGet": return SonyCommands.buildConnectionPriorityCapabilityGet()
+        case "connectionPriorityGet": return SonyCommands.buildConnectionPriorityGet()
+        case "connectionPrioritySet":
+            let priority = ConnectionPriority.allCases.first { Self.canonical($0) == a["priority"] as! String }!
+            return SonyCommands.buildConnectionPrioritySet(priority)
+        case "audioCodecGet": return SonyCommands.buildAudioCodecGet()
         default:
             XCTFail("fixture command not mapped: \(name)")
             return nil

@@ -88,6 +88,9 @@ public enum DeviceFeature: String, CaseIterable, Sendable {
     case battery, noiseCancelling, ambientSound, ambientLevel, focusOnVoice, listeningMode
     case speakToChat, wearDetection, autoPowerOff, eqPresets, eqCustomBands
     case multipointList, playbackSourceSwitch
+    /// "Priorizar calidad de sonido / conexión estable" (AUDIO type 0x05) and the read-only
+    /// codec indicator (`12 02`).
+    case connectionPriority, audioCodec
 }
 
 public struct EqPresetSpec: Equatable, Sendable {
@@ -179,6 +182,9 @@ public enum DeviceCatalog {
                     .speakToChat: .pendingHardware, .wearDetection: .verifiedHardware, .autoPowerOff: .verifiedHardware,
                     .eqPresets: .verifiedHardware, .eqCustomBands: .verifiedHardware, .multipointList: .verifiedHardware,
                     .playbackSourceSwitch: .pendingHardware,
+                    // e0/e6/e8 05 captured live on an XM6 fw 3.1.5 (Anneo22/xm6-control);
+                    // `12 02` comes from mos9527's tables and was never captured on an XM6.
+                    .connectionPriority: .verifiedHardware, .audioCodec: .pendingHardware,
                 ],
                 equalizer: xm6Equalizer,
                 ambientLevelRange: 1...20
@@ -192,7 +198,7 @@ public enum DeviceCatalog {
                     levels(.pendingHardware, [.battery, .noiseCancelling, .ambientSound, .ambientLevel, .focusOnVoice,
                                               .speakToChat, .eqCustomBands]),
                     levels(.experimental, [.eqPresets]),
-                    planned([.wearDetection, .autoPowerOff])),
+                    planned([.wearDetection, .autoPowerOff, .connectionPriority, .audioCodec])),
                 equalizer: fiveBandEqualizer, ambientLevelRange: 1...20)
         case .wh1000xm4:
             return DeviceCapabilities(
@@ -201,7 +207,7 @@ public enum DeviceCatalog {
                     levels(.pendingHardware, [.battery, .noiseCancelling, .ambientSound, .ambientLevel, .focusOnVoice,
                                               .eqPresets, .eqCustomBands]),
                     levels(.experimental, [.speakToChat]),
-                    planned([.wearDetection, .autoPowerOff])),
+                    planned([.wearDetection, .autoPowerOff, .connectionPriority, .audioCodec])),
                 equalizer: fiveBandEqualizer, ambientLevelRange: 1...20)
         case .wh1000xm3:
             return DeviceCapabilities(
@@ -209,13 +215,15 @@ public enum DeviceCatalog {
                 features: merge(
                     levels(.pendingHardware, [.battery, .noiseCancelling, .ambientSound, .ambientLevel, .focusOnVoice]),
                     levels(.experimental, [.eqPresets, .eqCustomBands]),
-                    planned([.autoPowerOff])),
+                    planned([.autoPowerOff, .connectionPriority, .audioCodec])),
                 equalizer: xm3Equalizer, ambientLevelRange: 1...20)
         case .wh1000xm2:
             return DeviceCapabilities(
                 model: model,
-                features: levels(.experimental, [.battery, .noiseCancelling, .ambientSound, .ambientLevel, .focusOnVoice,
-                                                 .eqPresets, .eqCustomBands]),
+                features: merge(
+                    levels(.experimental, [.battery, .noiseCancelling, .ambientSound, .ambientLevel, .focusOnVoice,
+                                           .eqPresets, .eqCustomBands]),
+                    planned([.connectionPriority, .audioCodec])),
                 equalizer: fiveBandEqualizer, ambientLevelRange: 1...20)
         case .mdr1000x:
             return DeviceCapabilities(

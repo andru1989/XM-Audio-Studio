@@ -60,7 +60,8 @@ final class HeadphonesControllerTests: XCTestCase {
     }
 
     private func drain(_ connection: TestConnection) async {
-        for _ in 0..<20 {
+        // 19 state queries plus the commands a test queues.
+        for _ in 0..<30 {
             connection.ack()
             await settle()
         }
@@ -654,4 +655,100 @@ final class HeadphonesControllerTests: XCTestCase {
         XCTAssertEqual(controller.connectionState, .connected)
     }
 
+    // MARK: - Connection priority
+
+    func testConnectionPriorityIsWrittenAfterTheStateRead() async {
+        let (controller, connection) = makeController()
+        defer { controller.disconnect() }
+        controller.setConnectionPriority(.stableConnection)
+        XCTAssertEqual(connection.addresses.count, 1)
+        await handshake(connection)
+        connection.reply([0xe1, 0x05, 0x03, 0x00, 0x01, 0x02, 0x00])
+        await settle()
+        await drain(connection)
+        let payloads = connection.payloads
+        let write = try! XCTUnwrap(payloads.firstIndex(of: [0xe8, 0x05, 0x01, 0x01]))
+        for query in [SonyCommands.buildConnectionPriorityCapabilityGet(), SonyCommands.buildConnectionPriorityGet(),
+                      SonyCommands.buildAudioCodecGet(), SonyCommands.buildDeviceListGet()] {
+            XCTAssertLessThan(try! XCTUnwrap(payloads.lastIndex(of: query)), write, "\(query) must be read first")
+        }
+        XCTAssertEqual(payloads.filter { $0.starts(with: [0xe8, 0x05]) }.count, 1)
+    }
+
+    func testUnwritablePrioritiesAreNeverSentAndDoNotStallTheQueue() async {
+        let (controller, connection) = makeController()
+        defer { controller.disconnect() }
+        // Low latency: refused up front, without even acquiring the channel.
+        controller.setConnectionPriority(.lowLatency)
+        XCTAssertTrue(connection.addresses.isEmpty)
+        XCTAssertNil(controller.connectionPriority)
+
+        // Offered list read after connecting excludes "stable": the queued intent is dropped
+        // at send time and the next intent still goes out.
+        controller.setConnectionPriority(.stableConnection)
+        controller.setPauseWhenTakenOff(true)
+        await handshake(connection)
+        connection.reply([0xe1, 0x05, 0x01, 0x00, 0x00])
+        connection.reply([0xe7, 0x05, 0x00])
+        await settle()
+        await drain(connection)
+        XCTAssertFalse(connection.payloads.contains { $0.starts(with: [0xe8, 0x05]) })
+        XCTAssertTrue(connection.payloads.contains(SonyCommands.buildPauseWhenTakenOffSet(true)))
+        XCTAssertEqual(controller.connectionPriorities, [.soundQuality])
+        XCTAssertEqual(controller.connectionPriority, .soundQuality)
+        XCTAssertFalse(controller.canWriteConnectionPriority(.stableConnection))
+    }
+
+    func testReportsUpdateStreamAndCodec() async {
+        let (controller, connection) = makeController()
+        defer { controller.disconnect() }
+        controller.setControlSurface(UUID(), visible: true)
+        await handshake(connection)
+        connection.reply([0xe9, 0x05, 0x01, 0x01])
+        await settle()
+        XCTAssertEqual(controller.connectionPriority, .stableConnection)
+        XCTAssertEqual(controller.audioStream, .leAudio)
+        connection.reply([0xe9, 0x05, 0x00, 0x00]) // no switch: the known stream stays
+        await settle()
+        XCTAssertEqual(controller.connectionPriority, .soundQuality)
+        XCTAssertEqual(controller.audioStream, .leAudio)
+        connection.reply([0x13, 0x02, 0x99])
+        await settle()
+        XCTAssertEqual(controller.audioCodec, .unknown(0x99))
+        connection.reply([0x15, 0x02, 0x10])
+        await settle()
+        XCTAssertEqual(controller.audioCodec, .ldac)
+    }
+
+    /// End to end against the byte-level simulator: the write goes out and its notify is mirrored.
+    func testSimulatedHeadphonesConfirmThePriorityChange() async throws {
+        let simulator = SimulatedXM6Connection(latency: 0.002)
+        let controller = HeadphonesController(connection: simulator, pairedDevices: { [SimulatedXM6Connection.pairedDevice] })
+        defer { controller.disconnect() }
+        controller.autoConnect()
+        try await waitFor { controller.audioCodec != nil && controller.connectionPriority != nil && controller.devices != nil }
+        XCTAssertEqual(controller.connectionPriority, .soundQuality)
+        XCTAssertEqual(controller.connectionPriorities, [.soundQuality, .stableConnection, .lowLatency])
+        XCTAssertEqual(controller.audioCodec, .ldac)
+        XCTAssertNil(controller.audioStream)
+
+        controller.setConnectionPriority(.stableConnection)
+        try await waitFor { controller.audioStream != nil }
+        XCTAssertEqual(simulator.connectionPriority, 0x01)
+        XCTAssertEqual(controller.connectionPriority, .stableConnection)
+        XCTAssertEqual(controller.audioStream, .classic)
+
+        controller.refreshState()
+        try await waitFor { simulator.connectionPriority == 0x01 && controller.devices != nil }
+        try? await Task.sleep(for: .milliseconds(500))
+        XCTAssertEqual(controller.connectionPriority, .stableConnection, "re-read from the simulated headphones")
+    }
+
+    private func waitFor(timeout: Duration = .seconds(5), _ condition: () -> Bool) async throws {
+        let deadline = ContinuousClock.now + timeout
+        while !condition() {
+            guard ContinuousClock.now < deadline else { return XCTFail("timed out") }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+    }
 }
