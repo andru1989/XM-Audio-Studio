@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget colours from shared/design-tokens/tokens.json (color.dark). -->
+<resources>
+    <color name="widget_surface">#FF161B22</color>
+    <color name="widget_on_surface">#FFE8EDF2</color>
+    <color name="widget_muted">#FF8B96A3</color>
+    <color name="widget_chip">#FF1E242D</color>
+    <color name="widget_accent">#FF7CC4FF</color>
+    <color name="widget_chip_selected">#337CC4FF</color>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Widget colours from shared/design-tokens/tokens.json (color.light); night values in values-night. -->
+<resources>
+    <color name="widget_surface">#FFFFFFFF</color>
+    <color name="widget_on_surface">#FF12161C</color>
+    <color name="widget_muted">#FF5C6773</color>
+    <color name="widget_chip">#FFF0F2F5</color>
+    <!-- deviceEq: anything stored in the headphones. -->
+    <color name="widget_accent">#FF1E7FD8</color>
+    <color name="widget_chip_selected">#261E7FD8</color>
+</resources>

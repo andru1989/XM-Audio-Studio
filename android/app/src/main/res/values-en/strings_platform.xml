@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Quick Settings tile and home-screen widget (Etapa 6). Keep values/strings_platform.xml in step. -->
+<resources>
+    <string name="tile_label">Noise control</string>
+    <string name="widget_label">XM noise control</string>
+    <string name="widget_description">Model, battery and noise mode of your headphones, with Noise cancelling, Ambient and Off buttons.</string>
+
+    <string name="noise_mode_nc">Noise cancelling</string>
+    <string name="noise_mode_ambient">Ambient sound</string>
+    <string name="noise_mode_off">Off</string>
+    <string name="noise_mode_unknown">Mode not read yet</string>
+
+    <string name="widget_button_nc">NC</string>
+    <string name="widget_button_ambient">Ambient</string>
+    <string name="widget_button_off">Off</string>
+    <string name="widget_button_nc_description">Turn on noise cancelling</string>
+    <string name="widget_button_ambient_description">Turn on ambient sound</string>
+    <string name="widget_button_off_description">Turn noise control off</string>
+
+    <string name="platform_model_demo">%1$s (demo)</string>
+    <string name="platform_model_line">%1$s · %2$s</string>
+    <string name="platform_battery">%1$d%%</string>
+    <string name="platform_battery_charging">%1$d%% · charging</string>
+
+    <string name="platform_status_live">Live</string>
+    <string name="platform_status_connecting">Connecting…</string>
+    <string name="platform_status_last_known">Last known state · %1$s</string>
+    <string name="platform_status_unknown">Tap a mode to connect</string>
+    <string name="platform_status_failed">Could not connect</string>
+    <string name="platform_status_yielded">In use by another device</string>
+    <string name="platform_no_device">Choose your headphones in the app</string>
+    <string name="platform_unsupported">Model not supported yet</string>
+    <string name="platform_permission">Grant the Bluetooth permission in the app</string>
+
+    <!-- Widget picker preview only (Android 12+ renders the layout with these texts). -->
+    <string name="widget_preview_battery">72%</string>
+    <string name="widget_preview_status">WH-1000XM6 · Live</string>
+
+    <!-- Tile subtitles must stay short. -->
+    <string name="tile_sub_last_known">Last known</string>
+    <string name="tile_sub_tap">Tap to connect</string>
+    <string name="tile_sub_failed">Not connected</string>
+    <string name="tile_sub_yielded">On another device</string>
+    <string name="tile_sub_no_device">No headphones</string>
+    <string name="tile_sub_unsupported">Not supported</string>
+    <string name="tile_sub_permission">Permission needed</string>
+</resources>
