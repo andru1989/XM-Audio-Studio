@@ -1,0 +1,186 @@
+{
+  "description": "Scene conformance cases, read by android/core ScenesTest.kt and macos SceneTests.swift. 'state' and 'current' use the scene vocabulary for what the headphones report (a level of 0 is possible there). 'capture': 'scene' is the scene captured from 'state' (null: none); saving the full configuration stores 'deviceEq' and that scene, or is refused when 'deviceEq' is null (the EQ was not reported). 'apply': applying 'scene' with the profile EQ 'eq' while the headphones report 'current' sends 'intents' in this order and lists 'changes' in the confirmation.",
+  "capture": [
+    {
+      "name": "XM6, everything reported, custom curve",
+      "model": "wh-1000xm6",
+      "state": {
+        "noiseControl": { "mode": "ambientSound", "level": 12, "focusOnVoice": true },
+        "listeningMode": "standard",
+        "bgmRoomSize": "middle",
+        "speakToChat": true,
+        "pauseWhenTakenOff": true,
+        "autoPowerOff": "whenTakenOff",
+        "equalizer": { "presetCode": 160, "bands": [-1, -1, 0, 0, 1, 2, 2, 1, 0, 0] }
+      },
+      "deviceEq": { "steps": [-1, -1, 0, 0, 1, 2, 2, 1, 0, 0] },
+      "scene": {
+        "noiseControl": { "mode": "ambientSound", "level": 12, "focusOnVoice": true },
+        "listeningMode": "standard",
+        "bgmRoomSize": "middle",
+        "speakToChat": true,
+        "pauseWhenTakenOff": true,
+        "autoPowerOff": "whenTakenOff"
+      }
+    },
+    {
+      "name": "XM6, Sony preset, only noise control and speak-to-chat reported",
+      "model": "wh-1000xm6",
+      "state": {
+        "noiseControl": { "mode": "noiseCancelling", "level": 15, "focusOnVoice": false },
+        "speakToChat": false,
+        "equalizer": { "presetCode": 48, "bands": [3, 2, 1, 0, 0, 0, 0, 0, 1, 2] }
+      },
+      "deviceEq": { "presetCode": 48 },
+      "scene": {
+        "noiseControl": { "mode": "noiseCancelling", "level": 15, "focusOnVoice": false },
+        "speakToChat": false
+      }
+    },
+    {
+      "name": "XM6, Sound Connect user setting keeps its reported bands",
+      "model": "wh-1000xm6",
+      "state": {
+        "listeningMode": "cinema",
+        "equalizer": { "presetCode": 161, "bands": [2, 2, 1, 0, -1, 0, 1, 1, 0, 0] }
+      },
+      "deviceEq": { "steps": [2, 2, 1, 0, -1, 0, 1, 1, 0, 0] },
+      "scene": { "listeningMode": "cinema" }
+    },
+    {
+      "name": "XM6, EQ only: no scene",
+      "model": "wh-1000xm6",
+      "state": {
+        "equalizer": { "presetCode": 0, "bands": [] }
+      },
+      "deviceEq": { "presetCode": 0 },
+      "scene": null
+    },
+    {
+      "name": "XM6, EQ not reported: refused",
+      "model": "wh-1000xm6",
+      "state": {
+        "noiseControl": { "mode": "off", "level": 10, "focusOnVoice": false }
+      },
+      "deviceEq": null,
+      "scene": {
+        "noiseControl": { "mode": "off", "level": 10, "focusOnVoice": false }
+      }
+    },
+    {
+      "name": "XM4, level 0 while noise cancelling is not captured; unsupported settings are dropped",
+      "model": "wh-1000xm4",
+      "state": {
+        "noiseControl": { "mode": "noiseCancelling", "level": 0, "focusOnVoice": false },
+        "listeningMode": "backgroundMusic",
+        "bgmRoomSize": "large",
+        "speakToChat": true,
+        "pauseWhenTakenOff": true,
+        "autoPowerOff": "off",
+        "equalizer": { "presetCode": 160, "bands": [1, 0, -1, 0, 2], "clearBass": 3 }
+      },
+      "deviceEq": { "steps": [1, 0, -1, 0, 2], "clearBass": 3 },
+      "scene": {
+        "noiseControl": { "mode": "noiseCancelling", "focusOnVoice": false },
+        "speakToChat": true
+      }
+    }
+  ],
+  "apply": [
+    {
+      "name": "XM6, full scene and custom curve",
+      "model": "wh-1000xm6",
+      "current": {
+        "noiseControl": { "mode": "noiseCancelling", "level": 15, "focusOnVoice": false },
+        "listeningMode": "standard",
+        "bgmRoomSize": "small",
+        "speakToChat": false,
+        "pauseWhenTakenOff": false,
+        "autoPowerOff": "off"
+      },
+      "scene": {
+        "noiseControl": { "mode": "ambientSound", "level": 12, "focusOnVoice": true },
+        "listeningMode": "standard",
+        "bgmRoomSize": "middle",
+        "speakToChat": true,
+        "pauseWhenTakenOff": true,
+        "autoPowerOff": "whenTakenOff"
+      },
+      "eq": { "steps": [-1, -1, 0, 0, 1, 2, 2, 1, 0, 0] },
+      "intents": [
+        { "type": "ambientSound", "mode": "ambientSound", "level": 12, "focusOnVoice": true },
+        { "type": "bgmRoomSize", "roomSize": "middle" },
+        { "type": "listeningMode", "mode": "standard" },
+        { "type": "eqBands", "steps": [-1, -1, 0, 0, 1, 2, 2, 1, 0, 0] },
+        { "type": "speakToChat", "enabled": true },
+        { "type": "pauseWhenTakenOff", "enabled": true },
+        { "type": "autoPowerOff", "mode": "whenTakenOff" }
+      ],
+      "changes": ["noiseMode", "ambientLevel", "focusOnVoice", "speakToChat", "pauseWhenTakenOff", "autoPowerOff"]
+    },
+    {
+      "name": "XM6, to Background Music: room first, EQ before leaving Standard",
+      "model": "wh-1000xm6",
+      "current": {
+        "listeningMode": "standard",
+        "bgmRoomSize": "small"
+      },
+      "scene": { "listeningMode": "backgroundMusic", "bgmRoomSize": "large" },
+      "eq": { "presetCode": 48 },
+      "intents": [
+        { "type": "bgmRoomSize", "roomSize": "large" },
+        { "type": "eqPreset", "code": 48 },
+        { "type": "listeningMode", "mode": "backgroundMusic" }
+      ],
+      "changes": ["listeningMode", "bgmRoomSize"]
+    },
+    {
+      "name": "XM6, Cinema back to Standard: EQ after switching",
+      "model": "wh-1000xm6",
+      "current": { "listeningMode": "cinema" },
+      "scene": { "listeningMode": "standard" },
+      "eq": { "steps": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+      "intents": [
+        { "type": "listeningMode", "mode": "standard" },
+        { "type": "eqBands", "steps": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
+      ],
+      "changes": ["listeningMode"]
+    },
+    {
+      "name": "XM6, a mode without level or focus keeps what the headphones report",
+      "model": "wh-1000xm6",
+      "current": {
+        "noiseControl": { "mode": "ambientSound", "level": 7, "focusOnVoice": true }
+      },
+      "scene": { "noiseControl": { "mode": "noiseCancelling" } },
+      "eq": null,
+      "intents": [
+        { "type": "ambientSound", "mode": "noiseCancelling", "level": 7, "focusOnVoice": true }
+      ],
+      "changes": ["noiseMode"]
+    },
+    {
+      "name": "XM6, nothing reported yet: level falls back to 15",
+      "model": "wh-1000xm6",
+      "current": {},
+      "scene": { "noiseControl": { "mode": "ambientSound" } },
+      "eq": null,
+      "intents": [
+        { "type": "ambientSound", "mode": "ambientSound", "level": 15, "focusOnVoice": false }
+      ],
+      "changes": ["noiseMode"]
+    },
+    {
+      "name": "XM4, curve without Clear Bass writes a neutral Clear Bass; unchanged settings are not listed",
+      "model": "wh-1000xm4",
+      "current": { "speakToChat": false },
+      "scene": { "speakToChat": false },
+      "eq": { "steps": [1, 0, -1, 0, 2] },
+      "intents": [
+        { "type": "eqBands", "steps": [1, 0, -1, 0, 2], "clearBass": 0 },
+        { "type": "speakToChat", "enabled": false }
+      ],
+      "changes": []
+    }
+  ]
+}

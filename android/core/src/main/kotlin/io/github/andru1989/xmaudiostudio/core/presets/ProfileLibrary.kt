@@ -1,5 +1,10 @@
 package io.github.andru1989.xmaudiostudio.core.presets
 
+import io.github.andru1989.xmaudiostudio.core.device.DeviceCatalog
+import io.github.andru1989.xmaudiostudio.core.device.EqualizerSpec
+import io.github.andru1989.xmaudiostudio.core.device.HeadphoneModel
+import io.github.andru1989.xmaudiostudio.core.device.HeadphoneState
+import io.github.andru1989.xmaudiostudio.core.model.EqualizerPreset
 import java.io.File
 import java.time.Instant
 import java.util.UUID
@@ -59,8 +64,47 @@ class ProfileLibrary(
     ): EqProfile {
         val stamp = now()
         val setting = DeviceEqSetting(steps = steps, clearBass = clearBass)
-        val profile = EqProfile(newId(), name.trim(), category, modelId, setting, sourceCurve, source, notes, stamp, stamp)
+        val profile = EqProfile(
+            id = newId(), name = name.trim(), category = category, model = modelId, deviceEq = setting,
+            sourceCurve = sourceCurve, source = source, notes = notes, createdAt = stamp, updatedAt = stamp,
+        )
         return add(profile)
+    }
+
+    /**
+     * "Guardar configuración completa": saves what the headphones report now as one profile, the
+     * EQ (custom curve, Sony preset, or the bands of a Sound Connect user setting) plus the
+     * [HeadphoneScene] of every other setting the model supports and the headphones reported.
+     * Throws [ProfileFormatException] when the headphones have not reported their EQ.
+     */
+    fun saveScene(name: String, modelId: String, state: HeadphoneState): EqProfile {
+        val model = HeadphoneModel.fromId(modelId) ?: throw ProfileFormatException("unknown model '$modelId'")
+        val capabilities = DeviceCatalog.capabilities(model)
+        val (eq, notes) = captureEq(state, capabilities.equalizer)
+            ?: throw ProfileFormatException("The headphones have not reported their equalizer yet")
+        val stamp = now()
+        return add(
+            EqProfile(
+                id = newId(), name = name.trim(), category = ProfileCategory.USER, model = modelId, deviceEq = eq,
+                scene = HeadphoneScenes.capture(state, capabilities), notes = notes, createdAt = stamp, updatedAt = stamp,
+            ),
+        )
+    }
+
+    /** The EQ the headphones report, as a profile setting, with a note for a Sound Connect user setting. */
+    private fun captureEq(state: HeadphoneState, spec: EqualizerSpec?): Pair<DeviceEqSetting, String?>? {
+        val eq = state.equalizer ?: return null
+        spec ?: return null
+        val clearBass = eq.clearBass?.takeIf { spec.clearBassRange != null }
+        return when {
+            eq.presetCode == EqualizerPreset.CUSTOM.code ->
+                eq.bands.takeIf { it.size == spec.bandCount }?.let { DeviceEqSetting(steps = it, clearBass = clearBass) to null }
+            spec.presets.any { it.code == eq.presetCode } -> DeviceEqSetting(presetCode = eq.presetCode) to null
+            // A Sound Connect user setting: keep its curve as a custom profile.
+            eq.bands.size == spec.bandCount ->
+                DeviceEqSetting(steps = eq.bands, clearBass = clearBass) to SOUND_CONNECT_NOTE.format(eq.presetCode)
+            else -> null
+        }
     }
 
     fun duplicate(id: String, name: String): EqProfile {
@@ -102,6 +146,10 @@ class ProfileLibrary(
     fun exportText(ids: Collection<String>? = null): String {
         val selected = if (ids == null) userProfiles else (BuiltinProfiles.all + userProfiles).filter { it.id in ids }
         return ProfileCodec.encode(selected, now())
+    }
+
+    companion object {
+        const val SOUND_CONNECT_NOTE = "Importado de un ajuste de usuario de Sound Connect (preset 0x%02x)."
     }
 
     private fun add(profile: EqProfile): EqProfile {
