@@ -15,6 +15,11 @@ object Opcode {
     const val EQ_CAPABILITY_GET = 0x50
     const val EQ_CAPABILITY_RET = 0x51
 
+    /** COMMON status (codec indicator, type 0x02). mos9527 tables; not captured on an XM6. */
+    const val COMMON_STATUS_GET = 0x12
+    const val COMMON_STATUS_RET = 0x13
+    const val COMMON_STATUS_NOTIFY = 0x15
+
     const val BATTERY_GET = 0x22
     const val BATTERY_RET = 0x23
     const val BATTERY_NOTIFY = 0x25
@@ -34,6 +39,8 @@ object Opcode {
     const val NCASM_SET = 0x68
     const val NCASM_NOTIFY = 0x69
 
+    const val AUDIO_CAPABILITY_GET = 0xe0
+    const val AUDIO_CAPABILITY_RET = 0xe1
     const val AUDIO_GET = 0xe6
     const val AUDIO_RET = 0xe7
     const val AUDIO_SET = 0xe8
@@ -66,6 +73,10 @@ object Subtype {
     const val AUTOMATIC_POWER_OFF = 0x05
     const val BGM_MODE = 0x09
     const val UPMIX_CINEMA = 0x04
+    /** AUDIO inquired type "sound quality / connection priority" (XM6, live-verified upstream). */
+    const val CONNECTION_PRIORITY = 0x05
+    /** COMMON status type "audio codec". */
+    const val AUDIO_CODEC = 0x02
     const val EQ_PRESET_AND_ERRORCODE = 0x04
     const val DEVICE_INFO_MODEL_NAME = 0x01
     const val DEVICE_INFO_FIRMWARE = 0x02

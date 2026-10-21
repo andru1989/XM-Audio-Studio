@@ -32,6 +32,15 @@ public final class HeadphonesController: ObservableObject {
     @Published public private(set) var firmwareVersion: String?
     /// Band/step counts confirmed by the headphones (`50 04 01`), when they answer it.
     @Published public private(set) var equalizerCapability: EqualizerCapability?
+    /// Bluetooth connection priority (`e6 05`); nil until reported.
+    @Published public private(set) var connectionPriority: ConnectionPriority?
+    /// Priorities the headphones offer (`e1 05`); nil until reported.
+    @Published public private(set) var connectionPriorities: [ConnectionPriority]?
+    /// LE Audio or classic, as the last priority notification said. A notification that
+    /// reports no stream switch keeps what was known; nil means never reported.
+    @Published public private(set) var audioStream: AudioStreamType?
+    /// Codec the headphones report (`12 02`); nil until reported.
+    @Published public private(set) var audioCodec: AudioCodec?
 
     /// Raw BGM/cinema flags as last reported; listeningMode is derived from them.
     private var bgmEnabled = false
@@ -364,6 +373,25 @@ public final class HeadphonesController: ObservableObject {
         }
     }
 
+    /// Whether `priority` may be written: live-verified on the wire (never low latency), and
+    /// offered by the headphones when they reported their list.
+    public func canWriteConnectionPriority(_ priority: ConnectionPriority) -> Bool {
+        priority.isWritable && (connectionPriorities?.contains(priority) ?? true)
+    }
+
+    /// Sound quality vs stable connection. Changing it may briefly drop the Bluetooth audio.
+    /// Low latency (or a priority the headphones did not offer) is ignored: nothing is sent.
+    public func setConnectionPriority(_ priority: ConnectionPriority) {
+        guard canWriteConnectionPriority(priority) else { return }
+        connectionPriority = priority
+        enqueueCommand(key: "priority") { [unowned self] in
+            // Checked again against the list read after a (re)connect.
+            guard self.canWriteConnectionPriority(priority),
+                  let payload = SonyCommands.buildConnectionPrioritySet(priority) else { return [] }
+            return [(.command1, payload)]
+        }
+    }
+
     /// Switch the active playback source to another connected device.
     public func switchPlayback(to device: MultipointDevice) {
         guard let payload = SonyCommands.buildSourceSwitchSet(macAddress: device.macAddress) else { return }
@@ -406,6 +434,10 @@ public final class HeadphonesController: ObservableObject {
         listeningMode = nil
         bgmRoomSize = nil
         devices = nil
+        connectionPriority = nil
+        connectionPriorities = nil
+        audioStream = nil
+        audioCodec = nil
         bgmEnabled = false
         cinemaEnabled = false
         protocolVersion = .unknown
@@ -561,6 +593,13 @@ public final class HeadphonesController: ObservableObject {
             firmwareVersion = version
         case .equalizerCapability(let capability):
             equalizerCapability = capability
+        case .connectionPriorityCapability(let priorities):
+            connectionPriorities = priorities
+        case .connectionPriority(let priority, let stream):
+            connectionPriority = priority
+            if let stream, stream != .unspecified { audioStream = stream }
+        case .audioCodec(let codec):
+            audioCodec = codec
         }
     }
 
@@ -599,6 +638,9 @@ public final class HeadphonesController: ObservableObject {
         enqueue(SonyCommands.buildEqualizerCapabilityGet())
         enqueue(SonyCommands.buildBGMModeGet())
         enqueue(SonyCommands.buildUpmixCinemaGet())
+        enqueue(SonyCommands.buildConnectionPriorityCapabilityGet())
+        enqueue(SonyCommands.buildConnectionPriorityGet())
+        enqueue(SonyCommands.buildAudioCodecGet())
         enqueue(SonyCommands.buildDeviceListGet(), type: .command2)
     }
 
@@ -623,7 +665,9 @@ public final class HeadphonesController: ObservableObject {
     private func sendNextQueuedCommand() {
         disconnectIfIdle()
         // Read before write: intents are encoded only once every queued query has gone.
-        if outgoingQueue.isEmpty, connectionState == .connected, !pendingCommands.isEmpty {
+        // An intent that encodes to nothing (a priority the headphones did not offer) is
+        // dropped and the next one tried, so it never stalls the queue.
+        while outgoingQueue.isEmpty, connectionState == .connected, !pendingCommands.isEmpty {
             let intent = pendingCommands.removeFirst()
             outgoingQueue.append(contentsOf: intent.build().map { ($0.0, $0.1, true) })
         }

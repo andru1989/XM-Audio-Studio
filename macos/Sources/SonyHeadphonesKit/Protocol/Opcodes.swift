@@ -26,6 +26,11 @@ enum Opcode {
     static let equalizerCapabilityGet: UInt8 = 0x50
     static let equalizerCapabilityRet: UInt8 = 0x51
 
+    /// COMMON status (codec indicator, type 0x02). mos9527 tables; not captured on an XM6.
+    static let commonStatusGet: UInt8 = 0x12
+    static let commonStatusRet: UInt8 = 0x13
+    static let commonStatusNotify: UInt8 = 0x15
+
     static let ambientSoundControlGet: UInt8 = 0x66
     static let ambientSoundControlRet: UInt8 = 0x67
     static let ambientSoundControlSet: UInt8 = 0x68
@@ -39,6 +44,10 @@ enum Opcode {
     static let equalizerRet: UInt8 = 0x57
     static let equalizerSet: UInt8 = 0x58
     static let equalizerNotify: UInt8 = 0x59
+
+    /// AUDIO capability (connection priority list, inquired type 0x05).
+    static let audioGetCapability: UInt8 = 0xe0
+    static let audioRetCapability: UInt8 = 0xe1
 
     /// AUDIO parameter family (XM6 generation): BGM mode, upmix cinema, etc.
     static let audioGetParam: UInt8 = 0xe6
@@ -98,6 +107,10 @@ enum Subtype {
     static let batterySingle: UInt8 = 0x00
     static let batterySingleWithThreshold: UInt8 = 0x08
     static let equalizerPresetAndErrorCode: UInt8 = 0x04
+    /// AUDIO inquired type "sound quality / connection priority" (XM6, live-verified upstream).
+    static let connectionPriority: UInt8 = 0x05
+    /// COMMON status type "audio codec".
+    static let audioCodec: UInt8 = 0x02
 }
 
 func boolFromByte(_ b: UInt8) -> Bool? {

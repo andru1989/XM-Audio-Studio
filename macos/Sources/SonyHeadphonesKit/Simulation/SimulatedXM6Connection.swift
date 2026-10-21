@@ -28,6 +28,10 @@ final class SimulatedXM6Connection: HeadphonesConnection {
     private var autoPowerOff: UInt8 = 0x11
     private var pauseWhenTakenOff = true
     private var playbackIndex = 0
+    /// 0x00 sound quality, 0x01 stable connection (0x02 low latency is advertised, not writable).
+    private(set) var connectionPriority: UInt8 = 0x00
+    /// LDAC.
+    private var audioCodec: UInt8 = 0x10
     private let devices = [("AA:BB:CC:DD:EE:01", "MacBook Pro"), ("AA:BB:CC:DD:EE:02", "Pixel")]
 
     init(latency: TimeInterval = 0.02) {
@@ -114,6 +118,15 @@ final class SimulatedXM6Connection: HeadphonesConnection {
             eqPreset = p[2]
             if p[2] == 0xa0, p.count >= 4 + Int(p[3]) { eqBands = p[4..<(4 + Int(p[3]))].map { Int($0) - 6 } }
             return eqReport(0x59)
+        case (0x12, 0x02): return [0x13, 0x02, audioCodec]
+        // Capability as captured on an XM6 fw 3.1.5: quality, stable, low latency; no exclusive list.
+        case (0xe0, 0x05): return [0xe1, 0x05, 0x03, 0x00, 0x01, 0x02, 0x00]
+        case (0xe6, 0x05): return [0xe7, 0x05, connectionPriority]
+        case (0xe8, 0x05):
+            // Like the real XM6, only `e8 05 <00|01> 01` is taken; anything else is ignored.
+            guard p.count == 4, p[3] == 0x01, p[2] <= 0x01 else { return nil }
+            connectionPriority = p[2]
+            return [0xe9, 0x05, connectionPriority, 0x02] // stream: classic
         case (0xe6, 0x09): return [0xe7, 0x09, bgmEnabled ? 0 : 1, bgmRoom]
         case (0xe6, 0x04): return [0xe7, 0x04, cinemaEnabled ? 0 : 1]
         case (0xe8, 0x09):

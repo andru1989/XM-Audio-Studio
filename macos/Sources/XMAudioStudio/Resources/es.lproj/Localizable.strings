@@ -249,3 +249,15 @@
 "Enabled" = "Activado";
 "Disabled" = "Desactivado";
 "not read" = "sin leer";
+/* Conexión Bluetooth: códec y prioridad de conexión. */
+"Bluetooth Connection" = "Conexión Bluetooth";
+"Codec" = "Códec";
+"Unknown (0x%02X)" = "Desconocido (0x%02X)";
+"Classic Bluetooth" = "Bluetooth clásico";
+"Not reported" = "No informado";
+"Priority" = "Prioridad";
+"Prioritize Sound Quality" = "Priorizar calidad de sonido";
+"Prioritize Stable Connection" = "Priorizar conexión estable";
+"Prioritize Low Latency (read-only)" = "Priorizar baja latencia (solo lectura)";
+"Changing it can cut the Bluetooth audio for a moment." = "Al cambiarla, el audio Bluetooth puede cortarse un momento.";
+"The headphones didn't report their connection priority." = "Los audífonos no informaron su prioridad de conexión.";

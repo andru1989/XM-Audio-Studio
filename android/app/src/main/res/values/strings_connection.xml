@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Conexión Bluetooth: códec y prioridad de conexión. Keep values-en/strings_connection.xml in step. -->
+<resources>
+    <string name="bt_connection_title">Conexión Bluetooth</string>
+    <string name="bt_codec">Códec: %1$s</string>
+    <string name="bt_codec_unknown">desconocido (0x%1$02X)</string>
+    <string name="bt_not_reported">no informado</string>
+    <string name="bt_stream_classic">Bluetooth clásico</string>
+    <string name="bt_stream_le_audio">LE Audio</string>
+    <string name="bt_priority_quality">Priorizar calidad de sonido</string>
+    <string name="bt_priority_stable">Priorizar conexión estable</string>
+    <string name="bt_priority_low_latency">Prioridad actual: baja latencia (solo lectura, no se cambia desde aquí).</string>
+    <string name="bt_priority_not_reported">Los audífonos no informaron su prioridad de conexión.</string>
+    <string name="bt_priority_warning">Al cambiarla, el audio Bluetooth puede cortarse un momento.</string>
+</resources>

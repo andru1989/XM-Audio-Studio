@@ -74,7 +74,8 @@ class MdrV1Adapter(val model: HeadphoneModel) : ProtocolAdapter {
         // Not implemented for MDR v1 (auto power off and pause-when-removed are documented but
         // not modelled yet; v1 has no listening modes or multipoint list here): nothing is sent.
         is DeviceCommand.SetListeningMode, is DeviceCommand.SetBgmRoomSize, is DeviceCommand.SetAutomaticPowerOff,
-        is DeviceCommand.SetPauseWhenTakenOff, is DeviceCommand.SwitchPlayback -> emptyList()
+        is DeviceCommand.SetPauseWhenTakenOff, is DeviceCommand.SwitchPlayback,
+        is DeviceCommand.SetConnectionPriority -> emptyList()
     }
 
     override fun decode(type: MessageType, payload: ByteArray): MdrEvent? = MdrV1EventDecoder.decode(payload, type)

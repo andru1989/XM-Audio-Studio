@@ -16,6 +16,12 @@ public enum HeadphonesEvent: Sendable {
     case modelName(String)
     case firmwareVersion(String)
     case equalizerCapability(EqualizerCapability)
+    /// Priorities the headphones offer (`e1 05`), in the order reported.
+    case connectionPriorityCapability([ConnectionPriority])
+    /// Current priority; `switchingStream` only comes with a notification (`e9 05`).
+    case connectionPriority(ConnectionPriority, switchingStream: AudioStreamType?)
+    /// `13 02` / `15 02`; unknown bytes are kept as `.unknown`.
+    case audioCodec(AudioCodec)
 }
 
 /// Dispatches an incoming payload to the right decoder.
@@ -50,6 +56,12 @@ public enum SonyEventDecoder {
         if opcode == Opcode.equalizerCapabilityRet {
             return SonyCommands.decodeEqualizerCapability(payload).map { .equalizerCapability($0) }
         }
+        if opcode == Opcode.audioRetCapability {
+            return SonyCommands.decodeConnectionPriorityCapability(payload).map { .connectionPriorityCapability($0) }
+        }
+        if SonyCommands.isCommonStatusReply(opcode: opcode) {
+            return SonyCommands.decodeAudioCodec(payload).map { .audioCodec($0) }
+        }
         if SonyCommands.isAmbientSoundReply(opcode: opcode),
            let state = SonyCommands.decodeAmbientSound(payload) {
             return .ambientSound(state)
@@ -79,6 +91,9 @@ public enum SonyEventDecoder {
             return .equalizer(state)
         }
         if SonyCommands.isAudioParamReply(opcode: opcode) {
+            if let report = SonyCommands.decodeConnectionPriority(payload) {
+                return .connectionPriority(report.priority, switchingStream: report.stream)
+            }
             if let (enabled, roomSize) = SonyCommands.decodeBGMMode(payload) {
                 return .bgmMode(enabled: enabled, roomSize: roomSize)
             }

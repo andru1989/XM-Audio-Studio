@@ -31,7 +31,9 @@
         "eqPresets": "verified-hardware",
         "eqCustomBands": "verified-hardware",
         "multipointList": "verified-hardware",
-        "playbackSourceSwitch": "pending-hardware"
+        "playbackSourceSwitch": "pending-hardware",
+        "connectionPriority": "verified-hardware",
+        "audioCodec": "pending-hardware"
       },
       "equalizer": {
         "bandCount": 10,
@@ -103,7 +105,9 @@
         "wearDetection": "planned",
         "autoPowerOff": "planned",
         "eqPresets": "experimental",
-        "eqCustomBands": "pending-hardware"
+        "eqCustomBands": "pending-hardware",
+        "connectionPriority": "planned",
+        "audioCodec": "planned"
       },
       "equalizer": {
         "bandCount": 5,
@@ -197,7 +201,9 @@
         "wearDetection": "planned",
         "autoPowerOff": "planned",
         "eqPresets": "pending-hardware",
-        "eqCustomBands": "pending-hardware"
+        "eqCustomBands": "pending-hardware",
+        "connectionPriority": "planned",
+        "audioCodec": "planned"
       },
       "equalizer": {
         "bandCount": 5,
@@ -289,7 +295,9 @@
         "focusOnVoice": "pending-hardware",
         "autoPowerOff": "planned",
         "eqPresets": "experimental",
-        "eqCustomBands": "experimental"
+        "eqCustomBands": "experimental",
+        "connectionPriority": "planned",
+        "audioCodec": "planned"
       },
       "equalizer": {
         "bandCount": 5,
@@ -380,7 +388,9 @@
         "ambientLevel": "experimental",
         "focusOnVoice": "experimental",
         "eqPresets": "experimental",
-        "eqCustomBands": "experimental"
+        "eqCustomBands": "experimental",
+        "connectionPriority": "planned",
+        "audioCodec": "planned"
       },
       "equalizer": {
         "bandCount": 5,

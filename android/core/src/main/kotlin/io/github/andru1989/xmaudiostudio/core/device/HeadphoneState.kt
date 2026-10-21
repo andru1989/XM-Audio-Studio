@@ -1,9 +1,12 @@
 package io.github.andru1989.xmaudiostudio.core.device
 
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundState
+import io.github.andru1989.xmaudiostudio.core.model.AudioCodec
+import io.github.andru1989.xmaudiostudio.core.model.AudioStreamType
 import io.github.andru1989.xmaudiostudio.core.model.AutomaticPowerOffMode
 import io.github.andru1989.xmaudiostudio.core.model.BatteryStatus
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
+import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.DeviceInfo
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerCapability
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerState
@@ -29,6 +32,16 @@ data class HeadphoneState(
     val devices: List<MultipointDevice>? = null,
     val deviceInfo: DeviceInfo = DeviceInfo(),
     val equalizerCapability: EqualizerCapability? = null,
+    val connectionPriority: ConnectionPriority? = null,
+    /** Priorities the headphones offer (`e1 05`); null until reported. */
+    val connectionPriorities: List<ConnectionPriority>? = null,
+    /**
+     * LE Audio or classic, as the last priority notification said. A notification saying "none"
+     * (no stream switch) keeps what was known; null means never reported.
+     */
+    val audioStream: AudioStreamType? = null,
+    /** Raw codec byte (`13 02`); see [audioCodec]. */
+    val audioCodecCode: Int? = null,
 ) {
     val listeningMode: ListeningMode?
         get() = when {
@@ -37,6 +50,13 @@ data class HeadphoneState(
             cinemaEnabled == true -> ListeningMode.CINEMA
             else -> ListeningMode.STANDARD
         }
+
+    /** Null both when unreported and when the byte is outside the reference table (check [audioCodecCode]). */
+    val audioCodec: AudioCodec? get() = audioCodecCode?.let(AudioCodec::fromCode)
+
+    /** Writable on the wire, and offered by the headphones when they reported their list. */
+    fun canWrite(priority: ConnectionPriority): Boolean =
+        priority.isWritable && connectionPriorities?.contains(priority) != false
 
     /** Folds a device report into the state. */
     fun apply(event: MdrEvent): HeadphoneState = when (event) {
@@ -58,6 +78,12 @@ data class HeadphoneState(
         is MdrEvent.ModelName -> copy(deviceInfo = deviceInfo.copy(modelName = event.name))
         is MdrEvent.FirmwareVersion -> copy(deviceInfo = deviceInfo.copy(firmwareVersion = event.version))
         is MdrEvent.EqCapability -> copy(equalizerCapability = event.capability)
+        is MdrEvent.ConnectionPriorityCapability -> copy(connectionPriorities = event.priorities)
+        is MdrEvent.ConnectionPriorityReport -> copy(
+            connectionPriority = event.priority,
+            audioStream = event.switchingStream?.takeIf { it != AudioStreamType.NONE } ?: audioStream,
+        )
+        is MdrEvent.AudioCodecReport -> copy(audioCodecCode = event.code)
     }
 
     /** The state the UI should show once [command] is accepted. */
@@ -85,6 +111,9 @@ data class HeadphoneState(
         )
         is DeviceCommand.SetAutomaticPowerOff -> copy(automaticPowerOff = command.mode)
         is DeviceCommand.SetPauseWhenTakenOff -> copy(pauseWhenTakenOff = command.enabled)
+        // A priority that cannot be written is never sent, so it must not be shown as applied.
+        is DeviceCommand.SetConnectionPriority ->
+            if (canWrite(command.priority)) copy(connectionPriority = command.priority) else this
         is DeviceCommand.SwitchPlayback -> copy(
             devices = devices?.map { it.copy(isPlayback = it.macAddress == command.macAddress) },
         )

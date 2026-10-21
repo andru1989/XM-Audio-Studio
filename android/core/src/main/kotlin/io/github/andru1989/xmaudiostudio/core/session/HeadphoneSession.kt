@@ -380,7 +380,9 @@ class HeadphoneSession(
     /** Stop-and-wait: one message in flight. Intents are encoded only once connected. */
     private fun sendNext() {
         if (awaiting != null || awaitingInit) return
-        if (outgoing.isEmpty() && phase == ConnectionPhase.CONNECTED && pending.isNotEmpty()) {
+        // An intent that encodes to nothing (e.g. a priority the headphones did not offer) is
+        // dropped, and the next one is tried, so it never stalls the queue.
+        while (outgoing.isEmpty() && phase == ConnectionPhase.CONNECTED && pending.isNotEmpty()) {
             val command = pending.removeFirst()
             val encodeAgainst = inFlightCommands().fold(confirmed) { s, c -> s.applyOptimistic(c) }
             val messages = adapter?.encode(command, encodeAgainst).orEmpty()
@@ -389,7 +391,7 @@ class HeadphoneSession(
                 outgoing.addLast(QueuedMessage(out, if (i == messages.lastIndex) command else null))
             }
         }
-        val next = outgoing.removeFirstOrNull() ?: return
+        val next = outgoing.removeFirstOrNull() ?: return publish() // drops a discarded intent's optimistic state
         awaiting = next
         write(MdrMessage(next.outgoing.type, sequenceNumber, next.outgoing.payload))
         ackTimeoutJob?.cancel()
@@ -432,6 +434,7 @@ class HeadphoneSession(
             is DeviceCommand.SetAutomaticPowerOff -> Feature.AUTO_POWER_OFF
             is DeviceCommand.SetPauseWhenTakenOff -> Feature.WEAR_DETECTION
             is DeviceCommand.SwitchPlayback -> Feature.PLAYBACK_SOURCE_SWITCH
+            is DeviceCommand.SetConnectionPriority -> Feature.CONNECTION_PRIORITY
             is DeviceCommand.Raw -> null
         }
     }

@@ -75,6 +75,20 @@ object CanonicalEvents {
         }
         is MdrEvent.ModelName -> buildJsonObject { put("event", "modelName"); put("name", event.name) }
         is MdrEvent.FirmwareVersion -> buildJsonObject { put("event", "firmwareVersion"); put("version", event.version) }
+        is MdrEvent.ConnectionPriorityCapability -> buildJsonObject {
+            put("event", "connectionPriorityCapability")
+            put("priorities", buildJsonArray { event.priorities.forEach { add(JsonPrimitive(lowerCamel(it.name))) } })
+        }
+        is MdrEvent.ConnectionPriorityReport -> buildJsonObject {
+            put("event", "connectionPriority")
+            put("priority", lowerCamel(event.priority.name))
+            event.switchingStream?.let { put("switchingStream", lowerCamel(it.name)) }
+        }
+        is MdrEvent.AudioCodecReport -> buildJsonObject {
+            put("event", "audioCodec")
+            put("codec", event.codec?.let { lowerCamel(it.name) } ?: "unknown")
+            put("code", event.code)
+        }
     }
 
     /** Numbers in fixtures are plain ints; normalise so 25 == 25 regardless of JSON number formatting. */

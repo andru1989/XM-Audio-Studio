@@ -1,9 +1,12 @@
 package io.github.andru1989.xmaudiostudio.core.protocol
 
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundState
+import io.github.andru1989.xmaudiostudio.core.model.AudioCodec
+import io.github.andru1989.xmaudiostudio.core.model.AudioStreamType
 import io.github.andru1989.xmaudiostudio.core.model.AutomaticPowerOffMode
 import io.github.andru1989.xmaudiostudio.core.model.BatteryStatus
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
+import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerCapability
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerState
 import io.github.andru1989.xmaudiostudio.core.model.MultipointDevice
@@ -26,6 +29,17 @@ sealed interface MdrEvent {
     data class ModelName(val name: String) : MdrEvent
     data class FirmwareVersion(val version: String) : MdrEvent
     data class EqCapability(val capability: EqualizerCapability) : MdrEvent
+
+    /** Priorities the headphones offer (`e1 05`), in the order reported. */
+    data class ConnectionPriorityCapability(val priorities: List<ConnectionPriority>) : MdrEvent
+
+    /** Current priority; [switchingStream] only comes with a notification (`e9 05`), null on a reply (`e7 05`). */
+    data class ConnectionPriorityReport(val priority: ConnectionPriority, val switchingStream: AudioStreamType?) : MdrEvent
+
+    /** Raw codec byte (`13 02` / `15 02`); [codec] is null when the byte is not in the reference table. */
+    data class AudioCodecReport(val code: Int) : MdrEvent {
+        val codec: AudioCodec? get() = AudioCodec.fromCode(code)
+    }
 }
 
 /**
@@ -54,6 +68,12 @@ object MdrEventDecoder {
         if (op == Opcode.EQ_CAPABILITY_RET) {
             return MdrCommands.decodeEqualizerCapability(payload)?.let { MdrEvent.EqCapability(it) }
         }
+        if (op == Opcode.AUDIO_CAPABILITY_RET) {
+            return MdrCommands.decodeConnectionPriorityCapability(payload)?.let { MdrEvent.ConnectionPriorityCapability(it) }
+        }
+        if (MdrCommands.isCommonStatusReply(op)) {
+            return MdrCommands.decodeAudioCodec(payload)?.let { MdrEvent.AudioCodecReport(it) }
+        }
         if (MdrCommands.isAmbientSoundReply(op)) {
             MdrCommands.decodeAmbientSound(payload)?.let { return MdrEvent.AmbientSound(it) }
         }
@@ -76,6 +96,7 @@ object MdrEventDecoder {
             MdrCommands.decodeEqualizer(payload)?.let { return MdrEvent.Equalizer(it) }
         }
         if (MdrCommands.isAudioParamReply(op)) {
+            MdrCommands.decodeConnectionPriority(payload)?.let { return MdrEvent.ConnectionPriorityReport(it.first, it.second) }
             MdrCommands.decodeBgmMode(payload)?.let { return MdrEvent.BgmMode(it.first, it.second) }
             MdrCommands.decodeUpmixCinema(payload)?.let { return MdrEvent.UpmixCinema(it) }
         }

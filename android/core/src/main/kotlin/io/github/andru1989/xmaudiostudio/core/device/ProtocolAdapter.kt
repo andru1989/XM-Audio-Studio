@@ -68,6 +68,9 @@ object Xm6Adapter : ProtocolAdapter {
         c1(MdrCommands.equalizerCapabilityGet()),
         c1(MdrCommands.bgmModeGet()),
         c1(MdrCommands.upmixCinemaGet()),
+        c1(MdrCommands.connectionPriorityCapabilityGet()),
+        c1(MdrCommands.connectionPriorityGet()),
+        c1(MdrCommands.audioCodecGet()),
         c2(MdrCommands.deviceListGet()),
     )
 
@@ -93,6 +96,10 @@ object Xm6Adapter : ProtocolAdapter {
         is DeviceCommand.SetSpeakToChatConfig -> listOf(c1(MdrCommands.speakToChatConfigSet(command.config)))
         is DeviceCommand.SetAutomaticPowerOff -> listOf(c1(MdrCommands.automaticPowerOffSet(command.mode)))
         is DeviceCommand.SetPauseWhenTakenOff -> listOf(c1(MdrCommands.pauseWhenTakenOffSet(command.enabled)))
+        // Low latency, or a priority the headphones did not offer, is never sent.
+        is DeviceCommand.SetConnectionPriority ->
+            if (!state.canWrite(command.priority)) emptyList()
+            else listOfNotNull(MdrCommands.connectionPrioritySet(command.priority)?.let(::c1))
         is DeviceCommand.SwitchPlayback -> {
             val payload = MdrCommands.sourceSwitchSet(command.macAddress)
             if (payload == null) emptyList() else listOf(c2(payload), c2(MdrCommands.deviceListGet()))

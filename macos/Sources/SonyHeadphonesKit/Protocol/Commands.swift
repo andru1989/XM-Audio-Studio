@@ -285,6 +285,80 @@ public enum SonyCommands {
         opcode == Opcode.audioRetParam || opcode == Opcode.audioNotifyParam
     }
 
+    // MARK: - Bluetooth connection priority (AUDIO family, inquired type 0x05)
+    //
+    // Layouts verified live on an XM6 fw 3.1.5 by Anneo22/xm6-control (Apache-2.0):
+    // capability `e1 05 03 00 01 02 00`, reply `e7 05 <mode>`, notify `e9 05 <mode> <stream>`.
+
+    public static func buildConnectionPriorityCapabilityGet() -> [UInt8] {
+        [Opcode.audioGetCapability, Subtype.connectionPriority]
+    }
+
+    public static func buildConnectionPriorityGet() -> [UInt8] {
+        [Opcode.audioGetParam, Subtype.connectionPriority]
+    }
+
+    /// `e8 05 <mode> 01`. The trailing 0x01 is required: three-byte writes and a 0x00 trailer
+    /// were ignored live. Nil for a priority that is not writable (low latency is advertised
+    /// but rejected), so it can never be sent. Changing it may briefly drop the Bluetooth audio.
+    public static func buildConnectionPrioritySet(_ priority: ConnectionPriority) -> [UInt8]? {
+        guard priority.isWritable else { return nil }
+        return [Opcode.audioSetParam, Subtype.connectionPriority, priority.rawValue, 0x01]
+    }
+
+    /// `e1 05 <count> <modes…> <exclusiveCount>`. Rejects a wrong count, unknown or repeated
+    /// modes, and a non-empty exclusive list (only the captured empty one is understood).
+    public static func decodeConnectionPriorityCapability(_ payload: [UInt8]) -> [ConnectionPriority]? {
+        guard payload.count >= 4,
+              payload[0] == Opcode.audioRetCapability,
+              payload[1] == Subtype.connectionPriority else { return nil }
+        let count = Int(payload[2])
+        guard payload.count == count + 4, payload[payload.count - 1] == 0x00 else { return nil }
+        var priorities: [ConnectionPriority] = []
+        for byte in payload[3..<(3 + count)] {
+            guard let priority = ConnectionPriority(rawValue: byte), !priorities.contains(priority) else { return nil }
+            priorities.append(priority)
+        }
+        return priorities
+    }
+
+    /// Reply `e7 05 <mode>` (exactly 3 bytes; no stream, so `stream` is nil) or notify
+    /// `e9 05 <mode> <switchingStream>` (exactly 4 bytes).
+    public static func decodeConnectionPriority(_ payload: [UInt8]) -> (priority: ConnectionPriority, stream: AudioStreamType?)? {
+        guard payload.count >= 3, payload[1] == Subtype.connectionPriority else { return nil }
+        let stream: AudioStreamType?
+        switch payload[0] {
+        case Opcode.audioRetParam:
+            guard payload.count == 3 else { return nil }
+            stream = nil
+        case Opcode.audioNotifyParam:
+            guard payload.count == 4, let reported = AudioStreamType(rawValue: payload[3]) else { return nil }
+            stream = reported
+        default:
+            return nil
+        }
+        guard let priority = ConnectionPriority(rawValue: payload[2]) else { return nil }
+        return (priority, stream)
+    }
+
+    // MARK: - Audio codec (COMMON status, type 0x02). mos9527 reference; not captured on an XM6.
+
+    public static func buildAudioCodecGet() -> [UInt8] {
+        [Opcode.commonStatusGet, Subtype.audioCodec]
+    }
+
+    /// `13 02 <codec>` or notify `15 02 <codec>`, exactly 3 bytes. A byte outside the
+    /// reference table decodes as `.unknown`, not rejected and not guessed.
+    public static func decodeAudioCodec(_ payload: [UInt8]) -> AudioCodec? {
+        guard payload.count == 3, payload[1] == Subtype.audioCodec,
+              isCommonStatusReply(opcode: payload[0]) else { return nil }
+        return AudioCodec(code: payload[2])
+    }
+
+    static func isCommonStatusReply(opcode: UInt8) -> Bool {
+        opcode == Opcode.commonStatusRet || opcode == Opcode.commonStatusNotify
+    }
+
     // MARK: - Multipoint device list + playback source switch (frame type 0x0e)
     //
     // PERIPHERAL family, which rides the second message table (frame type 0x0e).

@@ -3,6 +3,7 @@ package io.github.andru1989.xmaudiostudio.core.device
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundMode
 import io.github.andru1989.xmaudiostudio.core.model.AutomaticPowerOffMode
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
+import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerState
 import io.github.andru1989.xmaudiostudio.core.model.ListeningMode
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
@@ -32,6 +33,7 @@ class AdapterSafetyTest {
         DeviceCommand.SetAutomaticPowerOff(AutomaticPowerOffMode.OFF),
         DeviceCommand.SetPauseWhenTakenOff(true),
         DeviceCommand.SwitchPlayback("AA:BB:CC:DD:EE:01"),
+        DeviceCommand.SetConnectionPriority(ConnectionPriority.STABLE_CONNECTION),
     )
 
     private val fiveBandState = HeadphoneState(equalizer = EqualizerState(0xa0, listOf(0, 0, 0, 0, 0), subtype = 0x01, clearBass = 4))
@@ -43,7 +45,7 @@ class AdapterSafetyTest {
         assertEquals(
             listOf(
                 "04 01", "04 02", "66 15", "66 17", "66 19", "22 00", "f6 0c", "fa 0c", "26 05", "f6 01",
-                "56 04", "56 00", "50 04 01", "e6 09", "e6 04", "T2 36 02",
+                "56 04", "56 00", "50 04 01", "e6 09", "e6 04", "e0 05", "e6 05", "12 02", "T2 36 02",
             ),
             hex(Xm6Adapter.stateQueries()),
         )
@@ -126,6 +128,7 @@ class AdapterSafetyTest {
             DeviceCommand.SetBgmRoomSize(BgmRoomSize.SMALL),
             DeviceCommand.SwitchPlayback("AA:BB:CC:DD:EE:01"),
             DeviceCommand.SetEqualizerBands(List(10) { 0 }),
+            DeviceCommand.SetConnectionPriority(ConnectionPriority.STABLE_CONNECTION),
         )) {
             assertEquals(command.toString(), emptyList<Outgoing>(), Xm5Adapter.encode(command, state))
         }

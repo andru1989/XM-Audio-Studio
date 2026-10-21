@@ -38,6 +38,10 @@ class SimulatedXm6Channel(
     var autoPowerOff = 0x11
     var pauseWhenTakenOff = true
     var playbackIndex = 0
+    /** 0x00 sound quality, 0x01 stable connection (0x02 low latency is advertised but not writable). */
+    var connectionPriority = 0x00
+    /** LDAC. */
+    var audioCodec = 0x10
     val devices = listOf("AA:BB:CC:DD:EE:01" to "MacBook Pro", "AA:BB:CC:DD:EE:02" to "Pixel")
 
     /** Set to make open() fail, e.g. to simulate another device holding the channel. */
@@ -167,9 +171,13 @@ class SimulatedXm6Channel(
                     }
                     eqReport(0x59)
                 }
+                0x12 -> if (p.u(1) == 0x02) bytes(0x13, 0x02, audioCodec) else null
+                // Capability as captured on an XM6 fw 3.1.5: quality, stable, low latency; no exclusive list.
+                0xe0 -> if (p.u(1) == 0x05) bytes(0xe1, 0x05, 0x03, 0x00, 0x01, 0x02, 0x00) else null
                 0xe6 -> when (p.u(1)) {
                     0x09 -> bytes(0xe7, 0x09, if (bgmEnabled) 0x00 else 0x01, bgmRoom)
                     0x04 -> bytes(0xe7, 0x04, if (cinemaEnabled) 0x00 else 0x01)
+                    0x05 -> bytes(0xe7, 0x05, connectionPriority)
                     else -> null
                 }
                 0xe8 -> when (p.u(1)) {
@@ -181,6 +189,13 @@ class SimulatedXm6Channel(
                     0x04 -> {
                         cinemaEnabled = p.u(2) == 0x00
                         bytes(0xe9, 0x04, p.u(2))
+                    }
+                    // Like the real XM6, only `e8 05 <00|01> 01` is taken; anything else is ignored.
+                    0x05 -> if (p.size == 4 && p.u(3) == 0x01 && p.u(2) in 0x00..0x01) {
+                        connectionPriority = p.u(2)
+                        bytes(0xe9, 0x05, connectionPriority, 0x02) // stream: classic
+                    } else {
+                        null
                     }
                     else -> null
                 }
