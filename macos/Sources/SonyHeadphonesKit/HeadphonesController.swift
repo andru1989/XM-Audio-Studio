@@ -63,7 +63,15 @@ public final class HeadphonesController: ObservableObject {
 
     private var usage = ConnectionUsage()
     private var idleDisconnectTask: Task<Void, Never>?
-    private var pendingCommands: [(SonyMessageType, [UInt8])] = []
+    /// A user intent waiting for the channel. It is encoded only when it is sent, after
+    /// the state read that follows every (re)connect, so it never writes stale companion
+    /// values (e.g. the BGM room size the user changed on the phone meanwhile).
+    private struct PendingCommand {
+        /// Intents with the same key replace each other while unsent (latest wins).
+        let key: String
+        let build: () -> [(SonyMessageType, [UInt8])]
+    }
+    private var pendingCommands: [PendingCommand] = []
     private var connectionGeneration = 0
     private let connection: HeadphonesConnection
     private let pairedDevicesProvider: () -> [PairedDeviceInfo]
@@ -71,7 +79,8 @@ public final class HeadphonesController: ObservableObject {
     private let protocolLog = ProtocolLog()
 
     private var sequenceNumber: UInt8 = 0
-    private var outgoingQueue: [(SonyMessageType, [UInt8])] = []
+    /// Messages ready to send: state queries, or the encoded messages of one intent.
+    private var outgoingQueue: [(type: SonyMessageType, payload: [UInt8], isCommand: Bool)] = []
     private var awaitingAck = false
     private var awaitingCommandAck = false
     private var ackTimeoutTask: Task<Void, Never>?
@@ -83,7 +92,6 @@ public final class HeadphonesController: ObservableObject {
     private var connectRetryCount = 0
     private var connectTarget: (address: String, name: String?)?
     private var lastConnectTarget: (address: String, name: String?)?
-    private var didApplyConnectDefaults = false
 
     public convenience init() {
         self.init(connection: RFCOMMConnection(), pairedDevices: RFCOMMConnection.pairedDevices)
@@ -229,7 +237,8 @@ public final class HeadphonesController: ObservableObject {
         guard usage.shouldRelease(now: now) else { return }
         // Finish an accepted command before releasing; background state queries do
         // not extend the grace period.
-        guard pendingCommands.isEmpty, !awaitingCommandAck, equalizerWriteTask == nil else { return }
+        guard pendingCommands.isEmpty, !awaitingCommandAck, equalizerWriteTask == nil,
+              !outgoingQueue.contains(where: { $0.isCommand }) else { return }
         disconnect()
     }
 
@@ -247,34 +256,42 @@ public final class HeadphonesController: ObservableObject {
 
     /// Queues a raw payload; used by the XMAudioProbe tool to verify command layouts.
     public func sendRaw(_ payload: [UInt8], type: SonyMessageType = .command1) {
-        enqueueCommand(payload, type: type)
+        enqueueCommand(key: "raw-\(UUID().uuidString)") { [(type, payload)] }
     }
 
     public func setAmbientSound(_ state: AmbientSoundState) {
         var state = state
         state.level = max(1, min(20, state.level))
         ambientSound = state // optimistic; a NOTIFY will reconcile if the device disagrees
-        enqueueCommand(SonyCommands.buildAmbientSoundSet(state))
+        enqueueCommand(key: "ambient") { [unowned self] in
+            // Speak the dialect the headphones reported most recently (0x19 on XM6 fw 3.x).
+            var write = state
+            if let reported = self.ambientSound {
+                write.subtype = reported.subtype
+                write.hasWindNoiseByte = reported.hasWindNoiseByte
+            }
+            return [(.command1, SonyCommands.buildAmbientSoundSet(write))]
+        }
     }
 
     public func setSpeakToChatEnabled(_ enabled: Bool) {
         speakToChatEnabled = enabled
-        enqueueCommand(SonyCommands.buildSpeakToChatEnabledSet(enabled))
+        enqueueCommand(key: "stc") { [(.command1, SonyCommands.buildSpeakToChatEnabledSet(enabled))] }
     }
 
     public func setSpeakToChatConfig(_ config: SpeakToChatConfigState) {
         speakToChatConfig = config
-        enqueueCommand(SonyCommands.buildSpeakToChatConfigSet(config))
+        enqueueCommand(key: "stcConfig") { [(.command1, SonyCommands.buildSpeakToChatConfigSet(config))] }
     }
 
     public func setAutomaticPowerOff(_ mode: AutomaticPowerOffMode) {
         automaticPowerOff = mode
-        enqueueCommand(SonyCommands.buildAutomaticPowerOffSet(mode))
+        enqueueCommand(key: "apo") { [(.command1, SonyCommands.buildAutomaticPowerOffSet(mode))] }
     }
 
     public func setPauseWhenTakenOff(_ enabled: Bool) {
         pauseWhenTakenOff = enabled
-        enqueueCommand(SonyCommands.buildPauseWhenTakenOffSet(enabled))
+        enqueueCommand(key: "pause") { [(.command1, SonyCommands.buildPauseWhenTakenOffSet(enabled))] }
     }
 
     /// Writes a custom equalizer curve, coalescing rapid changes.
@@ -299,7 +316,9 @@ public final class HeadphonesController: ObservableObject {
             try? await Task.sleep(nanoseconds: 120_000_000)
             guard let self, !Task.isCancelled else { return }
             self.equalizerWriteTask = nil
-            self.enqueueCommand(SonyCommands.buildEqualizerBandsSet(bands: bands, subtype: subtype))
+            self.enqueueCommand(key: "eq") { [unowned self] in
+                [(.command1, SonyCommands.buildEqualizerBandsSet(bands: bands, subtype: self.equalizer?.subtype ?? subtype))]
+            }
         }
     }
 
@@ -310,19 +329,28 @@ public final class HeadphonesController: ObservableObject {
         equalizerWriteTask = nil
         let subtype = equalizer?.subtype ?? 0x04
         equalizer = EqualizerState(presetCode: preset.rawValue, bands: equalizer?.bands ?? [], subtype: subtype)
-        enqueueCommand(SonyCommands.buildEqualizerPresetSet(code: preset.rawValue, subtype: subtype))
+        enqueueCommand(key: "eq") { [unowned self] in
+            [(.command1, SonyCommands.buildEqualizerPresetSet(code: preset.rawValue, subtype: self.equalizer?.subtype ?? subtype))]
+        }
     }
 
     public func setListeningMode(_ mode: ListeningMode) {
         listeningMode = mode
-        let roomSize = bgmRoomSize ?? .middle
-        enqueueCommand(SonyCommands.buildBGMModeSet(enabled: mode == .backgroundMusic, roomSize: roomSize))
-        enqueueCommand(SonyCommands.buildUpmixCinemaSet(enabled: mode == .cinema))
+        enqueueCommand(key: "listeningMode") { [unowned self] in
+            // The room size is read at send time, so a fresh read wins over a stale UI.
+            let roomSize = self.bgmRoomSize ?? .middle
+            return [
+                (.command1, SonyCommands.buildBGMModeSet(enabled: mode == .backgroundMusic, roomSize: roomSize)),
+                (.command1, SonyCommands.buildUpmixCinemaSet(enabled: mode == .cinema)),
+            ]
+        }
     }
 
     public func setBGMRoomSize(_ roomSize: BGMRoomSize) {
         bgmRoomSize = roomSize
-        enqueueCommand(SonyCommands.buildBGMModeSet(enabled: listeningMode == .backgroundMusic, roomSize: roomSize))
+        enqueueCommand(key: "bgmRoom") { [unowned self] in
+            [(.command1, SonyCommands.buildBGMModeSet(enabled: self.listeningMode == .backgroundMusic, roomSize: roomSize))]
+        }
     }
 
     /// Switch the active playback source to another connected device.
@@ -333,9 +361,10 @@ public final class HeadphonesController: ObservableObject {
             d.isPlayback = d.macAddress == device.macAddress
             return d
         }
-        enqueueCommand(payload, type: .command2)
-        // The device pushes an updated list after a switch; ask anyway as a fallback.
-        enqueueCommand(SonyCommands.buildDeviceListGet(), type: .command2)
+        enqueueCommand(key: "source") {
+            // The device pushes an updated list after a switch; ask anyway as a fallback.
+            [(.command2, payload), (.command2, SonyCommands.buildDeviceListGet())]
+        }
     }
 
     // MARK: - Connection events
@@ -354,7 +383,6 @@ public final class HeadphonesController: ObservableObject {
             equalizerWriteTask = nil
         }
         initRetryCount = 0
-        didApplyConnectDefaults = false
         initialStateTimedOut = false
         frameParser.reset()
         ambientSound = nil
@@ -380,6 +408,7 @@ public final class HeadphonesController: ObservableObject {
 
         case .closed:
             let hasPendingWork = !pendingCommands.isEmpty || awaitingCommandAck || equalizerWriteTask != nil
+                || outgoingQueue.contains { $0.isCommand }
             // Local teardown detaches the transport delegate and invalidates queued
             // events. An opened channel closing here is the headset yielding us out.
             if releaseWhenIdle && (connectionState == .connected || connectionState == .initializing)
@@ -489,23 +518,10 @@ public final class HeadphonesController: ObservableObject {
 
         case .ambientSound(var state):
             // XM6 answers 0x17 reads with a zero-update placeholder. Keep loading
-            // (or the last real state); legacy mode still applies its startup defaults.
-            if releaseWhenIdle && state.subtype == 0x17 && !state.isUpdate { return }
-            // On the first report after connecting, apply the user's preferred startup
-            // defaults: never sit in "Off" (use Noise Cancelling), and never keep an
-            // ambient level of 0 (use 15). Later reports (e.g. changes made on the
-            // headphones themselves) are mirrored untouched.
-            if !releaseWhenIdle && !didApplyConnectDefaults {
-                didApplyConnectDefaults = true
-                var desired = state
-                if desired.mode == .off { desired.mode = .noiseCancelling }
-                if desired.level == 0 { desired.level = 15 }
-                if desired != state {
-                    setAmbientSound(desired)
-                    return
-                }
-            }
-            if releaseWhenIdle { state.level = max(1, state.level) }
+            // (or the last real state). The reported state is mirrored as is: nothing is
+            // ever written on connect (upstream used to force Noise Cancelling here).
+            if state.subtype == 0x17 && !state.isUpdate { return }
+            state.level = max(1, state.level)
             ambientSound = state
         case .battery(let status):
             battery = status
@@ -577,19 +593,17 @@ public final class HeadphonesController: ObservableObject {
 
     // MARK: - Outbound queue
 
-    private func enqueueCommand(_ payload: [UInt8], type: SonyMessageType = .command1) {
-        if releaseWhenIdle {
-            pendingCommands.append((type, payload))
-            recordCommand()
-            if connectionState == .connected && !awaitingAck { sendNextQueuedCommand() }
-        } else {
-            recordCommand()
-            enqueue(payload, type: type)
-        }
+    /// Queues a user intent. It acquires the channel on demand and is written only after
+    /// any queued state queries (the read that follows every connect) have gone out.
+    private func enqueueCommand(key: String, build: @escaping () -> [(SonyMessageType, [UInt8])]) {
+        pendingCommands.removeAll { $0.key == key }
+        pendingCommands.append(PendingCommand(key: key, build: build))
+        recordCommand()
+        if connectionState == .connected && !awaitingAck { sendNextQueuedCommand() }
     }
 
     private func enqueue(_ payload: [UInt8], type: SonyMessageType = .command1) {
-        outgoingQueue.append((type, payload))
+        outgoingQueue.append((type, payload, false))
         if !awaitingAck {
             sendNextQueuedCommand()
         }
@@ -597,18 +611,16 @@ public final class HeadphonesController: ObservableObject {
 
     private func sendNextQueuedCommand() {
         disconnectIfIdle()
-        let command: (SonyMessageType, [UInt8])
-        if connectionState == .connected && !pendingCommands.isEmpty {
-            command = pendingCommands.removeFirst()
-            awaitingCommandAck = true
-        } else {
-            guard !outgoingQueue.isEmpty else { return }
-            command = outgoingQueue.removeFirst()
-            awaitingCommandAck = false
+        // Read before write: intents are encoded only once every queued query has gone.
+        if outgoingQueue.isEmpty, connectionState == .connected, !pendingCommands.isEmpty {
+            let intent = pendingCommands.removeFirst()
+            outgoingQueue.append(contentsOf: intent.build().map { ($0.0, $0.1, true) })
         }
-        let (type, payload) = command
+        guard !outgoingQueue.isEmpty else { return }
+        let next = outgoingQueue.removeFirst()
+        awaitingCommandAck = next.isCommand
         awaitingAck = true
-        send(SonyMessage(type: type, sequenceNumber: sequenceNumber, payload: payload))
+        send(SonyMessage(type: next.type, sequenceNumber: sequenceNumber, payload: next.payload))
         startAckTimeout()
     }
 
