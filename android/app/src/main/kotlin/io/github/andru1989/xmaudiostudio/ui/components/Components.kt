@@ -3,6 +3,9 @@ package io.github.andru1989.xmaudiostudio.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -50,9 +53,12 @@ fun SectionCard(title: String? = null, modifier: Modifier = Modifier, content: @
 
 @Composable
 fun <T> Segmented(options: List<Pair<T, String>>, selected: T?, enabled: Boolean = true, onSelect: (T) -> Unit) {
-    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+    // Every segment takes the height of the tallest one, so a label that wraps to two lines
+    // ("Música de fondo") does not leave its neighbours shorter.
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().height(IntrinsicSize.Min)) {
         options.forEachIndexed { i, (value, label) ->
             SegmentedButton(
+                modifier = Modifier.fillMaxHeight(),
                 selected = value == selected,
                 onClick = { onSelect(value) },
                 enabled = enabled,

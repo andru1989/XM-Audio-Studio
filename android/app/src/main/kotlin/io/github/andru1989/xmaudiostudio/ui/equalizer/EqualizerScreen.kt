@@ -6,6 +6,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -69,6 +71,7 @@ private val chartGrid = FrequencyGrid.logSpaced(20.0, 20_000.0, 160)
 
 private fun predicted(spec: EqualizerSpec, steps: List<Int>) = AutoEqImporter.deviceModel(spec).responseDb(steps, chartGrid)
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modifier) {
     val snap = state.snapshot
@@ -178,7 +181,8 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
             val maxBoost = (steps.maxOrNull() ?: 0) * spec.stepDb
             if (maxBoost >= 4) Text(stringResource(R.string.eq_clip_risk, maxBoost.toInt()), color = c.warning, style = MaterialTheme.typography.bodySmall)
 
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // Wraps onto further lines instead of scrolling sideways when the buttons don't fit.
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 OutlinedButton(onClick = vm::resetFlat, enabled = editable) { Text(stringResource(R.string.reset_flat)) }
                 OutlinedButton(onClick = vm::undo, enabled = editable && state.canUndo) {
                     Icon(Icons.AutoMirrored.Filled.Undo, null, Modifier.size(18.dp)); Spacer(Modifier.width(4.dp)); Text(stringResource(R.string.undo))
@@ -211,7 +215,7 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
                     )
                 }
             }
-            Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 FilledTonalButton(onClick = { autoEqDialog = true }) { Text(stringResource(R.string.autoeq_import)) }
                 OutlinedButton(onClick = { exportLauncher.launch("xm-audio-studio-profiles.json") }) { Text(stringResource(R.string.export_profiles)) }
                 OutlinedButton(onClick = { importLauncher.launch(arrayOf("application/json", "text/plain", "*/*")) }) { Text(stringResource(R.string.import_profiles)) }
