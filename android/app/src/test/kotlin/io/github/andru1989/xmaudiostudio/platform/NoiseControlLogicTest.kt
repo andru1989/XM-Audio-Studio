@@ -42,8 +42,9 @@ class NoiseControlLogicTest {
     @Test
     fun availabilityRules() {
         assertEquals(Availability.NO_DEVICE, NoiseControlLogic.availability(null, demoMode = false, hasBluetoothPermission = true))
-        val xm5 = DeviceTarget("AA:BB:CC:DD:EE:05", "WH-1000XM5", HeadphoneModel.WH_1000XM5)
-        assertEquals(Availability.UNSUPPORTED_MODEL, NoiseControlLogic.availability(xm5, demoMode = false, hasBluetoothPermission = true))
+        // MDR-1000X is the one model still without a protocol adapter.
+        val mdr1000x = DeviceTarget("AA:BB:CC:DD:EE:05", "MDR-1000X", HeadphoneModel.MDR_1000X)
+        assertEquals(Availability.UNSUPPORTED_MODEL, NoiseControlLogic.availability(mdr1000x, demoMode = false, hasBluetoothPermission = true))
         assertEquals(Availability.PERMISSION_MISSING, NoiseControlLogic.availability(xm6, demoMode = false, hasBluetoothPermission = false))
         // The simulator needs no Bluetooth permission.
         assertEquals(Availability.READY, NoiseControlLogic.availability(xm6, demoMode = true, hasBluetoothPermission = false))
