@@ -44,6 +44,10 @@
 	<string>NSApplication</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>XM Audio Studio se conecta a tus audífonos Sony por Bluetooth para leer la batería y cambiar ajustes como la cancelación de ruido y el ecualizador.</string>
+	<!-- Only used by the optional, off-by-default local DSP equalizer (AudioDSPKit):
+	     macOS shows the "System Audio Recording" prompt the first time it is turned on. -->
+	<key>NSAudioCaptureUsageDescription</key>
+	<string>XM Audio Studio solo usa el audio del sistema si activas el EQ avanzado, para ecualizar en este Mac lo que suena en la salida que elijas. El audio no se graba ni se envía a ningún sitio.</string>
 	<key>LSApplicationSecondaryUIElement</key>
 	<false/>
 </dict>
