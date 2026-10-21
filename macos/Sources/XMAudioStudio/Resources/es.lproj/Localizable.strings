@@ -228,3 +228,21 @@
 "Beta. Uses a Core Audio process tap (macOS 14.4 or later): no driver is installed and the system output is never changed. Turning it off, quitting or a crash returns the audio to normal, unprocessed." = "Beta. Usa un “process tap” de Core Audio (macOS 14.4 o posterior): no instala ningún controlador y nunca cambia la salida del sistema. Al apagarlo, al salir de la app o si esta falla, el audio vuelve a la normalidad, sin procesar.";
 "Adds about 5 ms of latency (limiter look-ahead) plus the device buffer; Bluetooth adds its own. A headset switching to call mode restarts processing at the new format." = "Añade unos 5 ms de latencia (anticipación del limitador) más el búfer del dispositivo; el Bluetooth suma la suya. Si unos audífonos pasan a modo llamada, el procesamiento se reinicia con el nuevo formato.";
 "Original is the untouched input, bit for bit." = "Original es la entrada intacta, idéntica bit a bit.";
+/* Escenas: perfiles con la configuración completa de los audífonos. */
+"Save Full Configuration…" = "Guardar configuración completa…";
+"Save Full Configuration" = "Guardar configuración completa";
+"Keep the EQ and every other setting the headphones report (noise control, listening mode, Speak-to-Chat…) as one profile" = "Guarda el ecualizador y los demás ajustes que informan los audífonos (control de ruido, modo de escucha, Hablar para chatear…) como un perfil";
+"My configuration %@" = "Mi configuración %@";
+"Scene" = "Escena";
+"Includes headphone settings besides the equalizer" = "Incluye ajustes de los audífonos además del ecualizador";
+"Scene: includes headphone settings besides the equalizer" = "Escena: incluye ajustes de los audífonos además del ecualizador";
+"Apply “%@”" = "Aplicar «%@»";
+"This profile is a scene. Applying it changes:" = "Este perfil es una escena. Al aplicarlo cambiará:";
+"Equalizer: %@" = "Ecualizador: %@";
+"custom curve" = "curva personalizada";
+"The other settings already match the scene." = "Los demás ajustes ya coinciden con la escena.";
+"State not read live: every saved setting is sent after the headphones are read." = "Estado no leído en vivo: se enviarán todos los ajustes guardados, después de leer los audífonos.";
+"Background Music room" = "Sala de Música de fondo";
+"Enabled" = "Activado";
+"Disabled" = "Desactivado";
+"not read" = "sin leer";
