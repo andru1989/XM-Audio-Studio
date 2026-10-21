@@ -1,8 +1,11 @@
 # Instalación, permisos y builds reproducibles
 
 ## macOS (13" o mayor, macOS 15+, Apple Silicon o Intel)
-1. `cd macos && Scripts/build_app.sh && Scripts/make_dmg.sh` → `macos/dist/XM Audio Studio <versión>.dmg`.
-2. Abre el `.dmg` y arrastra **XM Audio Studio** a Aplicaciones.
+1. Con widgets (recomendado): `cd macos && Scripts/build_xcode.sh && Scripts/make_dmg.sh`
+   (sin widgets: `Scripts/build_app.sh`, solo SwiftPM) → `macos/dist/XM Audio Studio <versión>.dmg`.
+2. Abre el `.dmg` y arrastra **XM Audio Studio** a Aplicaciones (o a `~/Applications`). **No la ejecutes
+   desde `~/Documents`, `~/Desktop` ni `~/Downloads`**: macOS no arranca ahí la extensión del widget (sandbox).
+   Abre la app una vez para que el widget aparezca en la galería de widgets.
 3. Primera apertura: concede **Bluetooth** cuando macOS lo pida (Ajustes del Sistema → Privacidad y
    seguridad → Bluetooth). Firmado con tu certificado "Apple Development": macOS conserva el permiso
    entre builds. No está notarizado (requiere Developer ID); en otros Macs habría que abrirlo con

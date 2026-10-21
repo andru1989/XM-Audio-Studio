@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- WidgetKit extensions must be sandboxed. -->
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<!-- Read snapshot.json, write Commands/*.json. Same ID as the app. -->
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>P5M226DH69.group.io.github.andru1989.xmaudiostudio</string>
+	</array>
+</dict>
+</plist>

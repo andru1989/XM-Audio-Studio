@@ -1,0 +1,48 @@
+/* Widget gallery */
+"XM Audio Studio" = "XM Audio Studio";
+"Battery, noise control and equalizer presets for your Sony headphones." = "Batería, control de ruido y presets del ecualizador de tus audífonos Sony.";
+
+/* Sections and labels */
+"Noise control" = "Control de ruido";
+"Noise control unknown" = "Control de ruido desconocido";
+"Equalizer" = "Ecualizador";
+"Equalizer preset" = "Preset del ecualizador";
+"Noise Canceling" = "Cancelación de ruido";
+"Ambient Sound" = "Sonido ambiente";
+"NC" = "Cancelación";
+"Ambient" = "Ambiente";
+"Off" = "Desactivado";
+"Heavy" = "Heavy";
+"Clear" = "Clear";
+"Hard" = "Hard";
+"Soft" = "Soft";
+"Custom" = "Personalizado";
+"Personalized" = "Personalizado";
+"Demo" = "Demo";
+"Demo mode: simulated headphones, invented data." = "Modo demostración: audífonos simulados, datos inventados.";
+"Battery level not reported" = "Nivel de batería no informado";
+"Battery %lld%%" = "Batería al %lld %%";
+"Battery %lld%%, charging" = "Batería al %lld %%, cargando";
+"The EQ is off while Background Music or Cinema is on." = "El EQ está desactivado mientras Música de fondo o Cine están activos.";
+
+/* Status line */
+"Live" = "En vivo";
+"Connecting…" = "Conectando…";
+"Applying…" = "Aplicando…";
+"Open XM Audio Studio to connect." = "Abre XM Audio Studio para conectar.";
+"Last known · %@ ago" = "Último estado · hace %@";
+"Not connected" = "Sin conexión";
+"Couldn't reach the headphones." = "No se pudo contactar con los audífonos.";
+"Another device is using the headphones." = "Otro dispositivo está usando los audífonos.";
+"The headphones didn't report their state." = "Los audífonos no informaron su estado.";
+"XM Audio Studio wasn't running. Try again." = "XM Audio Studio no estaba abierto. Inténtalo de nuevo.";
+"The headphones didn't answer in time." = "Los audífonos no respondieron a tiempo.";
+
+/* App Intents (Shortcuts-facing names of the widget buttons) */
+"Set Noise Control" = "Cambiar control de ruido";
+"Switches the headphones between noise canceling, ambient sound and off." = "Cambia los audífonos entre cancelación de ruido, sonido ambiente y desactivado.";
+"Apply Equalizer Preset" = "Aplicar preset del ecualizador";
+"Applies one of the headphones' equalizer presets." = "Aplica uno de los presets del ecualizador de los audífonos.";
+"Mode" = "Modo";
+"Preset" = "Preset";
+"Not available on these headphones." = "No disponible en estos audífonos.";
