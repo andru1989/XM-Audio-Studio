@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/andru1989/xm-audio-studio/shared/preset-schema/profiles.schema.json",
+  "title": "XM Audio Studio profile export",
+  "type": "object",
+  "required": [
+    "format",
+    "version",
+    "profiles"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "format": {
+      "const": "xm-audio-studio.profiles"
+    },
+    "version": {
+      "const": 1
+    },
+    "exportedAt": {
+      "type": "string"
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/profile"
+      }
+    }
+  },
+  "$defs": {
+    "profile": {
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "category",
+        "model",
+        "deviceEq"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "category": {
+          "enum": [
+            "device-preset",
+            "measured",
+            "subjective",
+            "user"
+          ],
+          "description": "device-preset: a Sony built-in preset; measured: derived from an acoustic measurement (e.g. AutoEq); subjective: designed by taste; user: created by the user"
+        },
+        "model": {
+          "enum": [
+            "mdr-1000x",
+            "wh-1000xm2",
+            "wh-1000xm3",
+            "wh-1000xm4",
+            "wh-1000xm5",
+            "wh-1000xm6"
+          ]
+        },
+        "deviceEq": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Exactly one of presetCode (select a Sony preset) or steps (custom curve, low band first, device steps).",
+          "properties": {
+            "presetCode": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            },
+            "steps": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "clearBass": {
+              "type": "integer"
+            }
+          }
+        },
+        "sourceCurve": {
+          "description": "The parametric curve the steps were fitted to (AutoEq import). Kept for comparison and the future DSP mode.",
+          "type": "object",
+          "required": [
+            "preampDb",
+            "filters"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "preampDb": {
+              "type": "number"
+            },
+            "filters": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "type",
+                  "frequency",
+                  "gainDb",
+                  "q"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "type": {
+                    "enum": [
+                      "peaking",
+                      "lowShelf",
+                      "highShelf"
+                    ]
+                  },
+                  "frequency": {
+                    "type": "number"
+                  },
+                  "gainDb": {
+                    "type": "number"
+                  },
+                  "q": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "source": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "description": {
+              "type": "string"
+            },
+            "url": {
+              "type": "string"
+            },
+            "attribution": {
+              "type": "string"
+            }
+          }
+        },
+        "notes": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

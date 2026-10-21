@@ -1,0 +1,26 @@
+{
+  "format": "xm-audio-studio.profiles",
+  "version": 1,
+  "profiles": [
+    {
+      "id": "x",
+      "name": " ",
+      "category": "user",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,241 @@
+{
+  "format": "xm-audio-studio.profiles",
+  "version": 1,
+  "profiles": [
+    {
+      "id": "builtin.sony-original",
+      "name": "Original Sony",
+      "category": "device-preset",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "presetCode": 0
+      },
+      "notes": "Desactiva el EQ de los audífonos: afinación de fábrica de Sony."
+    },
+    {
+      "id": "builtin.flat",
+      "name": "Plano",
+      "category": "subjective",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "notes": "Curva personalizada a cero. Equivale al sonido de fábrica, no a una respuesta neutra medida."
+    },
+    {
+      "id": "builtin.controlled-bass",
+      "name": "Graves controlados",
+      "category": "subjective",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          -3,
+          -2,
+          -1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+    },
+    {
+      "id": "builtin.clear-vocals",
+      "name": "Voces claras",
+      "category": "subjective",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          -2,
+          -1,
+          -1,
+          0,
+          1,
+          2,
+          3,
+          2,
+          0,
+          0
+        ]
+      },
+      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+    },
+    {
+      "id": "builtin.electronic",
+      "name": "Música electrónica",
+      "category": "subjective",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          4,
+          3,
+          1,
+          0,
+          -1,
+          -1,
+          0,
+          1,
+          2,
+          2
+        ]
+      },
+      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+    },
+    {
+      "id": "builtin.rock",
+      "name": "Rock",
+      "category": "subjective",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          3,
+          2,
+          0,
+          -1,
+          -1,
+          0,
+          1,
+          2,
+          2,
+          1
+        ]
+      },
+      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+    },
+    {
+      "id": "builtin.classical",
+      "name": "Música clásica",
+      "category": "subjective",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          1,
+          1,
+          0,
+          0,
+          -1,
+          -1,
+          0,
+          1,
+          2,
+          1
+        ]
+      },
+      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+    },
+    {
+      "id": "builtin.movies",
+      "name": "Películas",
+      "category": "subjective",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          3,
+          2,
+          1,
+          0,
+          0,
+          1,
+          2,
+          1,
+          0,
+          0
+        ]
+      },
+      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+    },
+    {
+      "id": "builtin.gaming",
+      "name": "Videojuegos",
+      "category": "subjective",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          1,
+          1,
+          0,
+          -1,
+          0,
+          1,
+          3,
+          3,
+          1,
+          0
+        ]
+      },
+      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+    },
+    {
+      "id": "builtin.podcast",
+      "name": "Podcast",
+      "category": "subjective",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          -4,
+          -3,
+          -2,
+          0,
+          1,
+          2,
+          2,
+          1,
+          -1,
+          -2
+        ]
+      },
+      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+    },
+    {
+      "id": "builtin.sony-heavy",
+      "name": "Sony Heavy",
+      "category": "device-preset",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "presetCode": 48
+      }
+    },
+    {
+      "id": "builtin.sony-clear",
+      "name": "Sony Clear",
+      "category": "device-preset",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "presetCode": 49
+      }
+    },
+    {
+      "id": "builtin.sony-hard",
+      "name": "Sony Hard",
+      "category": "device-preset",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "presetCode": 50
+      }
+    },
+    {
+      "id": "builtin.sony-soft",
+      "name": "Sony Soft",
+      "category": "device-preset",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "presetCode": 51
+      }
+    }
+  ]
+}

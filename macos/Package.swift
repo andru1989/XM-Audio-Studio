@@ -15,10 +15,12 @@ let package = Package(
                 .linkedFramework("IOBluetooth")
             ]
         ),
-        // Platform-neutral audio maths and presets: biquads, AutoEq import and fitting,
-        // preset schema. No Bluetooth, no UI; mirrored by android/core (eq, presets).
+        // Audio maths and profiles: biquads, AutoEq import and fitting, the shared profile
+        // format. No UI and no transport code; it only reads the device catalogue from
+        // SonyHeadphonesKit. Mirrored by android/core (eq, presets).
         .target(
             name: "AudioStudioKit",
+            dependencies: ["SonyHeadphonesKit"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         .executableTarget(
