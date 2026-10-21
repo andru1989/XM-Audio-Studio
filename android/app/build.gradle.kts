@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -17,12 +19,26 @@ android {
         versionName = "0.1.0"
     }
 
+    // Release signing comes from android/keystore.properties (git-ignored) pointing at a
+    // keystore kept outside the repository; without it, release builds use the debug key.
+    val keystoreProps = rootProject.file("keystore.properties")
+    signingConfigs {
+        if (keystoreProps.exists()) {
+            val props = Properties().apply { keystoreProps.inputStream().use(::load) }
+            create("release") {
+                storeFile = file(props.getProperty("storeFile"))
+                storePassword = props.getProperty("storePassword")
+                keyAlias = props.getProperty("keyAlias")
+                keyPassword = props.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Local test builds are signed with the debug key until a release key exists.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
 
