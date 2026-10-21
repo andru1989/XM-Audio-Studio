@@ -229,7 +229,11 @@ final class WidgetBridge: ObservableObject {
             controller.setAmbientSound(state)
             return .sent
         case .applyEqPreset(let value):
-            guard let preset = EqualizerPreset(rawValue: UInt8(value.code)) else { return .stateUnavailable }
+            // Only codes the connected model's catalogue lists (never another family's table).
+            let model = HeadphoneModel.from(bluetoothName: controller.deviceName) ?? .wh1000xm6
+            guard let preset = EqualizerPreset(rawValue: UInt8(value.code)),
+                  DeviceCatalog.capabilities(model).equalizer?.presets.contains(where: { $0.code == preset.rawValue }) == true
+            else { return .unsupported }
             guard controller.equalizer?.presetCode != preset.rawValue else { return .alreadySet }
             controller.setEqualizerPreset(preset)
             return .sent

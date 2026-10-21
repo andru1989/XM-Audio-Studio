@@ -153,6 +153,17 @@ final class WidgetBridgeTests: XCTestCase {
         XCTAssertEqual(demo.makeSnapshot().link, .offline, "never starts as live")
     }
 
+    func testXM6PresetIsNotSentToAnotherModel() async throws {
+        let controller = HeadphonesController(connection: SimulatedXM6Connection(), pairedDevices: { [] })
+        controller.releaseWhenIdle = true
+        controller.connect(toAddress: "00-00-00-00-de-45", name: "WH-1000XM5") // named as another model
+        let bridge = makeBridge(controller)
+        bridge.submit([WidgetCommand(action: .applyEqPreset(.heavy))]) // 0x30: XM6-only code
+        try await waitUntil("decided") { bridge.pending.isEmpty && bridge.lastOutcome != nil }
+        XCTAssertEqual(bridge.lastOutcome?.result, .unsupported)
+        XCTAssertNotEqual(controller.equalizer?.presetCode, EqualizerPreset.heavy.rawValue)
+    }
+
     func testNoPairedHeadsetFailsInsteadOfWaiting() async throws {
         let controller = HeadphonesController(connection: SimulatedXM6Connection(), pairedDevices: { [] })
         controller.releaseWhenIdle = true

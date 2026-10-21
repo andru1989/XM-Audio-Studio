@@ -108,6 +108,8 @@ public struct CommandOutcome: Codable, Equatable, Sendable {
         case stateUnavailable
         /// The firmware ignores the EQ while Background Music or Cinema is on.
         case blockedByListeningMode
+        /// The connected model doesn't have this preset (the widget's presets are XM6's).
+        case unsupported
         /// The command sat in the mailbox too long (app wasn't running) and was dropped.
         case expired
         /// No answer within the wait limit.

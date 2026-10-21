@@ -62,8 +62,10 @@ Sobre el formato del ID:
   máquina, pero no lo probé con una app lanzada por LaunchServices, que es donde macOS 15+ aplica
   la protección de contenedores. Para eso hacen falta un perfil y una cuenta, que aquí no hay.
   Por eso se usa el estilo macOS.
-- La app no tiene sandbox: necesita IOBluetooth/RFCOMM. Solo declara el App Group. La extensión
-  tiene sandbox, como exige WidgetKit.
+- La app no tiene sandbox: necesita IOBluetooth/RFCOMM. `Config/XMAudioStudio.entitlements`
+  repite los de `Resources/XMAudioStudio.entitlements` (`device.audio-input`, para el DSP local;
+  lo usa `build_app.sh`) y añade el App Group. Si cambia uno, hay que actualizar el otro. La
+  extensión tiene sandbox, como exige WidgetKit.
 
 ## IPC
 
@@ -88,6 +90,7 @@ app: WidgetBridge (Darwin observer / arranque / didBecomeActive) ─▶ toma los
      ├─ espera a .connected Y al estado leído en esta conexión (ambientSound / equalizer;
      │   modo de escucha hasta 8 s) ─▶ se escribe sobre ese estado, nunca sobre valores por defecto
      │   ni de una sesión anterior (regla 3 de AGENTS.md)
+     ├─ preset que el catálogo del modelo conectado no tiene ─▶ "unsupported" (no se envía)
      ├─ fallo, otro dispositivo, sin estado, BGM/Cine bloquea el EQ, 30 s sin respuesta ─▶ lastOutcome
      └─ snapshot.json (debounce 150 ms, solo si cambia el contenido) + reloadAllTimelines (≤ 1/s)
 ```
@@ -131,6 +134,7 @@ Resultados (2026-10-21, Xcode 26.6, macOS 26.5, modo demo, sin audífonos reales
 | EQ Heavy / Soft | Aplicado en 0,1–0,2 s. El snapshot incluye el perfil ("Sony Heavy"). |
 | Liberación a los 20 s | `link = released`, valores conservados. |
 | Comando tras más de 60 s liberado y en segundo plano | Aplicado en 0,7 s. Antes de `beginActivity`, el mismo caso terminaba en `timedOut` y después en `unreachable`. |
+| Tras fusionar `main` (AudioDSPKit, adaptadores, read-before-write) | Mismo build con firma automática. App con `audio-input` + grupo. `swift test`: 113 tests. Off / Clear / NC por IPC en 0,7 / 0,1 / 0,1 s. |
 | App cerrada + `XMAS_LAUNCH_APP` | La sonda (con sandbox) lanzó la app, que tomó el comando 0,5 s después de arrancar. Arrancó en modo real porque no se le pueden pasar argumentos, no encontró los audífonos y lo indicó con `unreachable` a los 16,7 s, sin escribir nada. |
 
 ## Limitaciones
@@ -145,8 +149,9 @@ Resultados (2026-10-21, Xcode 26.6, macOS 26.5, modo demo, sin audífonos reales
   SwiftPM (sin entitlement), el widget no lanza otra y el comando caduca a los 60 s.
 - WidgetKit limita las recargas. El puente solo recarga cuando cambia algo visible, como mucho una
   vez por segundo. Con el canal liberado no llegan cambios de batería.
-- Los presets son los de firmware XM6. El nombre del perfil (`eqProfileName`) se muestra, pero los
-  perfiles de la biblioteca se aplican desde la app.
+- Los botones de EQ son los presets del firmware XM6. El puente solo envía un código si
+  `DeviceCatalog` lo lista para el modelo conectado; si no, responde `unsupported`. El nombre del
+  perfil (`eqProfileName`) se muestra, pero los perfiles de la biblioteca se aplican desde la app.
 - Las fotos de `Resources/Models` (© Sony, uso personal) también van en el bundle de la extensión.
   Rige la regla 7b de AGENTS.md.
 - xcodebuild registra en LaunchServices la copia de `build/DerivedData`. Si hay varias copias,

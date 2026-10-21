@@ -229,6 +229,7 @@ struct StatusLine: View {
         case .blockedByListeningMode: return "The EQ is off while Background Music or Cinema is on."
         case .expired: return "XM Audio Studio wasn't running. Try again."
         case .timedOut: return "The headphones didn't answer in time."
+        case .unsupported: return "Not available on these headphones."
         case .sent, .alreadySet: return ""
         }
     }
