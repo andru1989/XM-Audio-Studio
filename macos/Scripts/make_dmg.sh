@@ -1,13 +1,18 @@
 #!/bin/bash
 # Packages the built app into a drag-to-Applications disk image.
-# Usage: Scripts/build_app.sh && Scripts/make_dmg.sh
+# Usage: Scripts/build_xcode.sh && Scripts/make_dmg.sh   (or build_app.sh for a build without widgets)
 # The image is signed with the same identity as the app when one is available. It is not
 # notarized: that needs a Developer ID certificate (see docs/distribution/INSTALL.md).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-APP=".build/XM Audio Studio.app"
-[ -d "${APP}" ] || { echo "Build the app first: Scripts/build_app.sh"; exit 1; }
+# Prefer the Xcode build (it embeds the WidgetKit extension); fall back to the SwiftPM one.
+if [ -d "build/XM Audio Studio.app" ]; then
+    APP="build/XM Audio Studio.app"
+else
+    APP=".build/XM Audio Studio.app"
+fi
+[ -d "${APP}" ] || { echo "Build the app first: Scripts/build_xcode.sh (with widgets) or Scripts/build_app.sh"; exit 1; }
 VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "${APP}/Contents/Info.plist")"
 OUT_DIR="dist"
 DMG="${OUT_DIR}/XM Audio Studio ${VERSION}.dmg"

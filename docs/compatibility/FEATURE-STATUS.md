@@ -49,7 +49,7 @@ Actualizado: 2026-10-21. Niveles (encargo §15):
 | Modo demostración | — | SIM | SIM (emulador) |
 | Foto del modelo detectado (fotos de Sony, uso personal) | — | **HW** | SIM |
 | Ventana de ajustes nativa, abrir al iniciar sesión | — | SIM | — |
-| Widgets (WidgetKit / Android) | — | en curso | SIM (emulador: modelo, batería, modo, 3 botones) |
+| Widgets (WidgetKit / Android) | — | SIM (IPC app↔widget verificada en demo; galería y clics reales pendientes) | SIM (emulador: modelo, batería, modo, 3 botones) |
 | Centro de Control / Ajustes rápidos | — | PLAN | SIM (mosaico NC → Ambiente → Off) |
 | EQ DSP local (paramétrico) | — | EXP (cadena DSP con 26 tests; captura en vivo sin probar) | PLAN |
 

@@ -11,6 +11,8 @@
   Clear Bass en el modelo de EQ; códecs equivalentes en Swift.
 - macOS: EQ avanzado (beta, apagado por defecto) — EQ paramétrico local vía process tap de Core Audio,
   margen automático, limitador, A/B y aviso de doble corrección (captura en vivo sin probar).
+- macOS: widgets WidgetKit (pequeño, mediano, grande: batería, control de ruido, presets) con build XcodeGen
+  (`Scripts/build_xcode.sh`) e IPC por App Group que encola los toques hasta leer el estado real.
 - CI (GitHub Actions), `.dmg`, APK de versión firmado con clave local, guía de instalación, problemas conocidos.
 - Prueba automática de escrituras con restauración: `tools/hardware/xm6_write_test.py`.
 

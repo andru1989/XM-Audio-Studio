@@ -17,7 +17,7 @@ Actualizado: 2026-10-21. Estado detallado en `compatibility/FEATURE-STATUS.md`.
 9. ~~CI~~ — workflow creado; se ejecutará cuando el repo esté en GitHub.
 
 ## P2 — Funciones de plataforma
-10. macOS widgets WidgetKit (XcodeGen; IPC por App Group con el Team ID; comandos vía controlador) — idea de yelloduxx.
+10. ~~macOS widgets WidgetKit~~ — hechos; falta comprobar en pantalla la galería y los clics (parámetros de botones).
 11. macOS controles del Centro de Control (tras widgets) — idea de plagnioj con IPC correcta.
 12. ~~Android: Ajustes rápidos y widget~~ — hecho (simulación).
 13. Imágenes por modelo: hechas para XM2 y XM3 (CC BY, `shared/model-images`). Sin foto libre para MDR-1000X, XM4, XM5, XM6: buscar de nuevo más adelante, pedir permiso a autores o hacer fotos propias. Android: permitir foto propia del usuario.
