@@ -6,6 +6,16 @@ let package = Package(
     platforms: [
         .macOS(.v15)
     ],
+    // Library products exist so the Xcode project (project.yml, which adds the WidgetKit
+    // extension) links the same modules that `swift build` compiles.
+    products: [
+        .library(name: "SonyHeadphonesKit", targets: ["SonyHeadphonesKit"]),
+        .library(name: "AudioStudioKit", targets: ["AudioStudioKit"]),
+        .library(name: "AudioDSPKit", targets: ["AudioDSPKit"]),
+        .library(name: "WidgetBridgeKit", targets: ["WidgetBridgeKit"]),
+        .executable(name: "XMAudioStudio", targets: ["XMAudioStudio"]),
+        .executable(name: "XMAudioProbe", targets: ["XMAudioProbe"])
+    ],
     targets: [
         // Sony MDR protocol, RFCOMM transport and the session controller.
         .target(
@@ -21,6 +31,13 @@ let package = Package(
         .target(
             name: "AudioStudioKit",
             dependencies: ["SonyHeadphonesKit"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        // App <-> widget IPC: the state snapshot and the command mailbox in the App Group
+        // container, plus the Darwin notification. Foundation only, so the sandboxed widget
+        // extension links it without pulling in IOBluetooth or the protocol code.
+        .target(
+            name: "WidgetBridgeKit",
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         // Local DSP ("EQ avanzado"): realtime parametric biquad chain, limiter and the
@@ -43,7 +60,7 @@ let package = Package(
         ),
         .executableTarget(
             name: "XMAudioStudio",
-            dependencies: ["SonyHeadphonesKit", "AudioStudioKit", "AudioDSPKit"],
+            dependencies: ["SonyHeadphonesKit", "AudioStudioKit", "AudioDSPKit", "WidgetBridgeKit"],
             exclude: ["Resources"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
@@ -78,6 +95,18 @@ let package = Package(
         .testTarget(
             name: "AudioDSPKitTests",
             dependencies: ["AudioDSPKit", "AudioStudioKit"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        .testTarget(
+            name: "WidgetBridgeKitTests",
+            dependencies: ["WidgetBridgeKit", "SonyHeadphonesKit"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        // The app-side half of the widget bridge: commands executed through
+        // HeadphonesController (demo transport), snapshots, throttled reloads.
+        .testTarget(
+            name: "XMAudioStudioTests",
+            dependencies: ["XMAudioStudio", "SonyHeadphonesKit", "WidgetBridgeKit"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         )
     ]

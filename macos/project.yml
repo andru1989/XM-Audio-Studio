@@ -1,0 +1,116 @@
+# XcodeGen spec for the Xcode build of XM Audio Studio: the app plus its WidgetKit
+# extension. SwiftPM (`swift build`, `swift test`, Scripts/build_app.sh) stays the main
+# build; this project compiles the same app sources and links the package's library
+# products, adding only what SwiftPM can't build (an embedded .appex).
+#
+#   xcodegen generate            # writes XMAudioStudio.xcodeproj (git-ignored)
+#   Scripts/build_xcode.sh       # generate + xcodebuild + signing, see docs/macos/WIDGETS.md
+name: XMAudioStudio
+
+options:
+  bundleIdPrefix: io.github.andru1989
+  deploymentTarget:
+    macOS: "15.0"
+  developmentLanguage: en
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+settings:
+  base:
+    DEVELOPMENT_TEAM: P5M226DH69
+    CODE_SIGN_STYLE: Automatic
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    # Same language mode as Package.swift (swiftLanguageMode(.v5)).
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: 0.1.0
+    CURRENT_PROJECT_VERSION: "1"
+    ENABLE_HARDENED_RUNTIME: YES
+    DEAD_CODE_STRIPPING: YES
+    GENERATE_INFOPLIST_FILE: NO
+  configs:
+    Release:
+      ONLY_ACTIVE_ARCH: NO
+      # No com.apple.security.get-task-allow in release builds (as with build_app.sh).
+      CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
+
+packages:
+  XMAudioStudioPackage:
+    path: .
+
+targets:
+  XMAudioStudioApp:
+    type: application
+    platform: macOS
+    sources:
+      - path: Sources/XMAudioStudio
+        excludes:
+          - Resources/Info.plist
+          - Resources/Models
+          # build_app.sh's entitlements; this build uses Config/XMAudioStudio.entitlements.
+          - Resources/XMAudioStudio.entitlements
+      # A folder reference keeps Contents/Resources/Models/<model>.png, the layout
+      # HeadphoneImage (and build_app.sh) use.
+      - path: Sources/XMAudioStudio/Resources/Models
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: XMAudioStudioPackage
+        product: SonyHeadphonesKit
+      - package: XMAudioStudioPackage
+        product: AudioStudioKit
+      - package: XMAudioStudioPackage
+        product: AudioDSPKit
+      - package: XMAudioStudioPackage
+        product: WidgetBridgeKit
+      - target: XMAudioStudioWidget
+        embed: true
+        codeSign: true
+    settings:
+      base:
+        # Bundle "XM Audio Studio.app", executable "XMAudioStudio" (as in Info.plist and
+        # build_app.sh), module "XMAudioStudio".
+        PRODUCT_NAME: XM Audio Studio
+        EXECUTABLE_NAME: XMAudioStudio
+        PRODUCT_MODULE_NAME: XMAudioStudio
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.andru1989.xmaudiostudio
+        INFOPLIST_FILE: Sources/XMAudioStudio/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Config/XMAudioStudio.entitlements
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks"
+        COMBINE_HIDPI_IMAGES: YES
+
+  XMAudioStudioWidget:
+    type: app-extension
+    platform: macOS
+    sources:
+      - path: WidgetExtension
+        excludes:
+          - Info.plist
+      - path: Sources/XMAudioStudio/Resources/Models
+        type: folder
+        buildPhase: resources
+    dependencies:
+      - package: XMAudioStudioPackage
+        product: WidgetBridgeKit
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+      - sdk: AppIntents.framework
+    settings:
+      base:
+        PRODUCT_NAME: XMAudioStudioWidget
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.andru1989.xmaudiostudio.widget
+        INFOPLIST_FILE: WidgetExtension/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Config/XMAudioStudioWidget.entitlements
+        APPLICATION_EXTENSION_API_ONLY: YES
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @executable_path/../../../../Frameworks"
+        SKIP_INSTALL: YES
+
+schemes:
+  XMAudioStudioApp:
+    build:
+      targets:
+        XMAudioStudioApp: all
+        XMAudioStudioWidget: all
+    run:
+      config: Debug
+    archive:
+      config: Release
