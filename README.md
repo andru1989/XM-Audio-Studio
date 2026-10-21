@@ -22,19 +22,42 @@ por Bluetooth con los audífonos Sony de la serie 1000X para:
 - **EQ avanzado en el Mac (beta)**: ecualizador paramétrico aplicado al audio del sistema, con
   protección contra recortes, A/B y aviso para no duplicar la corrección del EQ de los audífonos.
 
-> Proyecto independiente, **no afiliado ni respaldado por Sony**. "Sony", "WH-1000XM6" y "Sound
-> Connect" se usan solo para identificar el hardware compatible. Sony Sound Connect sigue siendo la app
+> Proyecto independiente, **no afiliado ni respaldado por Sony**. "Sony", los nombres de los modelos
+> 1000X y "Sound Connect" se usan solo para identificar el hardware compatible. Sony Sound Connect sigue siendo la app
 > oficial para actualizar el firmware y para funciones que esta app no implementa.
 
 ## Para quién es
 
-Para cualquiera que tenga unos audífonos de diadema de la serie Sony 1000X —MDR-1000X, WH-1000XM2,
-WH-1000XM3, WH-1000XM4, WH-1000XM5 o WH-1000XM6— y quiera controlarlos y personalizar su sonido desde
-el Mac (barra de menús, ventana o widgets) y desde Android (app, Ajustes rápidos o widget), con más
-control del ecualizador que la app oficial.
+XM Audio Studio está pensado para **cualquier persona que tenga unos audífonos de diadema de la serie
+Sony 1000X**:
 
-El soporte avanza por modelo: el WH-1000XM6 es el más completo hoy, y los demás modelos se van
-habilitando y validando con hardware real (ver la tabla de compatibilidad).
+| Modelo | Lanzamiento |
+|---|---|
+| MDR-1000X | 2016 |
+| WH-1000XM2 | 2017 |
+| WH-1000XM3 | 2018 |
+| WH-1000XM4 | 2020 |
+| WH-1000XM5 | 2022 |
+| WH-1000XM6 | 2025 |
+
+Te será útil si:
+
+- **Usas los audífonos con tu Mac** y quieres cambiar la cancelación de ruido, el ecualizador o el
+  dispositivo que reproduce sin tomar el teléfono: desde la barra de menús, la ventana principal o un
+  widget del escritorio.
+- **Quieres más control del sonido** del que ofrece Sound Connect: perfiles ilimitados con nombre,
+  comparación A/B, deshacer, la curva de respuesta a la vista y correcciones medidas de AutoEq
+  adaptadas a las bandas de tus audífonos.
+- **Alternas entre Mac y Android**: tienes los mismos perfiles en ambos (exportando un archivo) y la app
+  suelta el control de los audífonos cuando no la usas, para que el otro dispositivo o Sound Connect
+  puedan tomarlo sin conflictos.
+- **Prefieres no depender de cuentas ni de internet**: todo funciona en tu equipo.
+
+No sustituye a Sound Connect para actualizar el firmware ni para las funciones propietarias que aún no
+están implementadas; las dos apps pueden convivir.
+
+El soporte avanza modelo por modelo: hoy el más completo es el WH-1000XM6, y los demás se habilitan a
+medida que se validan con audífonos reales (ver la tabla de compatibilidad).
 
 ## Compatibilidad
 
