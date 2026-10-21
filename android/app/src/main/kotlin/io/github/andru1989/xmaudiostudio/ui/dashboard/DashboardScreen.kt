@@ -1,6 +1,13 @@
 package io.github.andru1989.xmaudiostudio.ui.dashboard
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import io.github.andru1989.xmaudiostudio.core.device.HeadphoneModel
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -39,6 +46,13 @@ import io.github.andru1989.xmaudiostudio.ui.components.SectionCard
 import io.github.andru1989.xmaudiostudio.ui.components.Segmented
 import io.github.andru1989.xmaudiostudio.ui.theme.Studio
 
+/** Freely licensed photos only (shared/model-images/ATTRIBUTION.md); other models show none. */
+private fun modelPhoto(model: HeadphoneModel): Int? = when (model) {
+    HeadphoneModel.WH_1000XM2 -> R.drawable.model_wh_1000xm2
+    HeadphoneModel.WH_1000XM3 -> R.drawable.model_wh_1000xm3
+    else -> null
+}
+
 @Composable
 fun DashboardScreen(
     state: UiState,
@@ -75,6 +89,16 @@ fun DashboardScreen(
                 TextButton(onClick = openSettings) { Text(stringResource(R.string.settings_choose_device)) }
             }
             return@Column
+        }
+
+        val model = snap.target!!.model
+        modelPhoto(model)?.let { photo ->
+            Image(
+                painter = painterResource(photo),
+                contentDescription = model.displayName,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(16.dp)),
+            )
         }
 
         ConnectionCard(snap, vm::connect, vm::disconnect, vm::refresh)

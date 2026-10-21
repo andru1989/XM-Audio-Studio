@@ -67,6 +67,9 @@ mkdir -p "${APP_DIR}/Contents/MacOS" "${APP_DIR}/Contents/Resources"
 cp "${BUILD_DIR}/${EXECUTABLE}" "${APP_DIR}/Contents/MacOS/${EXECUTABLE}"
 cp "${RESOURCES}/Info.plist" "${APP_DIR}/Contents/Info.plist"
 cp "${RESOURCES}/AppIcon.icns" "${APP_DIR}/Contents/Resources/AppIcon.icns"
+if [ -d "${RESOURCES}/Models" ]; then
+    cp -R "${RESOURCES}/Models" "${APP_DIR}/Contents/Resources/"
+fi
 for lproj in "${RESOURCES}"/*.lproj; do
     [ -d "${lproj}" ] && cp -R "${lproj}" "${APP_DIR}/Contents/Resources/"
 done

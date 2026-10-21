@@ -169,6 +169,7 @@ fun SettingsScreen(state: UiState, vm: MainViewModel, requestPermission: () -> U
         SectionCard(stringResource(R.string.about)) {
             Text("XM Audio Studio 0.1.0", style = MaterialTheme.typography.bodyMedium)
             Text(stringResource(R.string.disclaimer), color = c.muted, style = MaterialTheme.typography.bodySmall)
+            Text(stringResource(R.string.photo_credits), color = c.muted, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

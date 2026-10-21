@@ -22,7 +22,7 @@ Actualizado: 2026-10-21. Estado detallado en `compatibility/FEATURE-STATUS.md`.
 10. macOS widgets WidgetKit (XcodeGen; IPC por App Group con el Team ID; comandos vía controlador) — idea de yelloduxx.
 11. macOS controles del Centro de Control (tras widgets) — idea de plagnioj con IPC correcta.
 12. Android: Ajustes rápidos (TileService) y widget (Glance).
-13. Imágenes por modelo con licencia libre (en curso) o foto propia del usuario por modelo.
+13. Imágenes por modelo: hechas para XM2 y XM3 (CC BY, `shared/model-images`). Sin foto libre para MDR-1000X, XM4, XM5, XM6: buscar de nuevo más adelante, pedir permiso a autores o hacer fotos propias. Android: permitir foto propia del usuario.
 14. Calidad de conexión (Quality/Stable) — commits de Anneo22 `493360f`, `a6bbd2a`, `c3fd178` (Apache-2.0).
 
 ## P3 — DSP y AutoEQ avanzado

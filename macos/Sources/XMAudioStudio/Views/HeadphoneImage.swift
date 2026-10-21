@@ -1,35 +1,45 @@
 import SwiftUI
 import AppKit
+import SonyHeadphonesKit
 
-/// The hero image at the top of the dashboard.
+/// The hero image at the top of the dashboard, for the detected model.
 ///
-/// Prefers a user-supplied photo when one exists (so you can use your own picture of
-/// your actual headphones); otherwise falls back to an original vector illustration of
-/// black over-ear headphones drawn below. Photo locations checked, in order:
-///   1. `headphones.png` bundled in the app's Resources (drop it into
-///      `Sources/XMAudioStudio/Resources/` and rebuild)
-///   2. `~/Library/Application Support/XM Audio Studio/headphones.png` (no rebuild needed)
+/// Order: a photo the user supplies (`~/Library/Application Support/XM Audio Studio/
+/// <model-id>.png|jpg` or `headphones.png`), then a freely licensed photo of that model
+/// bundled under `Resources/Models/` (attribution in THIRD_PARTY_NOTICES.md), then the
+/// original vector illustration. No Sony-owned imagery is shipped.
 struct HeadphoneImage: View {
+    @EnvironmentObject private var controller: HeadphonesController
+
+    private var model: HeadphoneModel? { HeadphoneModel.from(bluetoothName: controller.deviceName) }
+
     var body: some View {
-        if let custom = Self.customImage() {
-            Image(nsImage: custom)
+        if let photo = Self.image(for: model) {
+            Image(nsImage: photo)
                 .resizable()
                 .interpolation(.high)
                 .scaledToFit()
+                .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
         } else {
             HeadphoneIllustration()
         }
     }
 
-    static func customImage() -> NSImage? {
-        if let url = Bundle.main.url(forResource: "headphones", withExtension: "png"),
-           let image = NSImage(contentsOf: url) {
-            return image
+    static func image(for model: HeadphoneModel?) -> NSImage? {
+        let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
+            .appendingPathComponent("XM Audio Studio", isDirectory: true)
+        var candidates: [URL] = []
+        if let support {
+            if let model {
+                candidates += ["png", "jpg"].map { support.appendingPathComponent("\(model.rawValue).\($0)") }
+            }
+            candidates.append(support.appendingPathComponent("headphones.png"))
         }
-        let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        if let url = appSupport?.appendingPathComponent("XM Audio Studio/headphones.png"),
-           let image = NSImage(contentsOf: url) {
-            return image
+        if let model, let resources = Bundle.main.resourceURL?.appendingPathComponent("Models") {
+            candidates += ["jpg", "png"].map { resources.appendingPathComponent("\(model.rawValue).\($0)") }
+        }
+        for url in candidates {
+            if let image = NSImage(contentsOf: url) { return image }
         }
         return nil
     }

@@ -22,5 +22,8 @@
 - Ajustes nativos, abrir al iniciar sesión, localización al español, diseño plano.
 - Binario universal arm64 + x86_64; mínimo macOS 15.
 
+### Imágenes
+- Fotos con licencia libre (Wikimedia Commons) para WH-1000XM2 (CC BY 2.0) y WH-1000XM3 (CC BY 4.0), con atribución. Otros modelos: ilustración propia.
+
 ### Pruebas
 - Kotlin: 34 tests. Swift: 59 tests. Emulador Android y app macOS verificados en modo demo.

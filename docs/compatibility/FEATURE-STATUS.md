@@ -42,6 +42,7 @@ Actualizado: 2026-10-21. Niveles (encargo §15):
 | AutoEQ interno (ParametricEQ/GraphicEQ → 10 bandas) | — | SIM (vectores) | SIM (vectores) |
 | Gráfica de respuesta (predicción) | — | SIM | SIM |
 | Modo demostración | — | SIM | SIM (emulador) |
+| Foto del modelo detectado (licencia libre: XM2, XM3; resto ilustración) | — | SIM | SIM |
 | Ventana de ajustes nativa, abrir al iniciar sesión | — | SIM | — |
 | Widgets (WidgetKit / Android) | — | PLAN | PLAN |
 | Centro de Control / Ajustes rápidos | — | PLAN | PLAN |

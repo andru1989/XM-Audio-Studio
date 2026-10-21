@@ -43,6 +43,15 @@ XM Audio Studio incorpora o se basa en el trabajo siguiente. Se conservan los av
 Nota: las tablas de mos9527 provienen de ingeniería inversa de la app oficial de Sony con fines de
 interoperabilidad. Este proyecto no distribuye binarios, imágenes, logotipos ni recursos de Sony.
 
+## Imágenes
+
+| Imagen | Autor | Licencia | Fuente |
+|---|---|---|---|
+| WH-1000XM2 (`shared/model-images/wh-1000xm2.jpg`) | MiNe (sfmine79) | CC BY 2.0 | https://commons.wikimedia.org/wiki/File:MiNe-M_100-4917U_(38327775211).jpg |
+| WH-1000XM3 (`shared/model-images/wh-1000xm3.jpg`) | www.digitalpush.net | CC BY 4.0 | https://commons.wikimedia.org/wiki/File:Sony-WH-1000XM3-kabellose-Bluetooth-Noise-Cancelling-Kopfhoerer.3.jpg |
+
+Sin modificaciones. Detalle en `shared/model-images/ATTRIBUTION.md`. El resto de modelos usa la ilustración vectorial propia.
+
 ## Dependencias de compilación (Android)
 AndroidX (Apache-2.0), Jetpack Compose (Apache-2.0), Kotlin stdlib/coroutines/serialization (Apache-2.0).
 macOS no tiene dependencias externas (solo frameworks del sistema).
