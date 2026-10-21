@@ -46,11 +46,14 @@ import io.github.andru1989.xmaudiostudio.ui.components.SectionCard
 import io.github.andru1989.xmaudiostudio.ui.components.Segmented
 import io.github.andru1989.xmaudiostudio.ui.theme.Studio
 
-/** Freely licensed photos only (shared/model-images/ATTRIBUTION.md); other models show none. */
-private fun modelPhoto(model: HeadphoneModel): Int? = when (model) {
+/** Product photos (shared/model-images/SOURCES.md: Sony's images, personal use only). */
+private fun modelPhoto(model: HeadphoneModel): Int = when (model) {
+    HeadphoneModel.MDR_1000X -> R.drawable.model_mdr_1000x
     HeadphoneModel.WH_1000XM2 -> R.drawable.model_wh_1000xm2
     HeadphoneModel.WH_1000XM3 -> R.drawable.model_wh_1000xm3
-    else -> null
+    HeadphoneModel.WH_1000XM4 -> R.drawable.model_wh_1000xm4
+    HeadphoneModel.WH_1000XM5 -> R.drawable.model_wh_1000xm5
+    HeadphoneModel.WH_1000XM6 -> R.drawable.model_wh_1000xm6
 }
 
 @Composable
@@ -92,14 +95,12 @@ fun DashboardScreen(
         }
 
         val model = snap.target!!.model
-        modelPhoto(model)?.let { photo ->
-            Image(
-                painter = painterResource(photo),
-                contentDescription = model.displayName,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxWidth().height(150.dp).clip(RoundedCornerShape(16.dp)),
-            )
-        }
+        Image(
+            painter = painterResource(modelPhoto(model)),
+            contentDescription = model.displayName,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxWidth().height(170.dp).clip(RoundedCornerShape(16.dp)),
+        )
 
         ConnectionCard(snap, vm::connect, vm::disconnect, vm::refresh)
 

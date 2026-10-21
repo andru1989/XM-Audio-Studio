@@ -267,12 +267,21 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private fun matchActiveProfile(snap: SessionSnapshot): EqProfile? {
         val eq = snap.state.equalizer ?: return null
         val all = library.forModel(snap.target?.model?.id ?: return null)
+        val userPreset = isUserPresetFromOfficialApp(snap)
         val candidates = if (eq.presetCode == EqualizerPreset.CUSTOM.code) {
             all.filter { it.deviceEq.steps == eq.bands }
         } else {
-            all.filter { it.deviceEq.presetCode == eq.presetCode }
+            // A Sound Connect user setting matches a saved profile with the same bands.
+            all.filter { it.deviceEq.presetCode == eq.presetCode || (userPreset && it.deviceEq.steps == eq.bands) }
         }
         return candidates.firstOrNull { it.id == settings.lastAppliedProfileId } ?: candidates.firstOrNull()
+    }
+
+    /** A preset code this app does not know, e.g. a user setting (0xA1+) made in Sound Connect. */
+    fun isUserPresetFromOfficialApp(snap: SessionSnapshot = _ui.value.snapshot): Boolean {
+        val eq = snap.state.equalizer ?: return false
+        val spec = snap.capabilities?.equalizer ?: return false
+        return eq.presetCode != EqualizerPreset.CUSTOM.code && spec.presets.none { it.code == eq.presetCode }
     }
 
     private fun attempt(action: () -> Unit) {
@@ -289,11 +298,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun saveCurrentAs(name: String) = attempt {
         val setting = currentSetting() ?: return@attempt
         val steps = setting.steps
-        val saved = if (steps != null) {
-            library.saveCurve(name, modelId(), steps)
-        } else {
-            val base = _ui.value.profiles.first { it.deviceEq.presetCode == setting.presetCode }
-            library.duplicate(base.id, name)
+        val reported = _ui.value.snapshot.state.equalizer?.bands.orEmpty()
+        val base = _ui.value.profiles.firstOrNull { setting.presetCode != null && it.deviceEq.presetCode == setting.presetCode }
+        val saved = when {
+            steps != null -> library.saveCurve(name, modelId(), steps)
+            base != null -> library.duplicate(base.id, name)
+            // A Sound Connect user setting: keep its curve as a custom profile.
+            reported.size == _ui.value.snapshot.capabilities?.equalizer?.bandCount ->
+                library.saveCurve(name, modelId(), reported, notes = "Importado de un ajuste de usuario de Sound Connect (preset 0x%02x).".format(setting.presetCode))
+            else -> return@attempt
         }
         settings.lastAppliedProfileId = saved.id
     }

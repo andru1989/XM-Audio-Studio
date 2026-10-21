@@ -12,25 +12,28 @@ Actualizado: 2026-10-21. Niveles (encargo §15):
 | **PLAN** | Pendiente |
 | **N/C** | No compatible |
 
-> Ninguna función tiene todavía nivel **HW**: no se ha conectado un XM6 real a esta versión.
-> Siguiente paso: [`docs/testing/HARDWARE-TEST-PLAN.md`](../testing/HARDWARE-TEST-PLAN.md).
+> **Primera validación con hardware (2026-10-21, macOS 26.5, WH-1000XM6 del propietario):** la app de
+> Mac conectó, negoció MDR v2 y **leyó** correctamente batería (49 %), control de ruido (ambiente nivel 20,
+> luego desactivado), modo de escucha, lista multipunto (Mac + Galaxy S25 Ultra), pausa al quitarse,
+> apagado automático y el EQ activo (un ajuste de usuario de Sound Connect, preset ≥ 0xA1).
+> Las **escrituras** y toda la app Android siguen pendientes: [`HARDWARE-TEST-PLAN.md`](../testing/HARDWARE-TEST-PLAN.md).
 
 ## WH-1000XM6
 
 | Función | Protocolo | macOS | Android |
 |---|---|---|---|
-| Conexión RFCOMM (UUID v2, SDP) | HW‑up | PEND (código upstream en uso real) | PEND (transporte propio) |
+| Conexión RFCOMM (UUID v2, SDP) | HW‑up | **HW** (lectura) | PEND (transporte propio) |
 | Canal bajo demanda, liberación 20 s, cesión | — | SIM (32 tests de Anneo22) | SIM (14 tests de sesión) |
 | Leer estado real antes de escribir tras reconectar | — | PLAN (PR #4 envía comandos primero) | SIM |
 | Identificación (modelo `04 01`, firmware `04 02`) | REF | SIM | SIM |
-| Batería y carga (tipo 00 y 08) | HW‑up (00) | SIM | SIM |
-| ANC / ambiente / nivel (0x19 lectura, 0x17 escritura) | HW‑up | SIM | SIM |
+| Batería y carga (tipo 00 y 08) | HW‑up (00) | **HW** (lectura) | SIM |
+| ANC / ambiente / nivel (0x19 lectura, 0x17 escritura) | HW‑up | **HW** lectura · PEND escritura | SIM |
 | Enfocar en la voz | PEND | SIM | SIM |
-| Modo de escucha (Estándar/BGM/Cine) + sala | PEND | SIM | SIM |
+| Modo de escucha (Estándar/BGM/Cine) + sala | PEND | **HW** lectura · PEND escritura | SIM |
 | Hablar para chatear + configuración | PEND | SIM | SIM |
-| Pausa al quitarse | HW‑up | SIM | SIM |
-| Apagado automático (10/11) | HW‑up | SIM | SIM |
-| Lista multipunto | HW‑up | SIM | SIM |
+| Pausa al quitarse | HW‑up | **HW** lectura · PEND escritura | SIM |
+| Apagado automático (10/11) | HW‑up | **HW** lectura · PEND escritura | SIM |
+| Lista multipunto | HW‑up | **HW** | SIM |
 | Cambiar fuente de reproducción | PEND | SIM | SIM |
 | EQ presets Sony (00, 30–33) | HW‑up | SIM | SIM |
 | EQ 10 bandas −6…+6 | HW‑up | SIM | SIM |
@@ -38,11 +41,11 @@ Actualizado: 2026-10-21. Niveles (encargo §15):
 | Perfiles ilimitados, duplicar, renombrar, borrar | — | SIM (tests) | SIM (tests) |
 | Exportar / importar perfiles (formato compartido) | — | SIM | SIM |
 | Deshacer, A/B | — | SIM | SIM (emulador) |
-| Guardar en la app la curva que ya tienen los audífonos | — | SIM | SIM |
+| Guardar en la app la curva/ajuste de usuario que ya tienen los audífonos | — | **HW** (detección del ajuste de Sound Connect) | SIM |
 | AutoEQ interno (ParametricEQ/GraphicEQ → 10 bandas) | — | SIM (vectores) | SIM (vectores) |
 | Gráfica de respuesta (predicción) | — | SIM | SIM |
 | Modo demostración | — | SIM | SIM (emulador) |
-| Foto del modelo detectado (licencia libre: XM2, XM3; resto ilustración) | — | SIM | SIM |
+| Foto del modelo detectado (fotos de Sony, uso personal) | — | **HW** | SIM |
 | Ventana de ajustes nativa, abrir al iniciar sesión | — | SIM | — |
 | Widgets (WidgetKit / Android) | — | PLAN | PLAN |
 | Centro de Control / Ajustes rápidos | — | PLAN | PLAN |

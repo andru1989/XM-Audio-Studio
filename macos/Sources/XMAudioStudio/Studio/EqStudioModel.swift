@@ -88,18 +88,37 @@ final class EqStudioModel: ObservableObject {
         set { UserDefaults.standard.set(newValue, forKey: Self.lastAppliedKey) }
     }
 
-    /// The profile whose curve matches what the headphones report, preferring the one last applied.
+    /// Bands the headphones report for whatever is active: the custom curve, a Sony preset,
+    /// or a user setting saved from Sound Connect.
+    var reportedBands: [Int]? {
+        let bands = controller.equalizer?.bands ?? []
+        return bands.count == spec.bandCount ? bands : nil
+    }
+
+    /// A preset code this app does not know, e.g. a user setting (0xA1+) made in Sound Connect.
+    var isUserPresetFromOfficialApp: Bool {
+        guard case .preset(let code) = current else { return false }
+        return !spec.presets.contains { $0.code == code }
+    }
+
+    /// The profile whose curve matches what the headphones report, preferring the one last
+    /// applied. A Sound Connect user setting matches a saved profile with the same bands.
     var activeProfile: EqProfile? {
         guard let current else { return nil }
-        let matches = profiles.filter { DeviceEqValue($0.deviceEq) == current }
+        let bands = reportedBands
+        let matches = profiles.filter { profile in
+            DeviceEqValue(profile.deviceEq) == current
+                || (isUserPresetFromOfficialApp && bands != nil && profile.deviceEq.steps == bands)
+        }
         return matches.first { $0.id == lastAppliedId } ?? matches.first
     }
 
     /// The headphones hold a custom curve (read from them, or set in Sound Connect) that is
     /// not in the library yet: offer to bring it into the app.
     var deviceCurveNotInLibrary: Bool {
-        guard controller.connectionState == .connected, case .bands = current else { return false }
-        return activeProfile == nil
+        guard controller.connectionState == .connected, activeProfile == nil, reportedBands != nil else { return false }
+        if case .bands = current { return true }
+        return isUserPresetFromOfficialApp
     }
 
     var suggestedImportName: String {
@@ -190,6 +209,12 @@ final class EqStudioModel: ObservableObject {
             case .preset(let code):
                 if let base = profiles.first(where: { $0.deviceEq.presetCode == Int(code) }) {
                     lastAppliedId = try library.duplicate(base.id, name: name).id
+                } else if let bands = reportedBands {
+                    // A Sound Connect user setting: keep its curve as a custom profile.
+                    lastAppliedId = try library.saveCurve(
+                        name: name, modelId: model.rawValue, steps: bands,
+                        notes: String(format: NSLocalizedString("Imported from a Sound Connect user setting (preset 0x%02x).", comment: ""), code)
+                    ).id
                 }
             case nil:
                 break

@@ -117,7 +117,9 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
         val compareSteps = state.compareWith?.steps
         val target = state.activeProfile?.sourceCurve?.toParametric()?.responseDb(chartGrid)
 
-        if (snap.stateIsLive && eq != null && eq.presetCode == EqualizerPreset.CUSTOM.code && state.activeProfile == null) {
+        val importable = eq != null && eq.bands.size == spec.bandCount &&
+            (eq.presetCode == EqualizerPreset.CUSTOM.code || vm.isUserPresetFromOfficialApp(snap))
+        if (snap.stateIsLive && importable && state.activeProfile == null) {
             val suggested = stringResource(R.string.device_curve_name)
             SectionCard {
                 Text(stringResource(R.string.device_curve_not_saved), style = MaterialTheme.typography.bodyMedium)

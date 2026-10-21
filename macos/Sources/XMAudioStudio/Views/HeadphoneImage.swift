@@ -5,9 +5,9 @@ import SonyHeadphonesKit
 /// The hero image at the top of the dashboard, for the detected model.
 ///
 /// Order: a photo the user supplies (`~/Library/Application Support/XM Audio Studio/
-/// <model-id>.png|jpg` or `headphones.png`), then a freely licensed photo of that model
-/// bundled under `Resources/Models/` (attribution in THIRD_PARTY_NOTICES.md), then the
-/// original vector illustration. No Sony-owned imagery is shipped.
+/// <model-id>.png|jpg` or `headphones.png`), then the product photo bundled under
+/// `Resources/Models/` (Sony's images, personal use only: shared/model-images/SOURCES.md),
+/// then the original vector illustration.
 struct HeadphoneImage: View {
     @EnvironmentObject private var controller: HeadphonesController
 
@@ -19,7 +19,6 @@ struct HeadphoneImage: View {
                 .resizable()
                 .interpolation(.high)
                 .scaledToFit()
-                .clipShape(RoundedRectangle(cornerRadius: Radius.control, style: .continuous))
         } else {
             HeadphoneIllustration()
         }

@@ -39,7 +39,7 @@ struct SettingsView: View {
                 Text("Independent project, not affiliated with Sony. Sony Sound Connect remains the official app for firmware and features not implemented here.")
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Photos: WH-1000XM2 © MiNe (sfmine79), CC BY 2.0; WH-1000XM3 © www.digitalpush.net, CC BY 4.0 (Wikimedia Commons). Models without a freely licensed photo use our own illustration.")
+                Text("Product photos © Sony Corporation, taken from sony.com for personal use; they are not covered by the project licence.")
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

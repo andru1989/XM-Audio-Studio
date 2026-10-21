@@ -46,18 +46,30 @@ struct EqualizerSection: View {
                                 .font(.callout.weight(.medium))
                         }
                         Spacer()
-                        if studio.deviceCurveNotInLibrary {
-                            Button("Save to Library") {
-                                studio.saveCurrent(as: studio.suggestedImportName)
-                            }
-                            .controlSize(.small)
-                            .help("Keep the curve the headphones have now as a profile in this app")
-                        }
                         Button("Equalizer Studio…") {
                             openWindow(id: "equalizer-studio")
                             NSApp.activate(ignoringOtherApps: true)
                         }
                         .controlSize(.small)
+                    }
+
+                    if studio.deviceCurveNotInLibrary {
+                        HStack(spacing: 8) {
+                            Image(systemName: "square.and.arrow.down.on.square")
+                                .foregroundStyle(Color.brand)
+                            Text("Your headphones have a curve that is not in your library yet.")
+                                .font(.caption)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 4)
+                            Button("Save to Library") {
+                                studio.saveCurrent(as: studio.suggestedImportName)
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            .help("Keep the curve the headphones have now as a profile in this app")
+                        }
+                        .padding(8)
+                        .background(RoundedRectangle(cornerRadius: Radius.control, style: .continuous).fill(Surface.well))
                     }
 
                     LazyVGrid(columns: columns, spacing: 6) {

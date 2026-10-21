@@ -23,7 +23,11 @@
 - Binario universal arm64 + x86_64; mínimo macOS 15.
 
 ### Imágenes
-- Fotos con licencia libre (Wikimedia Commons) para WH-1000XM2 (CC BY 2.0) y WH-1000XM3 (CC BY 4.0), con atribución. Otros modelos: ilustración propia.
+- Fotos de producto de los seis modelos (© Sony, sony.com) para uso personal, por decisión del propietario; ver `shared/model-images/SOURCES.md`. Sustituyen a las fotos CC de XM2/XM3.
+
+### Primera prueba con hardware
+- macOS leyó correctamente el estado completo de un WH-1000XM6 real (ver FEATURE-STATUS).
+- Importar a la biblioteca un ajuste de usuario de Sound Connect (preset ≥ 0xA1) usando las bandas que reporta (Mac y Android); corregido un fallo en Android al guardar en ese caso.
 
 ### Pruebas
 - Kotlin: 34 tests. Swift: 59 tests. Emulador Android y app macOS verificados en modo demo.

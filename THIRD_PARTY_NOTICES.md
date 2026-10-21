@@ -45,12 +45,9 @@ interoperabilidad. Este proyecto no distribuye binarios, imágenes, logotipos ni
 
 ## Imágenes
 
-| Imagen | Autor | Licencia | Fuente |
-|---|---|---|---|
-| WH-1000XM2 (`shared/model-images/wh-1000xm2.jpg`) | MiNe (sfmine79) | CC BY 2.0 | https://commons.wikimedia.org/wiki/File:MiNe-M_100-4917U_(38327775211).jpg |
-| WH-1000XM3 (`shared/model-images/wh-1000xm3.jpg`) | www.digitalpush.net | CC BY 4.0 | https://commons.wikimedia.org/wiki/File:Sony-WH-1000XM3-kabellose-Bluetooth-Noise-Cancelling-Kopfhoerer.3.jpg |
-
-Sin modificaciones. Detalle en `shared/model-images/ATTRIBUTION.md`. El resto de modelos usa la ilustración vectorial propia.
+Las fotos de producto de `shared/model-images/` (y sus copias en las apps) son **© Sony
+Corporation**, tomadas de sony.com para uso personal del propietario. **No** se distribuyen bajo la
+licencia del proyecto; retirarlas antes de cualquier publicación. Detalle: `shared/model-images/SOURCES.md`.
 
 ## Dependencias de compilación (Android)
 AndroidX (Apache-2.0), Jetpack Compose (Apache-2.0), Kotlin stdlib/coroutines/serialization (Apache-2.0).
