@@ -1,0 +1,369 @@
+{
+  "schema": "xm-audio-studio.protocol-events/1",
+  "decoder": "mdr-v1",
+  "note": "MDR v1 (WH-1000XM2/XM3/XM4) decoder. expect == null means the payload must not decode to any event. 'capture: WH-1000XM3 4.5.2' cases are unescaped payloads from mos9527/SonyHeadphonesClient tests/WH-1000XM3-4.5.2 (MIT); 'reference layout' cases follow the ProtocolV1T1.hpp structs or the MIT clients' hardware notes and are NOT captures. None of these models has been tested by this project.",
+  "cases": [
+    {
+      "name": "init reply, 4 bytes (v1, protocol 0x4010)",
+      "source": "capture: WH-1000XM3 4.5.2 (CONNECT_RET_PROTOCOL_INFO)",
+      "messageType": "command1",
+      "payload": "01 00 40 10",
+      "expect": {
+        "event": "protocolInfo",
+        "version": "v1"
+      }
+    },
+    {
+      "name": "model name",
+      "source": "capture: WH-1000XM3 4.5.2",
+      "messageType": "command1",
+      "payload": "05 01 0a 57 48 2d 31 30 30 30 58 4d 33",
+      "expect": {
+        "event": "modelName",
+        "name": "WH-1000XM3"
+      }
+    },
+    {
+      "name": "firmware version",
+      "source": "capture: WH-1000XM3 4.5.2",
+      "messageType": "command1",
+      "payload": "05 02 05 34 2e 35 2e 32",
+      "expect": {
+        "event": "firmwareVersion",
+        "version": "4.5.2"
+      }
+    },
+    {
+      "name": "battery reply 100 %, not charging",
+      "source": "capture: WH-1000XM3 4.5.2 (v1 opcode 0x11 COMMON_RET_BATTERY_LEVEL; the capture tool labels it with the v2 name)",
+      "messageType": "command1",
+      "payload": "11 00 64 00",
+      "expect": {
+        "event": "battery",
+        "level": 100,
+        "charging": false
+      }
+    },
+    {
+      "name": "battery notify, charging",
+      "source": "reference layout: NotifyBatteryLevelBatteryParam",
+      "messageType": "command1",
+      "payload": "13 00 32 01",
+      "expect": {
+        "event": "battery",
+        "level": 50,
+        "charging": true
+      }
+    },
+    {
+      "name": "battery charging status unknown (0xF0)",
+      "source": "reference layout: BatteryChargingStatus UNKNOWN",
+      "messageType": "command1",
+      "payload": "11 00 46 f0",
+      "expect": {
+        "event": "battery",
+        "level": 70,
+        "charging": false
+      }
+    },
+    {
+      "name": "battery level above 100 rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "11 00 c8 00",
+      "expect": null
+    },
+    {
+      "name": "left/right battery type ignored (over-ear decoder)",
+      "source": "negative: type 0x01 is the TWS layout",
+      "messageType": "command1",
+      "payload": "11 01 64 00 00 00",
+      "expect": null
+    },
+    {
+      "name": "v2 battery reply is not a v1 message",
+      "source": "negative: 0x23 has no meaning in the v1 table",
+      "messageType": "command1",
+      "payload": "23 00 50 01",
+      "expect": null
+    },
+    {
+      "name": "NC/ASM reply: noise cancelling (dual)",
+      "source": "capture: WH-1000XM3 4.5.2 (NCASM_RET_PARAM)",
+      "messageType": "command1",
+      "payload": "67 02 01 02 02 01 00 00",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "noiseCancelling",
+        "focusOnVoice": false,
+        "level": 0,
+        "subtype": 2,
+        "isUpdate": true,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "NC/ASM notify: off (NC/AMB button on the headset)",
+      "source": "capture: WH-1000XM3 4.5.2 (NCASM_NTFY_PARAM)",
+      "messageType": "command1",
+      "payload": "69 02 00 02 02 01 00 00",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "off",
+        "focusOnVoice": false,
+        "level": 0,
+        "subtype": 2,
+        "isUpdate": true,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "NC/ASM notify: noise cancelling back on",
+      "source": "capture: WH-1000XM3 4.5.2 (NCASM_NTFY_PARAM)",
+      "messageType": "command1",
+      "payload": "69 02 01 02 02 01 00 00",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "noiseCancelling",
+        "focusOnVoice": false,
+        "level": 0,
+        "subtype": 2,
+        "isUpdate": true,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "NC/ASM: ambient sound, voice, level 12",
+      "source": "reference layout: RetNcAsmParamNcAsmParam; NC value 00 = ambient (sony-device-center, XM4 readback)",
+      "messageType": "command1",
+      "payload": "69 02 11 01 00 01 01 0c",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "ambientSound",
+        "focusOnVoice": true,
+        "level": 12,
+        "subtype": 2,
+        "isUpdate": true,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "NC/ASM: single (wind-noise reduction) shown as noise cancelling",
+      "source": "reference layout: NcDualSingleValue SINGLE",
+      "messageType": "command1",
+      "payload": "67 02 01 01 01 01 00 00",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "noiseCancelling",
+        "focusOnVoice": false,
+        "level": 0,
+        "subtype": 2,
+        "isUpdate": true,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "NC/ASM: adjustment in progress is not a committed update",
+      "source": "reference layout: NcAsmEffect ADJUSTMENT_IN_PROGRESS",
+      "messageType": "command1",
+      "payload": "69 02 10 01 00 01 00 05",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "ambientSound",
+        "focusOnVoice": false,
+        "level": 5,
+        "subtype": 2,
+        "isUpdate": false,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "NC/ASM wrong length rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "67 02 01 02 02 01 00",
+      "expect": null
+    },
+    {
+      "name": "NC/ASM level above 20 rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "67 02 01 01 00 01 00 15",
+      "expect": null
+    },
+    {
+      "name": "v2 NC/ASM layout (0x17) is not decoded on v1",
+      "source": "negative: WF-1000XM5 capture bytes",
+      "messageType": "command1",
+      "payload": "67 17 01 00 01 00 14",
+      "expect": null
+    },
+    {
+      "name": "EQ reply: preset off, flat",
+      "source": "capture: WH-1000XM3 4.5.2 (EQEBB_RET_PARAM)",
+      "messageType": "command1",
+      "payload": "57 01 00 06 0a 0a 0a 0a 0a 0a",
+      "expect": {
+        "event": "equalizer",
+        "presetCode": 0,
+        "bands": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "subtype": 1,
+        "clearBass": 0
+      }
+    },
+    {
+      "name": "EQ notify after a preset change",
+      "source": "capture: WH-1000XM3 4.5.2 (EQEBB_NTFY_PARAM)",
+      "messageType": "command1",
+      "payload": "59 01 00 06 0a 0a 0a 0a 0a 0a",
+      "expect": {
+        "event": "equalizer",
+        "presetCode": 0,
+        "bands": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "subtype": 1,
+        "clearBass": 0
+      }
+    },
+    {
+      "name": "EQ custom curve with Clear Bass",
+      "source": "reference layout: Clear Bass first, wire = steps + 10 (sony-device-center, XM4 fw 3.0.1)",
+      "messageType": "command1",
+      "payload": "59 01 a0 06 0d 0b 0a 07 0c 14",
+      "expect": {
+        "event": "equalizer",
+        "presetCode": 160,
+        "bands": [
+          1,
+          0,
+          -3,
+          2,
+          10
+        ],
+        "subtype": 1,
+        "clearBass": 3
+      }
+    },
+    {
+      "name": "EQ band value above +10 rejected",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "57 01 a0 06 15 0a 0a 0a 0a 0a",
+      "expect": null
+    },
+    {
+      "name": "v2 EQ type 0x00 is not decoded on v1",
+      "source": "negative: WF-1000XM5 capture bytes",
+      "messageType": "command1",
+      "payload": "57 00 a0 06 14 0b 0a 0d 09 0c",
+      "expect": null
+    },
+    {
+      "name": "EQ capability: 6 values, 21 steps, 12 presets",
+      "source": "capture: WH-1000XM3 4.5.2 (EQEBB_RET_CAPABILITY)",
+      "messageType": "command1",
+      "payload": "51 01 06 15 0c 00 00 10 00 11 00 12 00 13 00 14 00 15 00 16 00 17 00 a0 00 a1 00 a2 00",
+      "expect": {
+        "event": "eqCapability",
+        "subtype": 1,
+        "bandCount": 6,
+        "stepCount": 21,
+        "presetCodes": [
+          0,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22,
+          23,
+          160,
+          161,
+          162
+        ]
+      }
+    },
+    {
+      "name": "speak-to-chat reply: on (v1 polarity, 01 = on)",
+      "source": "reference layout: RetSystemParamSmartTalkingModeRetParam",
+      "messageType": "command1",
+      "payload": "f7 05 00 01",
+      "expect": {
+        "event": "speakToChatEnabled",
+        "enabled": true
+      }
+    },
+    {
+      "name": "speak-to-chat notify: off",
+      "source": "reference layout: NotifySystemParamSmartTalkingModeSetNtfyParam",
+      "messageType": "command1",
+      "payload": "f9 05 01 00",
+      "expect": {
+        "event": "speakToChatEnabled",
+        "enabled": false
+      }
+    },
+    {
+      "name": "speak-to-chat: talking session in progress means on",
+      "source": "reference: sony-device-center WH-1000XM4 note (first byte 02)",
+      "messageType": "command1",
+      "payload": "f7 05 02 00",
+      "expect": {
+        "event": "speakToChatEnabled",
+        "enabled": true
+      }
+    },
+    {
+      "name": "speak-to-chat options with voice focus",
+      "source": "reference layout: RetSystemExParamChildPayloadSmartTalkingModeExParamType1Param",
+      "messageType": "command1",
+      "payload": "fb 05 00 01 01 02",
+      "expect": {
+        "event": "speakToChatConfig",
+        "sensitivity": "high",
+        "timeout": "long",
+        "voiceFocus": true
+      }
+    },
+    {
+      "name": "v2 speak-to-chat (0x0C, inverted) is not decoded on v1",
+      "source": "negative: WF-1000XM5 capture bytes",
+      "messageType": "command1",
+      "payload": "f7 0c 01 01",
+      "expect": null
+    },
+    {
+      "name": "v1 auto power off reply is not implemented",
+      "source": "capture: WH-1000XM3 4.5.2 (SYSTEM_RET_PARAM AUTO_POWER_OFF) - documented, not modelled",
+      "messageType": "command1",
+      "payload": "f7 04 01 00 00",
+      "expect": null
+    },
+    {
+      "name": "unknown opcode ignored",
+      "source": "negative",
+      "messageType": "command1",
+      "payload": "99 01 01 01",
+      "expect": null
+    },
+    {
+      "name": "table 2 is not used on v1",
+      "source": "negative: capture WH-1000XM3 4.5.2 VOICE_GUIDANCE_RET_PARAM",
+      "messageType": "command2",
+      "payload": "47 01 01 01",
+      "expect": null
+    }
+  ]
+}
