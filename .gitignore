@@ -27,3 +27,6 @@ captures/
 # Local artifacts
 dist/
 *.log
+
+# Agent worktrees (local only)
+.claude/worktrees/
