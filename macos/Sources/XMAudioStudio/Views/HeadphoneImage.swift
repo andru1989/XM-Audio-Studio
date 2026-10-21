@@ -7,8 +7,8 @@ import AppKit
 /// your actual headphones); otherwise falls back to an original vector illustration of
 /// black over-ear headphones drawn below. Photo locations checked, in order:
 ///   1. `headphones.png` bundled in the app's Resources (drop it into
-///      `Sources/XM6Control/Resources/` and rebuild)
-///   2. `~/Library/Application Support/XM6 Control/headphones.png` (no rebuild needed)
+///      `Sources/XMAudioStudio/Resources/` and rebuild)
+///   2. `~/Library/Application Support/XM Audio Studio/headphones.png` (no rebuild needed)
 struct HeadphoneImage: View {
     var body: some View {
         if let custom = Self.customImage() {
@@ -27,7 +27,7 @@ struct HeadphoneImage: View {
             return image
         }
         let appSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        if let url = appSupport?.appendingPathComponent("XM6 Control/headphones.png"),
+        if let url = appSupport?.appendingPathComponent("XM Audio Studio/headphones.png"),
            let image = NSImage(contentsOf: url) {
             return image
         }

@@ -1,7 +1,7 @@
 import Foundation
 import SonyHeadphonesKit
 
-// XM6Probe: connect to the paired WH-1000XM6, send raw payloads, print every reply.
+// XMAudioProbe: connect to the paired WH-1000XM6, send raw payloads, print every reply.
 //
 // Usage: xm6probe "f6 05" "28 05 01 00" "26 05"
 //   Each argument is a hex payload, sent ~1.5s apart after the handshake.

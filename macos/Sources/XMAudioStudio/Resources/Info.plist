@@ -2,24 +2,31 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>es</string>
+		<string>en</string>
+	</array>
 	<key>CFBundleName</key>
-	<string>XM6 Control</string>
+	<string>XM Audio Studio</string>
 	<key>CFBundleDisplayName</key>
-	<string>XM6 Control</string>
+	<string>XM Audio Studio</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.local.xm6control</string>
+	<string>io.github.andru1989.xmaudiostudio</string>
 	<key>CFBundleVersion</key>
-	<string>1.0</string>
+	<string>1</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.0</string>
+	<string>0.1.0</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleExecutable</key>
-	<string>XM6Control</string>
+	<string>XMAudioStudio</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>LSMinimumSystemVersion</key>
-	<string>13.0</string>
+	<string>14.0</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.utilities</string>
 	<key>CFBundleIconFile</key>
@@ -36,7 +43,7 @@
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>XM6 Control connects to your Sony WH-1000XM6 headphones over Bluetooth to read battery level and change settings like Noise Cancelling and Ambient Sound.</string>
+	<string>XM Audio Studio se conecta a tus audífonos Sony por Bluetooth para leer la batería y cambiar ajustes como la cancelación de ruido y el ecualizador.</string>
 	<key>LSApplicationSecondaryUIElement</key>
 	<false/>
 </dict>

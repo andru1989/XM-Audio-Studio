@@ -1,7 +1,7 @@
 import Foundation
 
 /// Appends a hex dump of every frame sent/received to
-/// `~/Library/Application Support/XM6 Control/protocol.log`, so protocol issues on
+/// `~/Library/Application Support/XM Audio Studio/protocol.log`, so protocol issues on
 /// real hardware (features the reference implementations never verified on XM6) can
 /// be diagnosed from a session transcript instead of guesswork.
 final class ProtocolLog {
@@ -16,7 +16,7 @@ final class ProtocolLog {
         formatter.dateFormat = "HH:mm:ss.SSS"
 
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-        if let dir = base?.appendingPathComponent("XM6 Control", isDirectory: true) {
+        if let dir = base?.appendingPathComponent("XM Audio Studio", isDirectory: true) {
             try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             url = dir.appendingPathComponent("protocol.log")
         } else {

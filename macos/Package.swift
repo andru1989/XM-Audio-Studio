@@ -2,11 +2,12 @@
 import PackageDescription
 
 let package = Package(
-    name: "XM6Control",
+    name: "XMAudioStudio",
     platforms: [
-        .macOS(.v13)
+        .macOS(.v14)
     ],
     targets: [
+        // Sony MDR protocol, RFCOMM transport and the session controller.
         .target(
             name: "SonyHeadphonesKit",
             swiftSettings: [.swiftLanguageMode(.v5)],
@@ -14,16 +15,22 @@ let package = Package(
                 .linkedFramework("IOBluetooth")
             ]
         ),
+        // Platform-neutral audio maths and presets: biquads, AutoEq import and fitting,
+        // preset schema. No Bluetooth, no UI; mirrored by android/core (eq, presets).
+        .target(
+            name: "AudioStudioKit",
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
         .executableTarget(
-            name: "XM6Control",
-            dependencies: ["SonyHeadphonesKit"],
+            name: "XMAudioStudio",
+            dependencies: ["SonyHeadphonesKit", "AudioStudioKit"],
             exclude: ["Resources"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         // Developer tool: connects to the headphones and sends raw hex payloads,
         // printing every reply. Used to verify command layouts on real hardware.
         .executableTarget(
-            name: "XM6Probe",
+            name: "XMAudioProbe",
             dependencies: ["SonyHeadphonesKit"],
             exclude: ["Info.plist"],
             swiftSettings: [.swiftLanguageMode(.v5)],
@@ -34,13 +41,18 @@ let package = Package(
                     "-Xlinker", "-sectcreate",
                     "-Xlinker", "__TEXT",
                     "-Xlinker", "__info_plist",
-                    "-Xlinker", "Sources/XM6Probe/Info.plist"
+                    "-Xlinker", "Sources/XMAudioProbe/Info.plist"
                 ])
             ]
         ),
         .testTarget(
             name: "SonyHeadphonesKitTests",
             dependencies: ["SonyHeadphonesKit"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        .testTarget(
+            name: "AudioStudioKitTests",
+            dependencies: ["AudioStudioKit"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         )
     ]

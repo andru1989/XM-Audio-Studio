@@ -231,7 +231,7 @@ extension RFCOMMConnection {
             // Discovery "succeeded" but returned no services at all -- not even the audio
             // profiles the headset is demonstrably using. That is what a missing Bluetooth
             // privilege looks like from in here: the calls are accepted and quietly dropped.
-            onEvent?(.failed("macOS reported no Bluetooth services for these headphones. Check that XM6 Control is enabled under System Settings \u{2192} Privacy & Security \u{2192} Bluetooth."))
+            onEvent?(.failed("macOS reported no Bluetooth services for these headphones. Check that XM Audio Studio is enabled under System Settings \u{2192} Privacy & Security \u{2192} Bluetooth."))
         } else {
             onEvent?(.failed("Couldn't find the Sony control service on this device."))
         }

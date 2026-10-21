@@ -2,9 +2,9 @@ import Foundation
 import AppKit
 import SonyHeadphonesKit
 
-/// Hidden developer mode: `open "XM6 Control.app" --args --probe "f6 05" "26 05"`
+/// Hidden developer mode: `open "XM Audio Studio.app" --args --probe "f6 05" "26 05"`
 /// connects, sends each raw hex payload ~1.5s apart, records every inbound message
-/// to `~/Library/Application Support/XM6 Control/probe.log`, then quits.
+/// to `~/Library/Application Support/XM Audio Studio/probe.log`, then quits.
 /// Prefix a payload with "t2:" to send it on the second message table (0x0e).
 /// Runs inside the app (not a bare CLI) so the Bluetooth privacy grant applies.
 @MainActor
@@ -30,7 +30,7 @@ enum ProbeMode {
 
         let logURL = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("XM6 Control/probe.log")
+            .appendingPathComponent("XM Audio Studio/probe.log")
         try? "=== probe \(Date()) ===\n".data(using: .utf8)?.write(to: logURL)
 
         func emit(_ line: String) {

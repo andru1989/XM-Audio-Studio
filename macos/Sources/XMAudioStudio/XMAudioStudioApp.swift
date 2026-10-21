@@ -3,7 +3,7 @@ import AppKit
 import SonyHeadphonesKit
 
 @main
-struct XM6ControlApp: App {
+struct XMAudioStudioApp: App {
     @StateObject private var controller: HeadphonesController
     @StateObject private var settings: AppSettings
 

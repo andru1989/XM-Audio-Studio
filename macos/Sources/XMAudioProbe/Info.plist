@@ -5,8 +5,8 @@
 	<key>CFBundleIdentifier</key>
 	<string>com.local.xm6probe</string>
 	<key>CFBundleName</key>
-	<string>XM6Probe</string>
+	<string>XMAudioProbe</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>XM6Probe is a developer tool that talks to the Sony WH-1000XM6 over Bluetooth to verify protocol commands.</string>
+	<string>XMAudioProbe is a developer tool that talks to Sony 1000X headphones over Bluetooth to verify protocol commands.</string>
 </dict>
 </plist>

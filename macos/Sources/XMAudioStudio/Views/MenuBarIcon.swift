@@ -108,6 +108,6 @@ extension NSImage {
 struct MenuBarIcon: View {
     var body: some View {
         Image(nsImage: .xm6MenuBarIcon())
-            .accessibilityLabel("XM6 Control")
+            .accessibilityLabel("XM Audio Studio")
     }
 }

@@ -1,4 +1,4 @@
-// Generates AppIcon.icns for XM6 Control.
+// Generates AppIcon.icns for XM Audio Studio.
 // Run: swift Scripts/make_icon.swift
 // Draws a macOS-style rounded-square icon with an indigo gradient and a headphones
 // glyph, renders it at 1024pt, then emits the full .iconset and compiles it to .icns.
@@ -81,7 +81,7 @@ func writePNG(_ image: NSImage, to url: URL, pixels: Int) throws {
 let scriptDir = URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent()
 let projectDir = scriptDir.deletingLastPathComponent()
 let iconsetDir = projectDir.appendingPathComponent(".build/AppIcon.iconset")
-let icnsPath = projectDir.appendingPathComponent("Sources/XM6Control/Resources/AppIcon.icns")
+let icnsPath = projectDir.appendingPathComponent("Sources/XMAudioStudio/Resources/AppIcon.icns")
 
 try? FileManager.default.removeItem(at: iconsetDir)
 try FileManager.default.createDirectory(at: iconsetDir, withIntermediateDirectories: true)
