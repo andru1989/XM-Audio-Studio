@@ -1,20 +1,35 @@
 import SwiftUI
 import AppKit
 import SonyHeadphonesKit
+import WidgetBridgeKit
 
 @main
 struct XMAudioStudioApp: App {
     @StateObject private var controller: HeadphonesController
     @StateObject private var settings: AppSettings
     @StateObject private var studio: EqStudioModel
+    @StateObject private var widgetBridge: WidgetBridge
 
     init() {
         ProbeMode.runIfRequested()
         AppSettings.migrateWindowFramesIfNeeded()
         let controller = AppSettings.launchesInDemoMode ? HeadphonesController.demo() : HeadphonesController()
+        let studio = EqStudioModel(controller: controller)
         _controller = StateObject(wrappedValue: controller)
         _settings = StateObject(wrappedValue: AppSettings(controller: controller))
-        _studio = StateObject(wrappedValue: EqStudioModel(controller: controller))
+        _studio = StateObject(wrappedValue: studio)
+
+        // WidgetKit widgets (Xcode build only; inert without the App Group entitlement).
+        let bridge = WidgetBridge(
+            controller: controller,
+            store: ProbeMode.active ? nil : WidgetStore.appGroup(),
+            isDemo: AppSettings.launchesInDemoMode,
+            profileName: { [weak studio] in studio?.activeProfile?.name }
+        )
+        _widgetBridge = StateObject(wrappedValue: bridge)
+        // After init returns: commands left by a widget may connect, and that shouldn't
+        // happen while the app is still being constructed.
+        Task { @MainActor in bridge.start() }
     }
 
     var body: some Scene {
