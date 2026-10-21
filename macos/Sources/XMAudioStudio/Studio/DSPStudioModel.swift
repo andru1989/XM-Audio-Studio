@@ -93,7 +93,10 @@ final class DSPStudioModel: ObservableObject {
         guard uid != outputUID else { return }
         outputUID = uid
         UserDefaults.standard.set(uid, forKey: Self.outputKey)
-        if isEnabled { engine.start(outputUID: uid, settings: settings) }
+        if isEnabled {
+            engine.start(outputUID: uid, settings: settings)
+            engineStateChanged(engine.state)
+        }
     }
 
     // MARK: - On / off
@@ -107,6 +110,9 @@ final class DSPStudioModel: ObservableObject {
         } else {
             engine.stop()
         }
+        // `start`/`stop` are synchronous; resync in case the state did not change (e.g.
+        // failing again with the same error fires no change callback).
+        engineStateChanged(engine.state)
     }
 
     private func engineStateChanged(_ new: DSPEngineState) {
@@ -123,9 +129,11 @@ final class DSPStudioModel: ObservableObject {
     private func startLevelTimer() {
         guard levelTimer == nil else { return }
         silentSeconds = 0
-        levelTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 0.25, repeats: true) { [weak self] _ in
             MainActor.assumeIsolated { self?.sampleLevel() }
         }
+        RunLoop.main.add(timer, forMode: .common) // keeps running while a slider is dragged
+        levelTimer = timer
     }
 
     private func stopLevelTimer() {
