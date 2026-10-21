@@ -79,7 +79,9 @@ final class ConformanceTests: XCTestCase {
         case .battery(let b):
             dict = ["event": "battery", "level": b.level, "charging": b.isCharging]
         case .equalizer(let e):
-            dict = ["event": "equalizer", "presetCode": Int(e.presetCode), "bands": e.bands, "subtype": Int(e.subtype)]
+            var d: [String: Any] = ["event": "equalizer", "presetCode": Int(e.presetCode), "bands": e.bands, "subtype": Int(e.subtype)]
+            if let clearBass = e.clearBass { d["clearBass"] = clearBass }
+            dict = d
         case .equalizerCapability(let c):
             dict = ["event": "eqCapability", "subtype": Int(c.subtype), "bandCount": c.bandCount, "stepCount": c.stepCount,
                     "presetCodes": c.presetCodes.map(Int.init)]
@@ -90,7 +92,9 @@ final class ConformanceTests: XCTestCase {
         case .speakToChatEnabled(let enabled):
             dict = ["event": "speakToChatEnabled", "enabled": enabled]
         case .speakToChatConfig(let c):
-            dict = ["event": "speakToChatConfig", "sensitivity": c.sensitivity.label.lowercased(), "timeout": c.timeout.label.lowercased()]
+            var d: [String: Any] = ["event": "speakToChatConfig", "sensitivity": c.sensitivity.label.lowercased(), "timeout": c.timeout.label.lowercased()]
+            if let voiceFocus = c.voiceFocus { d["voiceFocus"] = voiceFocus }
+            dict = d
         case .automaticPowerOff(let m):
             dict = ["event": "automaticPowerOff", "mode": m == .off ? "off" : "whenTakenOff"]
         case .pauseWhenTakenOff(let enabled):

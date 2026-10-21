@@ -42,7 +42,20 @@ public enum HeadphoneModel: String, CaseIterable, Sendable, Identifiable {
         }
     }
 
-    /// Whether this app has a protocol adapter for the model. Models without one are never sent a byte.
+    /// The protocol adapter id in `shared/protocol-spec/models.json` ("xm6", "xm5", "mdr-v1").
+    /// SonyHeadphonesKit has pure codecs for each (`SonyCommands`, `Xm5Commands`, `MdrV1Commands`);
+    /// Android drives all of them. Nil: no adapter anywhere (no public capture).
+    public var adapterId: String? {
+        switch self {
+        case .wh1000xm6: return "xm6"
+        case .wh1000xm5: return "xm5"
+        case .wh1000xm4, .wh1000xm3, .wh1000xm2: return "mdr-v1"
+        case .mdr1000x: return nil
+        }
+    }
+
+    /// Whether the macOS `HeadphonesController` drives the model. Only the XM6 for now: the
+    /// other adapters exist as codecs only on macOS. Models it does not drive are never sent a byte.
     public var hasAdapter: Bool { self == .wh1000xm6 }
 
     /// Best guess from the Bluetooth name (users can rename devices; the init reply confirms).
@@ -132,8 +145,27 @@ public enum DeviceCatalog {
             .map { EqPresetSpec(code: $0.0, name: $0.1) }
     )
 
+    /// The WH-1000XM3 reported these exact centres in its own EQ extended info
+    /// (`5B 01 06 10 0000 01 0190 01 03E8 01 09C4 01 189C 01 3E80`, mos9527 fw 4.5.2 capture).
+    private static let xm3Equalizer = EqualizerSpec(
+        bandFrequenciesHz: fiveBandEqualizer.bandFrequenciesHz,
+        frequenciesVerified: true,
+        minStep: -10, maxStep: 10, wireOffset: 10, stepDb: 1,
+        clearBassRange: -10...10,
+        presets: classicPresets
+    )
+
+    private static func levels(_ level: SupportLevel, _ features: [DeviceFeature]) -> [DeviceFeature: SupportLevel] {
+        Dictionary(uniqueKeysWithValues: features.map { ($0, level) })
+    }
+
     private static func planned(_ features: [DeviceFeature]) -> [DeviceFeature: SupportLevel] {
-        Dictionary(uniqueKeysWithValues: features.map { ($0, .planned) })
+        levels(.planned, features)
+    }
+
+    /// Merges per-level groups; a feature must appear once.
+    private static func merge(_ groups: [DeviceFeature: SupportLevel]...) -> [DeviceFeature: SupportLevel] {
+        groups.reduce(into: [:]) { result, group in result.merge(group) { _, _ in preconditionFailure("feature listed twice") } }
     }
 
     public static func capabilities(_ model: HeadphoneModel) -> DeviceCapabilities {
@@ -151,23 +183,39 @@ public enum DeviceCatalog {
                 equalizer: xm6Equalizer,
                 ambientLevelRange: 1...20
             )
-        case .wh1000xm5, .wh1000xm4:
+        // Levels mirror android DeviceCatalog.kt; evidence in docs/compatibility/OTHER-MODELS.md.
+        // None of these models has been tested on hardware by this project.
+        case .wh1000xm5:
             return DeviceCapabilities(
                 model: model,
-                features: planned([.battery, .noiseCancelling, .ambientSound, .ambientLevel, .focusOnVoice,
-                                   .speakToChat, .wearDetection, .autoPowerOff, .eqPresets, .eqCustomBands]),
+                features: merge(
+                    levels(.pendingHardware, [.battery, .noiseCancelling, .ambientSound, .ambientLevel, .focusOnVoice,
+                                              .speakToChat, .eqCustomBands]),
+                    levels(.experimental, [.eqPresets]),
+                    planned([.wearDetection, .autoPowerOff])),
+                equalizer: fiveBandEqualizer, ambientLevelRange: 1...20)
+        case .wh1000xm4:
+            return DeviceCapabilities(
+                model: model,
+                features: merge(
+                    levels(.pendingHardware, [.battery, .noiseCancelling, .ambientSound, .ambientLevel, .focusOnVoice,
+                                              .eqPresets, .eqCustomBands]),
+                    levels(.experimental, [.speakToChat]),
+                    planned([.wearDetection, .autoPowerOff])),
                 equalizer: fiveBandEqualizer, ambientLevelRange: 1...20)
         case .wh1000xm3:
             return DeviceCapabilities(
                 model: model,
-                features: planned([.battery, .noiseCancelling, .ambientSound, .ambientLevel, .focusOnVoice,
-                                   .autoPowerOff, .eqPresets, .eqCustomBands]),
-                equalizer: fiveBandEqualizer, ambientLevelRange: 1...20)
+                features: merge(
+                    levels(.pendingHardware, [.battery, .noiseCancelling, .ambientSound, .ambientLevel, .focusOnVoice]),
+                    levels(.experimental, [.eqPresets, .eqCustomBands]),
+                    planned([.autoPowerOff])),
+                equalizer: xm3Equalizer, ambientLevelRange: 1...20)
         case .wh1000xm2:
             return DeviceCapabilities(
                 model: model,
-                features: planned([.battery, .noiseCancelling, .ambientSound, .ambientLevel, .focusOnVoice,
-                                   .eqPresets, .eqCustomBands]),
+                features: levels(.experimental, [.battery, .noiseCancelling, .ambientSound, .ambientLevel, .focusOnVoice,
+                                                 .eqPresets, .eqCustomBands]),
                 equalizer: fiveBandEqualizer, ambientLevelRange: 1...20)
         case .mdr1000x:
             return DeviceCapabilities(
