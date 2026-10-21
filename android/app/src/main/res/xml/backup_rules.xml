@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Presets and preferences are user data worth backing up; nothing else is stored. -->
+<full-backup-content>
+    <include domain="file" path="presets" />
+    <include domain="sharedpref" path="." />
+</full-backup-content>

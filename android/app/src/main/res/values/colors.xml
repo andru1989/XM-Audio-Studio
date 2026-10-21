@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- shared/design-tokens/tokens.json: color.light.background / color.dark.background -->
+    <color name="window_background">#FFF6F7F9</color>
+    <color name="icon_background">#FF0E1116</color>
+</resources>
