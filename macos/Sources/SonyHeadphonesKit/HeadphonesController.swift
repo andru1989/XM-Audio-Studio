@@ -259,7 +259,8 @@ public final class HeadphonesController: ObservableObject {
         enqueueCommand(key: "raw-\(UUID().uuidString)") { [(type, payload)] }
     }
 
-    public func setAmbientSound(_ state: AmbientSoundState) {
+    /// `committed: false` while a level slider is being dragged; `true` on release.
+    public func setAmbientSound(_ state: AmbientSoundState, committed: Bool = true) {
         var state = state
         state.level = max(1, min(20, state.level))
         ambientSound = state // optimistic; a NOTIFY will reconcile if the device disagrees
@@ -270,7 +271,7 @@ public final class HeadphonesController: ObservableObject {
                 write.subtype = reported.subtype
                 write.hasWindNoiseByte = reported.hasWindNoiseByte
             }
-            return [(.command1, SonyCommands.buildAmbientSoundSet(write))]
+            return [(.command1, SonyCommands.buildAmbientSoundSet(write, committed: committed))]
         }
     }
 

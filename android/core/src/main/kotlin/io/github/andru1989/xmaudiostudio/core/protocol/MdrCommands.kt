@@ -59,11 +59,12 @@ object MdrCommands {
 
     fun ambientSoundGet(subtype: Int = Subtype.NCASM_STANDARD): ByteArray = bytes(Opcode.NCASM_GET, subtype)
 
-    fun ambientSoundSet(state: AmbientSoundState): ByteArray {
+    /** [committed] is the value-change status byte: 0x00 while a slider is dragged, 0x01 on release. */
+    fun ambientSoundSet(state: AmbientSoundState, committed: Boolean = true): ByteArray {
         val out = mutableListOf(
             Opcode.NCASM_SET,
             if (state.subtype == 0x19) 0x17 else state.subtype,
-            0x01, // the official app sends 0x00 mid-drag and 0x01 on commit
+            if (committed) 0x01 else 0x00,
             if (state.mode == AmbientSoundMode.OFF) 0x00 else 0x01,
             if (state.mode == AmbientSoundMode.AMBIENT_SOUND) 0x01 else 0x00,
         )

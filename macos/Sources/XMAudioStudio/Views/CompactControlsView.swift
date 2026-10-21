@@ -118,10 +118,15 @@ struct CompactControlsView: View {
                     set: { newValue in
                         var state = controller.ambientSound ?? AmbientSoundState(mode: .ambientSound)
                         state.level = Int(newValue.rounded())
-                        controller.setAmbientSound(state)
+                        controller.setAmbientSound(state, committed: false)
                     }
                 ),
-                in: 1...20, step: 1
+                in: 1...20, step: 1,
+                onEditingChanged: { editing in
+                    if !editing, let current = controller.ambientSound {
+                        controller.setAmbientSound(current, committed: true)
+                    }
+                }
             )
             .controlSize(.mini)
             .accessibilityLabel("Ambient sound level")

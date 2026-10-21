@@ -122,6 +122,7 @@ class EventCommandConformanceTest {
                 subtype = a["subtype"]!!.int,
                 hasWindNoiseByte = a["hasWindNoiseByte"]!!.bool,
             ),
+            committed = a["committed"]?.bool ?: true,
         )
         "batteryGet" -> MdrCommands.batteryGet()
         "equalizerGet" -> MdrCommands.equalizerGet(a["subtype"]!!.int)

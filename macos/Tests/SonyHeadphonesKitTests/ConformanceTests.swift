@@ -139,7 +139,7 @@ final class ConformanceTests: XCTestCase {
                 level: int("level"),
                 subtype: UInt8(int("subtype")),
                 hasWindNoiseByte: bool("hasWindNoiseByte")
-            ))
+            ), committed: (a["committed"] as? Bool) ?? true)
         case "batteryGet": return SonyCommands.buildBatteryGet()
         case "equalizerGet": return SonyCommands.buildEqualizerGet(subtype: UInt8(int("subtype")))
         case "equalizerCapabilityGet": return SonyCommands.buildEqualizerCapabilityGet()
