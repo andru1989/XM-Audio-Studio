@@ -44,6 +44,8 @@ import io.github.andru1989.xmaudiostudio.ui.UiState
 import io.github.andru1989.xmaudiostudio.ui.components.ConnectionCard
 import io.github.andru1989.xmaudiostudio.ui.components.SectionCard
 import io.github.andru1989.xmaudiostudio.ui.components.Segmented
+import io.github.andru1989.xmaudiostudio.ui.scenes.SaveSceneButton
+import io.github.andru1989.xmaudiostudio.ui.scenes.SceneBadge
 import io.github.andru1989.xmaudiostudio.ui.theme.Studio
 
 /** Product photos (shared/model-images/SOURCES.md: Sony's images, personal use only). */
@@ -161,13 +163,21 @@ fun DashboardScreen(
 
         SectionCard(stringResource(R.string.active_profile)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    state.activeProfile?.name ?: if (s.equalizer != null) stringResource(R.string.custom_unsaved) else "—",
-                    style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f),
-                )
+                Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        state.activeProfile?.name ?: if (s.equalizer != null) stringResource(R.string.custom_unsaved) else "—",
+                        style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f, fill = false),
+                    )
+                    if (state.activeProfile?.scene != null) {
+                        Spacer(Modifier.width(6.dp))
+                        SceneBadge()
+                    }
+                }
                 Spacer(Modifier.width(8.dp))
                 Button(onClick = openEqualizer) { Text(stringResource(R.string.open_eq)) }
             }
+            // Capture what the headphones have now (EQ, noise control, listening mode…) as one profile.
+            SaveSceneButton(state, vm, showDetail = false)
         }
 
         Text(stringResource(R.string.disclaimer), color = Studio.colors.muted, style = MaterialTheme.typography.bodySmall)
