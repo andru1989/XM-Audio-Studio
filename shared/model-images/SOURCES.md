@@ -1,9 +1,9 @@
 # Fotos de producto
 
-**Copyright © Sony Corporation. Uso personal del propietario del proyecto.** No están cubiertas por
-la licencia MIT del repositorio ni tienen licencia de redistribución: si el repositorio o las apps
-se publican, hay que retirarlas o sustituirlas (por fotos propias o con licencia libre). Decisión
-del propietario (2026-10-21) de versionarlas en este repositorio privado.
+**Copyright © Sony Corporation.** No están cubiertas por la licencia MIT del repositorio ni tienen
+licencia de redistribución. El propietario del proyecto decidió el 2026-10-21 publicarlas en el
+repositorio público asumiendo ese riesgo. Si Sony u otro titular lo solicita, deben retirarse (las
+apps vuelven a la ilustración propia; las fotos CC de XM2/XM3 siguen en el historial como alternativa).
 
 Imagen principal ("primaryShot") de la página de soporte de Sony USA de cada modelo, PNG con fondo
 transparente, reducida a 800 px. Copias idénticas en `macos/Sources/XMAudioStudio/Resources/Models/`

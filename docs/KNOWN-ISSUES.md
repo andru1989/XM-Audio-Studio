@@ -22,7 +22,7 @@ Actualizado: 2026-10-21.
 
 ## Distribución y licencias
 - `.app`/`.dmg` sin notarizar (requiere Developer ID).
-- Fotos de producto © Sony incluidas para uso personal: **retirar antes de publicar** el repositorio o las apps.
+- Fotos de producto © Sony publicadas en el repo por decisión del propietario, sin licencia de redistribución (riesgo asumido).
 - Aportes de Anneo22 declarados Apache‑2.0: compatible, pendiente de confirmación del autor.
 - Datos de medición de AutoEq: sin licencia; no se incluyen (el usuario importa sus archivos).
 

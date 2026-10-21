@@ -56,8 +56,8 @@ interoperabilidad. Este proyecto no distribuye binarios, imágenes, logotipos ni
 ## Imágenes
 
 Las fotos de producto de `shared/model-images/` (y sus copias en las apps) son **© Sony
-Corporation**, tomadas de sony.com para uso personal del propietario. **No** se distribuyen bajo la
-licencia del proyecto; retirarlas antes de cualquier publicación. Detalle: `shared/model-images/SOURCES.md`.
+Corporation**, tomadas de sony.com. **No** están bajo la licencia del proyecto; el propietario decidió
+publicarlas asumiendo el riesgo. Detalle: `shared/model-images/SOURCES.md`.
 
 ## Dependencias de compilación (Android)
 AndroidX (Apache-2.0), Jetpack Compose (Apache-2.0), Kotlin stdlib/coroutines/serialization (Apache-2.0).

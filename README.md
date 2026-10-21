@@ -93,5 +93,5 @@ Empieza por [`AGENTS.md`](AGENTS.md) (reglas y mapa del repositorio), luego
 
 Código propio bajo MIT ([`LICENSE`](LICENSE)); componentes de terceros en
 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md). Las fotos de producto de `shared/model-images/` son
-© Sony y se incluyen solo para uso personal (ver [`shared/model-images/SOURCES.md`](shared/model-images/SOURCES.md)).
+© Sony Corporation y no están cubiertas por la licencia del proyecto (ver [`shared/model-images/SOURCES.md`](shared/model-images/SOURCES.md)).
 No se incluyen datos de medición de AutoEq: cada usuario importa los suyos.

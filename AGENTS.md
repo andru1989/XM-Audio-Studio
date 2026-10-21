@@ -64,8 +64,9 @@ python3 tools/fixtures/generate_eq_vectors.py
    código. mos9527 / Plutoberth / sony-device-center (MIT) se pueden reutilizar con aviso. Datos de
    AutoEq: no incluir en el repo ni en las apps (sin licencia).
 7. Sin firmware, sin restablecimiento de fábrica, sin borrar emparejamientos, sin telemetría.
-7b. Las fotos de `shared/model-images/` son © Sony (uso personal, decisión del propietario). **No publicar
-    el repositorio ni las apps con ellas** sin retirarlas o reemplazarlas.
+7b. Las fotos de `shared/model-images/` son © Sony, sin licencia de redistribución. El propietario decidió
+    publicarlas en el repo público (2026-10-21) asumiendo el riesgo; no las quites sin que él lo pida, y
+    retíralas si llega una solicitud del titular.
 8. Commits pequeños; ejecutar las dos suites tras cambios que toquen protocolo o EQ.
 
 ## Dónde está cada decisión
