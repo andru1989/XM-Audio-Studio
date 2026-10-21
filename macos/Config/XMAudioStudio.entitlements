@@ -2,6 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- Entitlements of the Xcode build (project.yml). Same as
+	     Sources/XMAudioStudio/Resources/XMAudioStudio.entitlements (used by build_app.sh)
+	     plus the App Group; keep the shared keys in sync. -->
+
+	<!-- Hardened runtime: audio input for the optional local DSP's process tap. -->
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
 	<!-- The app is not sandboxed (IOBluetooth RFCOMM). It claims the App Group only to
 	     share the widget snapshot and command mailbox with the sandboxed extension.
 	     macOS-style ID: the team prefix authorises it without a provisioning profile.

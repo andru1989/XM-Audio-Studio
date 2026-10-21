@@ -54,6 +54,19 @@
     {
       "command": "ambientSoundSet",
       "args": {
+        "mode": "ambientSound",
+        "focusOnVoice": false,
+        "level": 7,
+        "subtype": 25,
+        "hasWindNoiseByte": false,
+        "committed": false
+      },
+      "payload": "68 17 00 01 01 00 07",
+      "source": "value-change status 0x00 while dragging (official app behaviour, mos9527)"
+    },
+    {
+      "command": "ambientSoundSet",
+      "args": {
         "mode": "off",
         "focusOnVoice": false,
         "level": 10,

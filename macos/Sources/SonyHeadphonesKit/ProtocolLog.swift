@@ -10,6 +10,8 @@ final class ProtocolLog {
 
     private let url: URL?
     private let formatter: DateFormatter
+    /// File I/O happens here, never on the main thread that drives the protocol.
+    private let queue = DispatchQueue(label: "XMAudioStudio.ProtocolLog", qos: .utility)
 
     init() {
         formatter = DateFormatter()
@@ -28,9 +30,11 @@ final class ProtocolLog {
         guard isEnabled, let url else { return }
         // Rotate only when the log gets big; never truncate on reconnect, otherwise
         // an auto-reconnect wipes the evidence the log exists to preserve.
-        if let size = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int,
-           size > 2_000_000 {
-            try? FileManager.default.removeItem(at: url)
+        queue.async {
+            if let size = try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? Int,
+               size > 2_000_000 {
+                try? FileManager.default.removeItem(at: url)
+            }
         }
         appendLine("=== session \(Date()) device=\(deviceName ?? "?") ===\n")
     }
@@ -42,6 +46,10 @@ final class ProtocolLog {
     }
 
     private func appendLine(_ line: String) {
+        queue.async { [url] in Self.append(line, to: url) }
+    }
+
+    private static func append(_ line: String, to url: URL?) {
         guard let url, let data = line.data(using: .utf8) else { return }
         if !FileManager.default.fileExists(atPath: url.path) {
             try? data.write(to: url)

@@ -60,13 +60,15 @@ public enum SonyCommands {
         [Opcode.ambientSoundControlGet, subtype]
     }
 
-    public static func buildAmbientSoundSet(_ state: AmbientSoundState) -> [UInt8] {
+    /// `committed` is the value-change status byte: the official app sends 0x00 while a
+    /// slider is being dragged and 0x01 when it is released.
+    public static func buildAmbientSoundSet(_ state: AmbientSoundState, committed: Bool = true) -> [UInt8] {
         let onOff: UInt8 = state.mode == .off ? 0x00 : 0x01
         let ambientFlag: UInt8 = state.mode == .ambientSound ? 0x01 : 0x00
         var payload: [UInt8] = [
             Opcode.ambientSoundControlSet,
             state.subtype == 0x19 ? 0x17 : state.subtype,
-            0x01, // fixed; the real app sends 0x00 mid-drag, 0x01 on commit
+            committed ? 0x01 : 0x00,
             onOff,
             ambientFlag
         ]

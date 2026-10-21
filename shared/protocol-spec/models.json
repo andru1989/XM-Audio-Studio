@@ -2,13 +2,13 @@
   "schema": "xm-audio-studio.models/1",
   "levels": {
     "verified-hardware": "byte layout confirmed by a live capture on this model",
-    "pending-hardware": "from references only; needs a hardware test",
+    "pending-hardware": "implemented from references (MIT clients' hardware notes, captures of the same layout); needs a hardware test",
     "verified-simulation": "covered by simulation only",
-    "experimental": "implemented, may not work",
-    "planned": "model has it, no adapter yet",
+    "experimental": "implemented by inference or with a known open risk; may not work",
+    "planned": "model has it; its adapter does not implement it (nothing is sent)",
     "unsupported": "not available"
   },
-  "note": "Levels describe protocol evidence for the model, not app test status (see docs/compatibility/FEATURE-STATUS.md). Frequencies marked frequenciesVerified=false are client labels, not device-reported values.",
+  "note": "Levels describe protocol evidence for the model, not app test status (see docs/compatibility/FEATURE-STATUS.md and docs/compatibility/OTHER-MODELS.md). Only the WH-1000XM6 has been used with real hardware by this project. 'adapter' names the protocol adapter (Android: ProtocolAdapter.forModel; SonyHeadphonesKit has the same codecs, but the macOS controller drives only the XM6). Frequencies marked frequenciesVerified=false are client labels, not device-reported values.",
   "models": [
     {
       "id": "wh-1000xm6",
@@ -92,18 +92,18 @@
         "WH-1000XM5"
       ],
       "protocol": "mdr-v2",
-      "adapter": null,
+      "adapter": "xm5",
       "features": {
-        "battery": "planned",
-        "noiseCancelling": "planned",
-        "ambientSound": "planned",
-        "ambientLevel": "planned",
-        "focusOnVoice": "planned",
-        "speakToChat": "planned",
+        "battery": "pending-hardware",
+        "noiseCancelling": "pending-hardware",
+        "ambientSound": "pending-hardware",
+        "ambientLevel": "pending-hardware",
+        "focusOnVoice": "pending-hardware",
+        "speakToChat": "pending-hardware",
         "wearDetection": "planned",
         "autoPowerOff": "planned",
-        "eqPresets": "planned",
-        "eqCustomBands": "planned"
+        "eqPresets": "experimental",
+        "eqCustomBands": "pending-hardware"
       },
       "equalizer": {
         "bandCount": 5,
@@ -186,18 +186,18 @@
         "WH-1000XM4"
       ],
       "protocol": "mdr-v1",
-      "adapter": null,
+      "adapter": "mdr-v1",
       "features": {
-        "battery": "planned",
-        "noiseCancelling": "planned",
-        "ambientSound": "planned",
-        "ambientLevel": "planned",
-        "focusOnVoice": "planned",
-        "speakToChat": "planned",
+        "battery": "pending-hardware",
+        "noiseCancelling": "pending-hardware",
+        "ambientSound": "pending-hardware",
+        "ambientLevel": "pending-hardware",
+        "focusOnVoice": "pending-hardware",
+        "speakToChat": "experimental",
         "wearDetection": "planned",
         "autoPowerOff": "planned",
-        "eqPresets": "planned",
-        "eqCustomBands": "planned"
+        "eqPresets": "pending-hardware",
+        "eqCustomBands": "pending-hardware"
       },
       "equalizer": {
         "bandCount": 5,
@@ -280,16 +280,16 @@
         "WH-1000XM3"
       ],
       "protocol": "mdr-v1",
-      "adapter": null,
+      "adapter": "mdr-v1",
       "features": {
-        "battery": "planned",
-        "noiseCancelling": "planned",
-        "ambientSound": "planned",
-        "ambientLevel": "planned",
-        "focusOnVoice": "planned",
+        "battery": "pending-hardware",
+        "noiseCancelling": "pending-hardware",
+        "ambientSound": "pending-hardware",
+        "ambientLevel": "pending-hardware",
+        "focusOnVoice": "pending-hardware",
         "autoPowerOff": "planned",
-        "eqPresets": "planned",
-        "eqCustomBands": "planned"
+        "eqPresets": "experimental",
+        "eqCustomBands": "experimental"
       },
       "equalizer": {
         "bandCount": 5,
@@ -300,7 +300,7 @@
           6300,
           16000
         ],
-        "frequenciesVerified": false,
+        "frequenciesVerified": true,
         "minStep": -10,
         "maxStep": 10,
         "wireOffset": 10,
@@ -372,15 +372,15 @@
         "WH-1000XM2"
       ],
       "protocol": "mdr-v1",
-      "adapter": null,
+      "adapter": "mdr-v1",
       "features": {
-        "battery": "planned",
-        "noiseCancelling": "planned",
-        "ambientSound": "planned",
-        "ambientLevel": "planned",
-        "focusOnVoice": "planned",
-        "eqPresets": "planned",
-        "eqCustomBands": "planned"
+        "battery": "experimental",
+        "noiseCancelling": "experimental",
+        "ambientSound": "experimental",
+        "ambientLevel": "experimental",
+        "focusOnVoice": "experimental",
+        "eqPresets": "experimental",
+        "eqCustomBands": "experimental"
       },
       "equalizer": {
         "bandCount": 5,

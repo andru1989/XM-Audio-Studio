@@ -84,7 +84,7 @@ final class HeadphonesControllerTests: XCTestCase {
         XCTAssertEqual(connection.closeCount, 2)
     }
 
-    func testDisconnectedCommandsWaitForHandshakeAndAreAppliedInOrder() async {
+    func testDisconnectedCommandsWaitForStateReadAndAreAppliedInOrder() async {
         let (controller, connection) = makeController()
         defer { controller.disconnect() }
         controller.setListeningMode(.cinema)
@@ -94,14 +94,33 @@ final class HeadphonesControllerTests: XCTestCase {
         await handshake(connection)
         XCTAssertEqual(controller.connectionState, .connected)
         await drain(connection)
-        XCTAssertEqual(Array(connection.payloads.prefix(4)), [
-            SonyCommands.buildInit(),
+        let payloads = connection.payloads
+        XCTAssertEqual(payloads.first, SonyCommands.buildInit())
+        let commands = [
             SonyCommands.buildBGMModeSet(enabled: false, roomSize: .middle),
             SonyCommands.buildUpmixCinemaSet(enabled: true),
-            SonyCommands.buildEqualizerPresetSet(code: EqualizerPreset.off.rawValue, subtype: 0x04)
-        ])
-        XCTAssertTrue(connection.payloads.contains(SonyCommands.buildBatteryGet()))
-        XCTAssertTrue(connection.payloads.contains(SonyCommands.buildDeviceListGet()))
+            SonyCommands.buildEqualizerPresetSet(code: EqualizerPreset.off.rawValue, subtype: 0x04),
+        ]
+        let positions = commands.compactMap { payloads.firstIndex(of: $0) }
+        XCTAssertEqual(positions.count, 3)
+        XCTAssertEqual(positions, positions.sorted())
+        // Read before write: every state query precedes the first intent.
+        let lastQuery = try! XCTUnwrap(payloads.lastIndex(of: SonyCommands.buildDeviceListGet()))
+        XCTAssertGreaterThan(positions[0], lastQuery)
+        XCTAssertTrue(payloads.contains(SonyCommands.buildBatteryGet()))
+    }
+
+    func testPendingListeningModeUsesFreshlyReadRoomSize() async {
+        let (controller, connection) = makeController()
+        defer { controller.disconnect() }
+        controller.setListeningMode(.backgroundMusic)
+        await handshake(connection)
+        // The phone set the room to "large" while we were away; the read reports it.
+        connection.reply([0xe7, 0x09, 0x01, 0x02])
+        await settle()
+        await drain(connection)
+        XCTAssertTrue(connection.payloads.contains(SonyCommands.buildBGMModeSet(enabled: true, roomSize: .large)))
+        XCTAssertFalse(connection.payloads.contains(SonyCommands.buildBGMModeSet(enabled: true, roomSize: .middle)))
     }
 
     func testEqualizerDragConnectsAndKeepsLatestCurve() async {
@@ -225,41 +244,43 @@ final class HeadphonesControllerTests: XCTestCase {
         XCTAssertEqual(controller.ambientSound?.level, 1)
     }
 
-    func testLegacyZeroPlaceholderStillAppliesOriginalStartupDefaultsOnce() async {
-        let (controller, connection) = makeController()
-        defer { controller.disconnect() }
-        controller.releaseWhenIdle = false
-        await handshake(connection)
-        connection.reply([0x67, 0x17, 0, 0, 0, 0, 0])
-        await settle()
-        await drain(connection)
-        XCTAssertEqual(controller.ambientSound?.mode, .noiseCancelling)
-        XCTAssertEqual(controller.ambientSound?.level, 15)
-        XCTAssertEqual(connection.payloads.filter { $0.first == 0x68 }, [[0x68, 0x17, 1, 1, 0, 0, 15]])
-        connection.reply([0x69, 0x17, 1, 0, 0, 0, 9])
-        await settle()
-        XCTAssertEqual(controller.ambientSound?.mode, .off)
-        XCTAssertEqual(controller.ambientSound?.level, 9)
-        XCTAssertEqual(connection.payloads.filter { $0.first == 0x68 }.count, 1)
-    }
-
-    func testLegacyStartupDefaultsPreserveAmbientModeAndNonzeroLevel() async {
-        let fixtures: [([UInt8], AmbientSoundMode, Int, [[UInt8]])] = [
-            ([0x67, 0x17, 1, 0, 0, 0, 9], .noiseCancelling, 9, [[0x68, 0x17, 1, 1, 0, 0, 9]]),
-            ([0x67, 0x17, 1, 1, 1, 0, 0], .ambientSound, 15, [[0x68, 0x17, 1, 1, 1, 0, 15]]),
-            ([0x67, 0x19, 1, 1, 1, 0, 10, 0, 0], .ambientSound, 10, []),
-        ]
-        for (report, mode, level, writes) in fixtures {
+    func testZeroPlaceholderIsIgnoredInBothModes() async {
+        for release in [true, false] {
             let (controller, connection) = makeController()
             defer { controller.disconnect() }
-            controller.releaseWhenIdle = false
+            controller.releaseWhenIdle = release
+            if release { controller.setControlSurface(UUID(), visible: true) }
             await handshake(connection)
-            connection.reply(report)
+            connection.reply([0x67, 0x17, 0, 0, 0, 0, 0])
             await settle()
             await drain(connection)
-            XCTAssertEqual(controller.ambientSound?.mode, mode)
-            XCTAssertEqual(controller.ambientSound?.level, level)
-            XCTAssertEqual(connection.payloads.filter { $0.first == 0x68 }, writes)
+            XCTAssertNil(controller.ambientSound)
+            XCTAssertTrue(connection.payloads.filter { $0.first == 0x68 }.isEmpty)
+        }
+    }
+
+    func testConnectNeverWritesStartupDefaults() async {
+        // Upstream forced Noise Cancelling / level 15 on connect; reading must never write.
+        let fixtures: [([UInt8], AmbientSoundMode, Int)] = [
+            ([0x67, 0x17, 1, 0, 0, 0, 9], .off, 9),
+            ([0x67, 0x17, 1, 1, 1, 0, 0], .ambientSound, 1),
+            ([0x67, 0x19, 1, 1, 1, 0, 10, 0, 0], .ambientSound, 10),
+        ]
+        for release in [true, false] {
+            for (report, mode, level) in fixtures {
+                let (controller, connection) = makeController()
+                defer { controller.disconnect() }
+                controller.releaseWhenIdle = release
+                // With idle release on, a visible window is what acquires the channel.
+                if release { controller.setControlSurface(UUID(), visible: true) }
+                await handshake(connection)
+                connection.reply(report)
+                await settle()
+                await drain(connection)
+                XCTAssertEqual(controller.ambientSound?.mode, mode)
+                XCTAssertEqual(controller.ambientSound?.level, level)
+                XCTAssertTrue(connection.payloads.filter { $0.first == 0x68 }.isEmpty)
+            }
         }
     }
 
@@ -530,9 +551,8 @@ final class HeadphonesControllerTests: XCTestCase {
         XCTAssertFalse(connection.payloads.contains(SonyCommands.buildPauseWhenTakenOffSet(true)))
         // Exercise the real timeout callback without waiting for the transport timeout.
         controller.handleAckTimeout()
+        await drain(connection)
         XCTAssertTrue(connection.payloads.contains(SonyCommands.buildPauseWhenTakenOffSet(true)))
-        connection.ack()
-        await settle()
         controller.disconnectIfIdle(now: .now.advanced(by: .seconds(21)))
         XCTAssertEqual(controller.connectionState, .disconnected)
     }
@@ -548,7 +568,7 @@ final class HeadphonesControllerTests: XCTestCase {
         XCTAssertTrue(connection.payloads.contains(SonyCommands.buildEqualizerBandsSet(bands: Array(repeating: 3, count: 10), subtype: 0x04)))
     }
 
-    func testIdleExpiryFinishesCommandButDoesNotWaitForStateQueries() async {
+    func testIdleExpiryWaitsForTheCommandThatFollowsTheStateRead() async {
         let (controller, connection) = makeController()
         defer { controller.disconnect() }
         controller.setPauseWhenTakenOff(true)
@@ -557,12 +577,12 @@ final class HeadphonesControllerTests: XCTestCase {
         await handshake(connection)
         controller.disconnectIfIdle(now: .now.advanced(by: .seconds(21)))
         XCTAssertEqual(controller.connectionState, .connected)
-        connection.ack()
-        await settle()
+        await drain(connection)
         controller.disconnectIfIdle(now: .now.advanced(by: .seconds(21)))
         XCTAssertEqual(controller.connectionState, .disconnected)
-        XCTAssertTrue(connection.payloads.contains(SonyCommands.buildPauseWhenTakenOffSet(true)))
-        XCTAssertFalse(connection.payloads.contains(SonyCommands.buildDeviceListGet()))
+        let payloads = connection.payloads
+        let write = try! XCTUnwrap(payloads.firstIndex(of: SonyCommands.buildPauseWhenTakenOffSet(true)))
+        XCTAssertGreaterThan(write, try! XCTUnwrap(payloads.lastIndex(of: SonyCommands.buildDeviceListGet())))
     }
 
     func testTimerReleasesAfterPendingCommandsSurviveDropPastDeadline() async {
@@ -590,8 +610,9 @@ final class HeadphonesControllerTests: XCTestCase {
         await drain(connection)
         // The ACK path must finish idle release itself, without another UI event.
         XCTAssertEqual(controller.connectionState, .disconnected)
-        XCTAssertEqual(connection.payloads.filter { $0 == SonyCommands.buildPauseWhenTakenOffSet(true) }.count
-            + connection.payloads.filter { $0 == SonyCommands.buildPauseWhenTakenOffSet(false) }.count, 10)
+        // Ten unsent intents of the same kind coalesce into the latest one.
+        XCTAssertEqual(connection.payloads.filter { $0 == SonyCommands.buildPauseWhenTakenOffSet(true) }.count, 0)
+        XCTAssertEqual(connection.payloads.filter { $0 == SonyCommands.buildPauseWhenTakenOffSet(false) }.count, 1)
     }
 
     func testIdleReleaseRemembersManuallySelectedHeadset() {
@@ -618,7 +639,7 @@ final class HeadphonesControllerTests: XCTestCase {
         XCTAssertEqual(connection.addresses, ["test-device"])
     }
 
-    func testDisablingReleaseConnectsAndPreservesStartupDefaults() async {
+    func testDisablingReleaseConnectsAndMirrorsReportedState() async {
         let (controller, connection) = makeController()
         defer { controller.disconnect() }
         controller.releaseWhenIdle = false
@@ -626,9 +647,11 @@ final class HeadphonesControllerTests: XCTestCase {
         await handshake(connection)
         connection.reply([Opcode.ambientSoundControlRet, 0x15, 1, 0, 0, 0, 0])
         await settle()
-        XCTAssertEqual(controller.ambientSound?.mode, .noiseCancelling)
-        XCTAssertEqual(controller.ambientSound?.level, 15)
+        XCTAssertEqual(controller.ambientSound?.mode, .off)
+        XCTAssertEqual(controller.ambientSound?.level, 1)
+        XCTAssertTrue(connection.payloads.filter { $0.first == 0x68 }.isEmpty)
         controller.disconnectIfIdle(now: .now.advanced(by: .seconds(100)))
         XCTAssertEqual(controller.connectionState, .connected)
     }
+
 }

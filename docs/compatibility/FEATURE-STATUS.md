@@ -24,7 +24,9 @@ Actualizado: 2026-10-21. Niveles (encargo §15):
 |---|---|---|---|
 | Conexión RFCOMM (UUID v2, SDP) | HW‑up | **HW** (lectura) | PEND (transporte propio) |
 | Canal bajo demanda, liberación 20 s, cesión | — | SIM (32 tests de Anneo22) | SIM (14 tests de sesión) |
-| Leer estado real antes de escribir tras reconectar | — | PLAN (PR #4 envía comandos primero) | SIM |
+| Leer estado real antes de escribir tras reconectar | — | SIM (intenciones codificadas tras la lectura) | SIM |
+| No escribir nada al conectar | — | SIM (eliminado el forzado de NC de upstream) | SIM |
+| Escritura de nivel ambiente con estado "en curso"/"confirmado" | REF | SIM | SIM |
 | Identificación (modelo `04 01`, firmware `04 02`) | REF | SIM | SIM |
 | Batería y carga (tipo 00 y 08) | HW‑up (00) | **HW** (lectura) | SIM |
 | ANC / ambiente / nivel (0x19 lectura, 0x17 escritura) | HW‑up | **HW** lectura · PEND escritura | SIM |
@@ -47,17 +49,21 @@ Actualizado: 2026-10-21. Niveles (encargo §15):
 | Modo demostración | — | SIM | SIM (emulador) |
 | Foto del modelo detectado (fotos de Sony, uso personal) | — | **HW** | SIM |
 | Ventana de ajustes nativa, abrir al iniciar sesión | — | SIM | — |
-| Widgets (WidgetKit / Android) | — | PLAN | PLAN |
-| Centro de Control / Ajustes rápidos | — | PLAN | PLAN |
-| EQ DSP local (paramétrico) | — | PLAN (ADR-0008) | EXP/PLAN |
+| Widgets (WidgetKit / Android) | — | en curso | SIM (emulador: modelo, batería, modo, 3 botones) |
+| Centro de Control / Ajustes rápidos | — | PLAN | SIM (mosaico NC → Ambiente → Off) |
+| EQ DSP local (paramétrico) | — | EXP (cadena DSP con 26 tests; captura en vivo sin probar) | PLAN |
 
 ## Otros modelos
 
-| Modelo | Detección por nombre | Catálogo de capacidades | Adaptador | Estado |
-|---|---|---|---|---|
-| WH-1000XM5 | Sí | Sí (5 bandas + Clear Bass) | No | PLAN — la app no envía ningún byte |
-| WH-1000XM4 / XM3 / XM2 | Sí | Sí | No (MDR v1) | PLAN |
-| MDR-1000X | Sí | Parcial | No | PLAN (sin capturas públicas) |
+Detalle por función y evidencia: [`OTHER-MODELS.md`](OTHER-MODELS.md). Ninguno probado en hardware.
+
+| Modelo | Adaptador | Estado (Android) | macOS |
+|---|---|---|---|
+| WH-1000XM5 | `Xm5Adapter` (v2) | PEND batería, NC 0x17, EQ curva (Clear Bass + 5), STC · EXP presets · PLAN apagado/pausa | solo códec + tests |
+| WH-1000XM4 | `MdrV1Adapter` | PEND batería, NC, EQ · EXP STC · PLAN apagado/pausa | solo códec + tests |
+| WH-1000XM3 | `MdrV1Adapter` | PEND batería, NC · EXP EQ (frecuencias verificadas por captura) · PLAN apagado | solo códec + tests |
+| WH-1000XM2 | `MdrV1Adapter` | EXP todo (sin capturas públicas) | solo códec + tests |
+| MDR-1000X | ninguno | PLAN — no se envía ningún byte | — |
 
 ## Plataformas verificadas
 

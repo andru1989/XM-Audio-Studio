@@ -13,6 +13,7 @@ import io.github.andru1989.xmaudiostudio.core.device.Feature.NOISE_CANCELLING
 import io.github.andru1989.xmaudiostudio.core.device.Feature.PLAYBACK_SOURCE_SWITCH
 import io.github.andru1989.xmaudiostudio.core.device.Feature.SPEAK_TO_CHAT
 import io.github.andru1989.xmaudiostudio.core.device.Feature.WEAR_DETECTION
+import io.github.andru1989.xmaudiostudio.core.device.SupportLevel.EXPERIMENTAL
 import io.github.andru1989.xmaudiostudio.core.device.SupportLevel.PENDING_HARDWARE
 import io.github.andru1989.xmaudiostudio.core.device.SupportLevel.PLANNED
 import io.github.andru1989.xmaudiostudio.core.device.SupportLevel.VERIFIED_HARDWARE
@@ -22,8 +23,11 @@ import io.github.andru1989.xmaudiostudio.core.device.SupportLevel.VERIFIED_HARDW
  * (enforced by CatalogConformanceTest here and by the Swift suite).
  *
  * The level records protocol evidence for that model: VERIFIED_HARDWARE means the byte
- * layout was confirmed by a live capture on that model; PENDING_HARDWARE means it comes
- * from references only; PLANNED means the model has the feature but no adapter exists yet.
+ * layout was confirmed by a live capture on that model; PENDING_HARDWARE means it is
+ * implemented from references (MIT clients' hardware notes, captures of the same layout);
+ * EXPERIMENTAL means implemented by inference from a sibling model with no evidence for this
+ * one; PLANNED means the model has the feature but its adapter does not implement it.
+ * Evidence per model: docs/compatibility/OTHER-MODELS.md.
  */
 object DeviceCatalog {
 
@@ -55,6 +59,14 @@ object DeviceCatalog {
         presets = classicPresets,
     )
 
+    /**
+     * The WH-1000XM3 reported these exact centres in its own EQ extended info
+     * (`5B 01 06 10 0000 01 0190 01 03E8 01 09C4 01 189C 01 3E80`, mos9527 fw 4.5.2 capture).
+     */
+    private val xm3Equalizer = fiveBandEq.copy(frequenciesVerified = true)
+
+    private fun levels(level: SupportLevel, vararg features: Feature) = features.associateWith { level }
+
     val xm6Equalizer = EqualizerSpec(
         bandCount = 10,
         bandFrequenciesHz = listOf(31.0, 63.0, 125.0, 250.0, 500.0, 1_000.0, 2_000.0, 4_000.0, 8_000.0, 16_000.0),
@@ -73,7 +85,7 @@ object DeviceCatalog {
         ),
     )
 
-    private fun planned(vararg features: Feature) = features.associateWith { PLANNED }
+    private fun planned(vararg features: Feature) = levels(PLANNED, *features)
 
     val models: Map<HeadphoneModel, DeviceCapabilities> = mapOf(
         HeadphoneModel.WH_1000XM6 to DeviceCapabilities(
@@ -96,38 +108,43 @@ object DeviceCatalog {
             equalizer = xm6Equalizer,
             ambientLevelRange = 1..20,
         ),
+        // Xm5Adapter. Preset codes are assumed from the v1 generation (unverified on the XM5).
         HeadphoneModel.WH_1000XM5 to DeviceCapabilities(
             model = HeadphoneModel.WH_1000XM5,
-            features = planned(
-                BATTERY, NOISE_CANCELLING, AMBIENT_SOUND, AMBIENT_LEVEL, FOCUS_ON_VOICE,
-                SPEAK_TO_CHAT, WEAR_DETECTION, AUTO_POWER_OFF, EQ_PRESETS, EQ_CUSTOM_BANDS,
-            ),
+            features = levels(
+                PENDING_HARDWARE,
+                BATTERY, NOISE_CANCELLING, AMBIENT_SOUND, AMBIENT_LEVEL, FOCUS_ON_VOICE, SPEAK_TO_CHAT, EQ_CUSTOM_BANDS,
+            ) + levels(EXPERIMENTAL, EQ_PRESETS) + planned(WEAR_DETECTION, AUTO_POWER_OFF),
             equalizer = fiveBandEq,
             ambientLevelRange = 1..20,
         ),
+        // MdrV1Adapter. Speak-to-chat on/off is reported working on an XM4; its options read is not.
         HeadphoneModel.WH_1000XM4 to DeviceCapabilities(
             model = HeadphoneModel.WH_1000XM4,
-            features = planned(
-                BATTERY, NOISE_CANCELLING, AMBIENT_SOUND, AMBIENT_LEVEL, FOCUS_ON_VOICE,
-                SPEAK_TO_CHAT, WEAR_DETECTION, AUTO_POWER_OFF, EQ_PRESETS, EQ_CUSTOM_BANDS,
-            ),
+            features = levels(
+                PENDING_HARDWARE,
+                BATTERY, NOISE_CANCELLING, AMBIENT_SOUND, AMBIENT_LEVEL, FOCUS_ON_VOICE, EQ_PRESETS, EQ_CUSTOM_BANDS,
+            ) + levels(EXPERIMENTAL, SPEAK_TO_CHAT) + planned(WEAR_DETECTION, AUTO_POWER_OFF),
             equalizer = fiveBandEq,
             ambientLevelRange = 1..20,
         ),
+        // MdrV1Adapter. EQ changes raised a connection-mode alert on the captured XM3, which
+        // this app does not answer yet, hence experimental.
         HeadphoneModel.WH_1000XM3 to DeviceCapabilities(
             model = HeadphoneModel.WH_1000XM3,
-            features = planned(
+            features = levels(
+                PENDING_HARDWARE,
                 BATTERY, NOISE_CANCELLING, AMBIENT_SOUND, AMBIENT_LEVEL, FOCUS_ON_VOICE,
-                AUTO_POWER_OFF, EQ_PRESETS, EQ_CUSTOM_BANDS,
-            ),
-            equalizer = fiveBandEq,
+            ) + levels(EXPERIMENTAL, EQ_PRESETS, EQ_CUSTOM_BANDS) + planned(AUTO_POWER_OFF),
+            equalizer = xm3Equalizer,
             ambientLevelRange = 1..20,
         ),
+        // MdrV1Adapter by inference only: no public XM2 capture exists.
         HeadphoneModel.WH_1000XM2 to DeviceCapabilities(
             model = HeadphoneModel.WH_1000XM2,
-            features = planned(
-                BATTERY, NOISE_CANCELLING, AMBIENT_SOUND, AMBIENT_LEVEL, FOCUS_ON_VOICE,
-                EQ_PRESETS, EQ_CUSTOM_BANDS,
+            features = levels(
+                EXPERIMENTAL,
+                BATTERY, NOISE_CANCELLING, AMBIENT_SOUND, AMBIENT_LEVEL, FOCUS_ON_VOICE, EQ_PRESETS, EQ_CUSTOM_BANDS,
             ),
             equalizer = fiveBandEq,
             ambientLevelRange = 1..20,

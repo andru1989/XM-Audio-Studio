@@ -1,0 +1,247 @@
+{
+  "schema": "xm-audio-studio.protocol-events/1",
+  "decoder": "xm5",
+  "note": "WH-1000XM5 (MDR v2) decoder. expect == null means the payload must not decode to any event. No public WH-1000XM5 capture exists: 'capture: WF-1000XM5 6.1.0' cases are payloads from mos9527/SonyHeadphonesClient tests (MIT) of the same-generation earbuds, which share the NC 0x17 and EQ 0x00 layouts; 'reference layout' cases are NOT captures. Not tested by this project.",
+  "cases": [
+    {
+      "name": "init reply, 8 bytes (v2)",
+      "source": "capture: WF-1000XM5 6.1.0 (CONNECT_RET_PROTOCOL_INFO)",
+      "messageType": "command1",
+      "payload": "01 00 03 00 30 18 00 00",
+      "expect": {
+        "event": "protocolInfo",
+        "version": "v2"
+      }
+    },
+    {
+      "name": "init reply, 4 bytes, reported as v1 (the session then aborts)",
+      "source": "capture: WH-1000XM3 4.5.2",
+      "messageType": "command1",
+      "payload": "01 00 40 10",
+      "expect": {
+        "event": "protocolInfo",
+        "version": "v1"
+      }
+    },
+    {
+      "name": "firmware version",
+      "source": "capture: WF-1000XM5 6.1.0",
+      "messageType": "command1",
+      "payload": "05 02 05 36 2e 31 2e 30",
+      "expect": {
+        "event": "firmwareVersion",
+        "version": "6.1.0"
+      }
+    },
+    {
+      "name": "NC/ASM 0x17 reply: effect off, ambient level 20",
+      "source": "capture: WF-1000XM5 6.1.0 (NCASM_RET_PARAM)",
+      "messageType": "command1",
+      "payload": "67 17 01 00 01 00 14",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "off",
+        "focusOnVoice": false,
+        "level": 20,
+        "subtype": 23,
+        "isUpdate": true,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "NC/ASM 0x17 notify: noise cancelling",
+      "source": "reference layout: mos9527 0x17 struct; sony-device-center WH-1000XM5 fw 2.3.1",
+      "messageType": "command1",
+      "payload": "69 17 01 01 00 00 0a",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "noiseCancelling",
+        "focusOnVoice": false,
+        "level": 10,
+        "subtype": 23,
+        "isUpdate": true,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "NC/ASM 0x17: ambient sound, focus on voice, level 15",
+      "source": "reference layout: mos9527 0x17 struct ([5] = Focus on Voice)",
+      "messageType": "command1",
+      "payload": "67 17 01 01 01 01 0f",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "ambientSound",
+        "focusOnVoice": true,
+        "level": 15,
+        "subtype": 23,
+        "isUpdate": true,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "NC/ASM 0x17 while a slider is moving (update = 0)",
+      "source": "reference layout: valueChangeStatus UNDER_CHANGING",
+      "messageType": "command1",
+      "payload": "69 17 00 01 01 00 08",
+      "expect": {
+        "event": "ambientSound",
+        "mode": "ambientSound",
+        "focusOnVoice": false,
+        "level": 8,
+        "subtype": 23,
+        "isUpdate": false,
+        "hasWindNoiseByte": false
+      }
+    },
+    {
+      "name": "XM6 nine-byte 0x19 layout rejected on XM5",
+      "source": "negative: XM6 fw 3.x layout",
+      "messageType": "command1",
+      "payload": "67 19 01 01 00 00 0c 00 00",
+      "expect": null
+    },
+    {
+      "name": "eight-byte 0x17 (wind byte dialect) rejected on XM5",
+      "source": "negative: not documented for the XM5",
+      "messageType": "command1",
+      "payload": "67 17 01 01 00 02 00 0a",
+      "expect": null
+    },
+    {
+      "name": "battery single, 70 %",
+      "source": "reference layout: 23 00 <level> <charging> (sony-device-center WH-1000XM5)",
+      "messageType": "command1",
+      "payload": "23 00 46 00",
+      "expect": {
+        "event": "battery",
+        "level": 70,
+        "charging": false
+      }
+    },
+    {
+      "name": "TWS left/right battery is not an over-ear report",
+      "source": "capture: WF-1000XM5 6.1.0 (type 0x09) - negative",
+      "messageType": "command1",
+      "payload": "23 09 00 00 64 00 64 64",
+      "expect": null
+    },
+    {
+      "name": "EQ 0x00 reply: custom, Clear Bass +10",
+      "source": "capture: WF-1000XM5 6.1.0 (EQEBB_RET_PARAM)",
+      "messageType": "command1",
+      "payload": "57 00 a0 06 14 0b 0a 0d 09 0c",
+      "expect": {
+        "event": "equalizer",
+        "presetCode": 160,
+        "bands": [
+          1,
+          0,
+          3,
+          -1,
+          2
+        ],
+        "subtype": 0,
+        "clearBass": 10
+      }
+    },
+    {
+      "name": "EQ 0x00 notify: preset with its curve",
+      "source": "reference layout (values illustrative)",
+      "messageType": "command1",
+      "payload": "59 00 16 06 0a 0e 0c 0a 0a 0a",
+      "expect": {
+        "event": "equalizer",
+        "presetCode": 22,
+        "bands": [
+          4,
+          2,
+          0,
+          0,
+          0
+        ],
+        "subtype": 0,
+        "clearBass": 0
+      }
+    },
+    {
+      "name": "XM6 10-band EQ (type 0x04) rejected on XM5",
+      "source": "negative: XM6 btsnoop bytes",
+      "messageType": "command1",
+      "payload": "57 04 a0 0a 07 07 07 07 06 06 07 08 08 08",
+      "expect": null
+    },
+    {
+      "name": "v1 EQ type 0x01 rejected on XM5",
+      "source": "negative: WH-1000XM3 capture bytes",
+      "messageType": "command1",
+      "payload": "57 01 00 06 0a 0a 0a 0a 0a 0a",
+      "expect": null
+    },
+    {
+      "name": "EQ capability, type 0x00",
+      "source": "reference layout: 51 <type> <bands> <steps> <presets> (<id> <nameLen> <name>)*",
+      "messageType": "command1",
+      "payload": "51 00 06 15 03 00 00 10 00 a0 00",
+      "expect": {
+        "event": "eqCapability",
+        "subtype": 0,
+        "bandCount": 6,
+        "stepCount": 21,
+        "presetCodes": [
+          0,
+          16,
+          160
+        ]
+      }
+    },
+    {
+      "name": "speak-to-chat disabled (inverted: 01 = off)",
+      "source": "capture: WF-1000XM5 6.1.0 (SYSTEM_RET_PARAM 0x0C)",
+      "messageType": "command1",
+      "payload": "f7 0c 01 01",
+      "expect": {
+        "event": "speakToChatEnabled",
+        "enabled": false
+      }
+    },
+    {
+      "name": "speak-to-chat options",
+      "source": "capture: WF-1000XM5 6.1.0 (SYSTEM_RET_EXT_PARAM 0x0C)",
+      "messageType": "command1",
+      "payload": "fb 0c 00 00",
+      "expect": {
+        "event": "speakToChatConfig",
+        "sensitivity": "auto",
+        "timeout": "short"
+      }
+    },
+    {
+      "name": "auto power off is not implemented for the XM5",
+      "source": "capture: WF-1000XM5 6.1.0 (POWER_RET_PARAM) - not documented for the WH-1000XM5",
+      "messageType": "command1",
+      "payload": "27 05 10 00",
+      "expect": null
+    },
+    {
+      "name": "pause when taken off is not implemented for the XM5",
+      "source": "capture: WF-1000XM5 6.1.0 (SYSTEM_RET_PARAM 0x01) - not documented for the WH-1000XM5",
+      "messageType": "command1",
+      "payload": "f7 01 00",
+      "expect": null
+    },
+    {
+      "name": "v1 battery opcode is not a v2 message",
+      "source": "negative: WH-1000XM3 capture bytes",
+      "messageType": "command1",
+      "payload": "11 00 64 00",
+      "expect": null
+    },
+    {
+      "name": "multipoint list (table 2) is not implemented for the XM5",
+      "source": "negative",
+      "messageType": "command2",
+      "payload": "37 02 00 02",
+      "expect": null
+    }
+  ]
+}

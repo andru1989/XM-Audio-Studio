@@ -3,6 +3,7 @@ package io.github.andru1989.xmaudiostudio.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import io.github.andru1989.xmaudiostudio.AppContainer
 import io.github.andru1989.xmaudiostudio.XmAudioStudioApp
 import io.github.andru1989.xmaudiostudio.bluetooth.PairedDevice
 import io.github.andru1989.xmaudiostudio.bluetooth.PairedDevices
@@ -91,16 +92,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _ui.update { it.copy(devices = PairedDevices.list(getApplication())) }
     }
 
-    private fun restoreTarget() {
-        if (settings.demoMode) {
-            session.selectTarget(DeviceTarget(DEMO_ADDRESS, "WH-1000XM6 (demo)", HeadphoneModel.WH_1000XM6))
-            return
-        }
-        val address = settings.selectedAddress ?: return
-        val name = settings.selectedName ?: address
-        val model = settings.modelOverride?.let(HeadphoneModel::fromId) ?: HeadphoneModel.fromBluetoothName(name) ?: return
-        session.selectTarget(DeviceTarget(address, name, model))
-    }
+    /** Same rule as the tile and the widget, which may have created the process (AppContainer). */
+    private fun restoreTarget() = container.restoreSavedTarget()
 
     /** [modelOverride] is set when the user confirms the model of a renamed device. */
     fun selectDevice(device: PairedDevice, modelOverride: HeadphoneModel? = null) {
@@ -165,9 +158,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun ambient() = _ui.value.snapshot.state.ambientSound
 
+    /** MDR v1 headsets report level 0 while noise cancelling is on; fall back to a usable level. */
+    private fun ambientLevelToWrite() = ambient()?.level?.takeIf { it >= 1 } ?: 15
+
     fun setNoiseMode(mode: AmbientSoundMode) {
         val a = ambient()
-        session.execute(DeviceCommand.SetAmbientSound(mode, a?.focusOnVoice ?: false, (a?.level ?: 15).coerceAtLeast(1)))
+        session.execute(DeviceCommand.SetAmbientSound(mode, a?.focusOnVoice ?: false, ambientLevelToWrite()))
     }
 
     fun setAmbientLevel(level: Int) {
@@ -176,8 +172,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun setFocusOnVoice(enabled: Boolean) {
-        val a = ambient()
-        session.execute(DeviceCommand.SetAmbientSound(AmbientSoundMode.AMBIENT_SOUND, enabled, (a?.level ?: 15).coerceAtLeast(1)))
+        session.execute(DeviceCommand.SetAmbientSound(AmbientSoundMode.AMBIENT_SOUND, enabled, ambientLevelToWrite()))
     }
 
     fun setListeningMode(mode: ListeningMode) = session.execute(DeviceCommand.SetListeningMode(mode))
@@ -193,8 +188,15 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun currentSetting(): DeviceEqSetting? {
         val eq = _ui.value.snapshot.state.equalizer ?: return null
-        return if (eq.presetCode == EqualizerPreset.CUSTOM.code) DeviceEqSetting(steps = eq.bands) else DeviceEqSetting(presetCode = eq.presetCode)
+        return if (eq.presetCode == EqualizerPreset.CUSTOM.code) {
+            DeviceEqSetting(steps = eq.bands, clearBass = eq.clearBass)
+        } else {
+            DeviceEqSetting(presetCode = eq.presetCode)
+        }
     }
+
+    /** 0 on models with a Clear Bass control (a profile defines the whole curve), null otherwise. */
+    private fun neutralClearBass(): Int? = _ui.value.snapshot.capabilities?.equalizer?.clearBassRange?.let { 0 }
 
     private fun remember(previous: DeviceEqSetting?) {
         if (previous == null) return
@@ -206,7 +208,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun send(setting: DeviceEqSetting) {
         setting.presetCode?.let { session.execute(DeviceCommand.SetEqualizerPreset(it)) }
-        setting.steps?.let { session.execute(DeviceCommand.SetEqualizerBands(it)) }
+        setting.steps?.let { session.execute(DeviceCommand.SetEqualizerBands(it, clearBass = setting.clearBass ?: neutralClearBass())) }
     }
 
     fun applyProfile(profile: EqProfile) {
@@ -223,7 +225,18 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             ?: List(_ui.value.snapshot.capabilities?.equalizer?.bandCount ?: return) { 0 }
         val updated = bands.toMutableList().also { it[index] = step }
         settings.lastAppliedProfileId = null
+        // Clear Bass (5-band models) is left as the headphones report it.
         session.execute(DeviceCommand.SetEqualizerBands(updated))
+    }
+
+    /** Live Clear Bass edit (XM3-XM5); the bands are re-sent unchanged in the same message. */
+    fun setClearBass(step: Int) {
+        val current = currentSetting() ?: return
+        if (dragOrigin == null) dragOrigin = current
+        val count = _ui.value.snapshot.capabilities?.equalizer?.bandCount ?: return
+        val bands = _ui.value.snapshot.state.equalizer?.bands?.takeIf { it.size == count } ?: List(count) { 0 }
+        settings.lastAppliedProfileId = null
+        session.execute(DeviceCommand.SetEqualizerBands(bands, clearBass = step))
     }
 
     fun finishBandEdit() {
@@ -235,7 +248,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val count = _ui.value.snapshot.capabilities?.equalizer?.bandCount ?: return
         remember(currentSetting())
         settings.lastAppliedProfileId = "builtin.flat"
-        session.execute(DeviceCommand.SetEqualizerBands(List(count) { 0 }))
+        session.execute(DeviceCommand.SetEqualizerBands(List(count) { 0 }, clearBass = neutralClearBass()))
     }
 
     fun undo() {
@@ -269,7 +282,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val all = library.forModel(snap.target?.model?.id ?: return null)
         val userPreset = isUserPresetFromOfficialApp(snap)
         val candidates = if (eq.presetCode == EqualizerPreset.CUSTOM.code) {
-            all.filter { it.deviceEq.steps == eq.bands }
+            all.filter { it.deviceEq.steps == eq.bands && (it.deviceEq.clearBass ?: 0) == (eq.clearBass ?: 0) }
         } else {
             // A Sound Connect user setting matches a saved profile with the same bands.
             all.filter { it.deviceEq.presetCode == eq.presetCode || (userPreset && it.deviceEq.steps == eq.bands) }
@@ -300,12 +313,16 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val steps = setting.steps
         val reported = _ui.value.snapshot.state.equalizer?.bands.orEmpty()
         val base = _ui.value.profiles.firstOrNull { setting.presetCode != null && it.deviceEq.presetCode == setting.presetCode }
+        val reportedClearBass = _ui.value.snapshot.state.equalizer?.clearBass
         val saved = when {
-            steps != null -> library.saveCurve(name, modelId(), steps)
+            steps != null -> library.saveCurve(name, modelId(), steps, clearBass = setting.clearBass)
             base != null -> library.duplicate(base.id, name)
             // A Sound Connect user setting: keep its curve as a custom profile.
             reported.size == _ui.value.snapshot.capabilities?.equalizer?.bandCount ->
-                library.saveCurve(name, modelId(), reported, notes = "Importado de un ajuste de usuario de Sound Connect (preset 0x%02x).".format(setting.presetCode))
+                library.saveCurve(
+                    name, modelId(), reported, clearBass = reportedClearBass,
+                    notes = "Importado de un ajuste de usuario de Sound Connect (preset 0x%02x).".format(setting.presetCode),
+                )
             else -> return@attempt
         }
         settings.lastAppliedProfileId = saved.id
@@ -316,8 +333,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun deleteProfile(profile: EqProfile) = attempt { library.delete(profile.id) }
 
     fun overwriteWithCurrent(profile: EqProfile) = attempt {
-        val steps = currentSetting()?.steps ?: return@attempt
-        library.updateSteps(profile.id, steps)
+        val current = currentSetting() ?: return@attempt
+        library.updateSteps(profile.id, current.steps ?: return@attempt, current.clearBass)
     }
 
     fun exportProfiles(): String = library.exportText()
@@ -350,7 +367,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 steps = preview.fit.steps,
                 category = ProfileCategory.MEASURED,
                 sourceCurve = preview.sourceCurve,
-                source = ProfileSource(description = "AutoEq import, fitted to the headphones' 10 bands (prediction)"),
+                source = ProfileSource(description = "AutoEq import, fitted to the headphones' ${preview.fit.steps.size} bands (prediction)"),
                 notes = "Error RMS ponderado %.2f dB".format(preview.fit.weightedRmsErrorDb),
             )
             if (apply) applyProfile(saved)
@@ -363,7 +380,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     // endregion
 
     companion object {
-        const val DEMO_ADDRESS = "00:00:00:00:DE:40"
+        const val DEMO_ADDRESS = AppContainer.DEMO_ADDRESS
         private const val SURFACE_ID = "main-activity"
         private const val MAX_HISTORY = 30
     }

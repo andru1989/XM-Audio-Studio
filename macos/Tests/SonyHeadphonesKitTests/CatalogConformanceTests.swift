@@ -13,7 +13,9 @@ final class CatalogConformanceTests: XCTestCase {
             XCTAssertEqual(model.displayName, m["displayName"] as? String, id)
             XCTAssertEqual(model.namePatterns, m["namePatterns"] as? [String], id)
             XCTAssertEqual(model.protocolFamily.rawValue, m["protocol"] as? String, id)
-            XCTAssertEqual(model.hasAdapter, !(m["adapter"] is NSNull), id)
+            XCTAssertEqual(model.adapterId, m["adapter"] as? String, id)
+            // The macOS controller itself drives only the XM6; other adapters are codecs only here.
+            XCTAssertEqual(model.hasAdapter, model == .wh1000xm6, id)
 
             let caps = DeviceCatalog.capabilities(model)
             let features = m["features"] as! [String: String]

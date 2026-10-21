@@ -31,7 +31,6 @@ import io.github.andru1989.xmaudiostudio.core.device.ProtocolAdapter
 import io.github.andru1989.xmaudiostudio.core.model.AutomaticPowerOffMode
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
 import io.github.andru1989.xmaudiostudio.core.model.ListeningMode
-import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatSensitivity
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatTimeout
 import io.github.andru1989.xmaudiostudio.ui.MainViewModel
@@ -85,6 +84,9 @@ fun SettingsScreen(state: UiState, vm: MainViewModel, requestPermission: () -> U
                                         }
                                         ProtocolAdapter.forModel(model) == null ->
                                             Text(stringResource(R.string.settings_planned, model.displayName), color = c.warning, style = MaterialTheme.typography.bodySmall)
+                                        // Only the XM6 has been used with real hardware; the other adapters are untested.
+                                        model != HeadphoneModel.WH_1000XM6 ->
+                                            Text(stringResource(R.string.model_untested, model.displayName), color = c.warning, style = MaterialTheme.typography.bodySmall)
                                         else -> Text(model.displayName, color = c.muted, style = MaterialTheme.typography.bodySmall)
                                     }
                                 }
@@ -119,13 +121,13 @@ fun SettingsScreen(state: UiState, vm: MainViewModel, requestPermission: () -> U
                         Segmented(
                             listOf(SpeakToChatSensitivity.AUTO to stringResource(R.string.sens_auto), SpeakToChatSensitivity.HIGH to stringResource(R.string.sens_high), SpeakToChatSensitivity.LOW to stringResource(R.string.sens_low)),
                             config.sensitivity,
-                        ) { vm.setSpeakToChatConfig(SpeakToChatConfig(it, config.timeout)) }
+                        ) { vm.setSpeakToChatConfig(config.copy(sensitivity = it)) }
                         Text(stringResource(R.string.stc_timeout), style = MaterialTheme.typography.labelLarge)
                         Segmented(
                             listOf(SpeakToChatTimeout.SHORT to stringResource(R.string.to_short), SpeakToChatTimeout.STANDARD to stringResource(R.string.to_standard),
                                 SpeakToChatTimeout.LONG to stringResource(R.string.to_long), SpeakToChatTimeout.OFF to stringResource(R.string.to_off)),
                             config.timeout,
-                        ) { vm.setSpeakToChatConfig(SpeakToChatConfig(config.sensitivity, it)) }
+                        ) { vm.setSpeakToChatConfig(config.copy(timeout = it)) }
                     }
                 }
                 if (caps.supports(Feature.WEAR_DETECTION)) {

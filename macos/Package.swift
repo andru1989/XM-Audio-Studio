@@ -11,6 +11,7 @@ let package = Package(
     products: [
         .library(name: "SonyHeadphonesKit", targets: ["SonyHeadphonesKit"]),
         .library(name: "AudioStudioKit", targets: ["AudioStudioKit"]),
+        .library(name: "AudioDSPKit", targets: ["AudioDSPKit"]),
         .library(name: "WidgetBridgeKit", targets: ["WidgetBridgeKit"]),
         .executable(name: "XMAudioStudio", targets: ["XMAudioStudio"]),
         .executable(name: "XMAudioProbe", targets: ["XMAudioProbe"])
@@ -39,9 +40,27 @@ let package = Package(
             name: "WidgetBridgeKit",
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
+        // Local DSP ("EQ avanzado"): realtime parametric biquad chain, limiter and the
+        // Core Audio process-tap engine that runs it on this Mac's output (ADR-0009).
+        // Optional and off by default; no UI and no Bluetooth code.
+        .target(
+            name: "AudioDSPKit",
+            dependencies: ["AudioStudioKit"],
+            swiftSettings: [
+                .swiftLanguageMode(.v5),
+                // Always optimized: unoptimized Swift allocates inside plain `for` loops
+                // (unspecialized generic iterators), which is not acceptable on the audio
+                // IO thread even in a debug build. RealtimeAllocationTests checks this.
+                .unsafeFlags(["-O"], .when(configuration: .debug))
+            ],
+            linkerSettings: [
+                .linkedFramework("Accelerate"),
+                .linkedFramework("CoreAudio")
+            ]
+        ),
         .executableTarget(
             name: "XMAudioStudio",
-            dependencies: ["SonyHeadphonesKit", "AudioStudioKit", "WidgetBridgeKit"],
+            dependencies: ["SonyHeadphonesKit", "AudioStudioKit", "AudioDSPKit", "WidgetBridgeKit"],
             exclude: ["Resources"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
@@ -71,6 +90,11 @@ let package = Package(
         .testTarget(
             name: "AudioStudioKitTests",
             dependencies: ["AudioStudioKit"],
+            swiftSettings: [.swiftLanguageMode(.v5)]
+        ),
+        .testTarget(
+            name: "AudioDSPKitTests",
+            dependencies: ["AudioDSPKit", "AudioStudioKit"],
             swiftSettings: [.swiftLanguageMode(.v5)]
         ),
         .testTarget(

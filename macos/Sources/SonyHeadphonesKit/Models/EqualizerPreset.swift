@@ -33,15 +33,19 @@ public struct EqualizerState: Equatable, Sendable {
     public var presetCode: UInt8
     /// Raw band values as reported (10 bands on XM6, offset already removed).
     public var bands: [Int]
-    /// The EQEBB inquired-type byte the device used (XM6: 0x04). Echoed on writes.
+    /// The EQEBB inquired-type byte the device used (XM6: 0x04, XM5: 0x00, MDR v1: 0x01). Echoed on writes.
     public var subtype: UInt8
+    /// Clear Bass in steps (offset removed) on the 5-band models (XM3-XM5), where it is the
+    /// first of the six band bytes; nil on models without it (XM6).
+    public var clearBass: Int?
 
     public var preset: EqualizerPreset? { EqualizerPreset(rawValue: presetCode) }
 
-    public init(presetCode: UInt8, bands: [Int] = [], subtype: UInt8 = 0x04) {
+    public init(presetCode: UInt8, bands: [Int] = [], subtype: UInt8 = 0x04, clearBass: Int? = nil) {
         self.presetCode = presetCode
         self.bands = bands
         self.subtype = subtype
+        self.clearBass = clearBass
     }
 }
 

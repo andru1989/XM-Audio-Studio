@@ -46,6 +46,8 @@ targets:
         excludes:
           - Resources/Info.plist
           - Resources/Models
+          # build_app.sh's entitlements; this build uses Config/XMAudioStudio.entitlements.
+          - Resources/XMAudioStudio.entitlements
       # A folder reference keeps Contents/Resources/Models/<model>.png, the layout
       # HeadphoneImage (and build_app.sh) use.
       - path: Sources/XMAudioStudio/Resources/Models
@@ -56,6 +58,8 @@ targets:
         product: SonyHeadphonesKit
       - package: XMAudioStudioPackage
         product: AudioStudioKit
+      - package: XMAudioStudioPackage
+        product: AudioDSPKit
       - package: XMAudioStudioPackage
         product: WidgetBridgeKit
       - target: XMAudioStudioWidget

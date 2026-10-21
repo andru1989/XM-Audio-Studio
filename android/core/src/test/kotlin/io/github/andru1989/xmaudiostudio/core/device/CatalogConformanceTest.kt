@@ -5,6 +5,7 @@ import io.github.andru1989.xmaudiostudio.core.bool
 import io.github.andru1989.xmaudiostudio.core.double
 import io.github.andru1989.xmaudiostudio.core.int
 import io.github.andru1989.xmaudiostudio.core.str
+import io.github.andru1989.xmaudiostudio.core.model.ProtocolVersion
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -28,7 +29,13 @@ class CatalogConformanceTest {
                 ProtocolFamily.MDR_V1 -> "mdr-v1"; ProtocolFamily.MDR_V2 -> "mdr-v2"; ProtocolFamily.UNKNOWN -> "unknown"
             }
             assertEquals(id, m["protocol"]!!.str, protocol)
-            assertEquals("$id adapter", m["adapter"] !is JsonNull, ProtocolAdapter.forModel(model) != null)
+            val adapterId = m["adapter"]!!.let { if (it is JsonNull) null else it.str }
+            val adapter = ProtocolAdapter.forModel(model)
+            assertEquals("$id adapter", adapterId, adapter?.id)
+            if (adapter != null) {
+                val expectedVersion = if (model.protocol == ProtocolFamily.MDR_V1) ProtocolVersion.V1 else ProtocolVersion.V2
+                assertEquals("$id protocol family", expectedVersion, adapter.expectedProtocol)
+            }
 
             val caps = DeviceCatalog.capabilities(model)
             val features = m["features"]!!.jsonObject.mapValues { it.value.str }

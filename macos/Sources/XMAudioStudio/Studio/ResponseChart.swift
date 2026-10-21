@@ -41,6 +41,8 @@ struct ResponseChart: View {
     var bandGainsDb: [Double]
     var rangeDb: Double = 12
     var showsDbLabels = true
+    /// Band markers: blue for the headphones' EQ, amber for the local DSP.
+    var markerColor: Color = StudioColor.deviceEq
 
     private static let minHz = 20.0
     private static let maxHz = 20_000.0
@@ -86,7 +88,7 @@ struct ResponseChart: View {
             }
             for (f, g) in zip(bandFrequencies, bandGainsDb) {
                 let p = CGPoint(x: x(f), y: y(g))
-                context.fill(Path(ellipseIn: CGRect(x: p.x - 4.5, y: p.y - 4.5, width: 9, height: 9)), with: .color(StudioColor.deviceEq))
+                context.fill(Path(ellipseIn: CGRect(x: p.x - 4.5, y: p.y - 4.5, width: 9, height: 9)), with: .color(markerColor))
                 context.fill(Path(ellipseIn: CGRect(x: p.x - 2, y: p.y - 2, width: 4, height: 4)), with: .color(Color(nsColor: .windowBackgroundColor)))
             }
         }

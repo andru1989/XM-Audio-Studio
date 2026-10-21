@@ -1,0 +1,195 @@
+{
+  "schema": "xm-audio-studio.protocol-commands/1",
+  "encoder": "mdr-v1",
+  "note": "MDR v1 (WH-1000XM2/XM3/XM4) builders. payload == null means the builder must refuse. v1 opcode 0x22 is POWER OFF: no case may produce it. Write layouts come from the MIT clients (sony-device-center ProtocolV1.cpp, mos9527 HeadphonesV1.cpp, Plutoberth) and Sony's own v1 tables; none was tested by this project.",
+  "cases": [
+    {
+      "command": "init",
+      "args": {},
+      "payload": "00 00",
+      "source": "spec; XM3 4.5.2 capture shows the 4-byte reply"
+    },
+    {
+      "command": "modelNameGet",
+      "args": {},
+      "payload": "04 01",
+      "source": "spec; identical on v1 and v2 (XM3 capture)"
+    },
+    {
+      "command": "firmwareVersionGet",
+      "args": {},
+      "payload": "04 02",
+      "source": "spec; identical on v1 and v2 (XM3 capture)"
+    },
+    {
+      "command": "batteryGet",
+      "args": {},
+      "payload": "10 00",
+      "source": "v1 COMMON_GET_BATTERY_LEVEL (never 22 00, which is power off on v1)"
+    },
+    {
+      "command": "ambientSoundGet",
+      "args": {},
+      "payload": "66 02",
+      "source": "v1 NCASM_GET_PARAM, type NOISE_CANCELLING_AND_AMBIENT_SOUND_MODE"
+    },
+    {
+      "command": "ambientSoundSet",
+      "args": {
+        "mode": "noiseCancelling",
+        "focusOnVoice": false,
+        "level": 15
+      },
+      "payload": "68 02 11 01 02 01 00 00",
+      "source": "sony-device-center ProtocolV1.cpp setter: NC = dual, level 0"
+    },
+    {
+      "command": "ambientSoundSet",
+      "args": {
+        "mode": "ambientSound",
+        "focusOnVoice": true,
+        "level": 12
+      },
+      "payload": "68 02 11 01 00 01 01 0c",
+      "source": "sony-device-center ProtocolV1.cpp setter: ambient = NC value off + level, voice = asm id 01"
+    },
+    {
+      "command": "ambientSoundSet",
+      "args": {
+        "mode": "ambientSound",
+        "focusOnVoice": false,
+        "level": 0
+      },
+      "payload": "68 02 11 01 00 01 00 01",
+      "source": "ambient level is written as 1..20"
+    },
+    {
+      "command": "ambientSoundSet",
+      "args": {
+        "mode": "off",
+        "focusOnVoice": false,
+        "level": 10
+      },
+      "payload": "68 02 00 01 00 01 00 00",
+      "source": "sony-device-center ProtocolV1.cpp setter: effect off"
+    },
+    {
+      "command": "equalizerGet",
+      "args": {},
+      "payload": "56 01",
+      "source": "v1 EQEBB_GET_PARAM, type PRESET_EQ (0x01 on v1; 0x00 is v2)"
+    },
+    {
+      "command": "equalizerCapabilityGet",
+      "args": {},
+      "payload": "50 01 01",
+      "source": "mos9527 HeadphonesV1.cpp init; XM3 capture shows the reply"
+    },
+    {
+      "command": "equalizerPresetSet",
+      "args": {
+        "code": 16
+      },
+      "payload": "58 01 10 00",
+      "source": "sony-device-center ProtocolV1.cpp (preset, no band bytes)"
+    },
+    {
+      "command": "equalizerBandsSet",
+      "args": {
+        "bands": [
+          1,
+          0,
+          -3,
+          2,
+          10
+        ],
+        "clearBass": 3
+      },
+      "payload": "58 01 a0 06 0d 0b 0a 07 0c 14",
+      "source": "sony-device-center ProtocolV1.cpp (custom: A0, Clear Bass first, +10)"
+    },
+    {
+      "command": "equalizerBandsSet",
+      "args": {
+        "bands": [
+          15,
+          -15,
+          0,
+          0,
+          0
+        ],
+        "clearBass": -12
+      },
+      "payload": "58 01 a0 06 00 14 00 0a 0a 0a",
+      "source": "steps clamp to -10..+10"
+    },
+    {
+      "command": "equalizerBandsSet",
+      "args": {
+        "bands": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        "clearBass": 0
+      },
+      "payload": null,
+      "source": "a 10-band (XM6) curve is refused, never truncated"
+    },
+    {
+      "command": "speakToChatEnabledGet",
+      "args": {},
+      "payload": "f6 05",
+      "source": "v1 SYSTEM_GET_PARAM, type SMART_TALKING_MODE (XM4)"
+    },
+    {
+      "command": "speakToChatEnabledSet",
+      "args": {
+        "enabled": true
+      },
+      "payload": "f8 05 01 01",
+      "source": "sony-device-center (on/off reported working on XM4 fw 3.0.1); not inverted on v1"
+    },
+    {
+      "command": "speakToChatEnabledSet",
+      "args": {
+        "enabled": false
+      },
+      "payload": "f8 05 01 00",
+      "source": "sony-device-center"
+    },
+    {
+      "command": "speakToChatConfigGet",
+      "args": {},
+      "payload": "fa 05",
+      "source": "mos9527 HeadphonesV1.cpp init (SYSTEM_GET_EXTENDED_PARAM)"
+    },
+    {
+      "command": "speakToChatConfigSet",
+      "args": {
+        "sensitivity": "auto",
+        "timeout": "standard",
+        "voiceFocus": false
+      },
+      "payload": "fc 05 00 00 00 01",
+      "source": "sony-device-center: the options it writes before enabling on an XM4"
+    },
+    {
+      "command": "speakToChatConfigSet",
+      "args": {
+        "sensitivity": "low",
+        "timeout": "off",
+        "voiceFocus": true
+      },
+      "payload": "fc 05 00 02 01 03",
+      "source": "SetSystemExParam smart talking TYPE_1 layout (mos9527)"
+    }
+  ]
+}

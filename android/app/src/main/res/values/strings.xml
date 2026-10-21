@@ -52,6 +52,9 @@
     <string name="eq_preset_active">Preset de Sony activo: %1$s. Mueve una banda para pasar a una curva personalizada.</string>
     <string name="eq_unverified_freqs">Frecuencias de banda no verificadas en el dispositivo</string>
     <string name="eq_clip_risk">Refuerzo de +%1$d dB: posible saturación con música muy comprimida.</string>
+    <string name="clear_bass">Clear Bass</string>
+    <string name="clear_bass_note">Clear Bass es un control propio de los audífonos; la gráfica no lo incluye.</string>
+    <string name="model_untested">%1$s · sin probar con hardware (experimental)</string>
     <string name="profiles">Perfiles</string>
     <string name="reset_flat">Plano</string>
     <string name="undo">Deshacer</string>

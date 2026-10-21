@@ -9,4 +9,5 @@
 | [0005](ADR-0005-multi-model-adapters.md) | `HeadphoneDevice` + adaptadores por generación + catálogo de capacidades | Aceptada |
 | [0006](ADR-0006-autoeq-fitting-and-data.md) | AutoEQ interno por mínimos cuadrados acotados; sin datos de medición en el repo | Aceptada |
 | [0007](ADR-0007-toolchains.md) | Versiones de toolchain y mínimos de plataforma | Aceptada |
-| [0008](ADR-0008-dsp-engine-macos.md) | Motor DSP macOS basado en ParaEQ (process taps) | Propuesta |
+| [0008](ADR-0008-dsp-engine-macos.md) | Motor DSP macOS basado en ParaEQ (process taps) | Propuesta; precisada por 0009 |
+| [0009](ADR-0009-dsp-engine-implementation.md) | Motor DSP macOS implementado: tap por dispositivo, biquads en doble precisión | Aceptada (beta) |

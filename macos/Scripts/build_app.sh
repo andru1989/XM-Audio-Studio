@@ -12,8 +12,8 @@
 #   2. The first "Apple Development" identity in the keychain.
 #   3. A self-signed identity named "XMAudioDev".
 #   4. Ad-hoc signing.
-# A stable identity (1-3) lets macOS keep the Bluetooth permission across rebuilds;
-# ad-hoc signing re-prompts after every build.
+# A stable identity (1-3) lets macOS keep the Bluetooth and System Audio Recording
+# permissions across rebuilds; ad-hoc signing re-prompts after every build.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -32,6 +32,8 @@ else
 fi
 APP_DIR=".build/${APP_NAME}.app"
 RESOURCES="Sources/XMAudioStudio/Resources"
+# Hardened-runtime entitlements: audio input for the optional local DSP's process tap.
+ENTITLEMENTS="${RESOURCES}/XMAudioStudio.entitlements"
 
 # Swift precompiled headers record absolute module-cache paths, so moving the
 # checkout breaks incremental builds. Detect that signature and rebuild clean once.
@@ -84,10 +86,10 @@ fi
 
 if [ -n "${identity}" ]; then
     echo "==> Signing with: ${identity}"
-    codesign --force --deep --options runtime --sign "${identity}" "${APP_DIR}"
+    codesign --force --deep --options runtime --entitlements "${ENTITLEMENTS}" --sign "${identity}" "${APP_DIR}"
 else
     echo "==> Ad-hoc signing (Bluetooth permission will be asked again after each rebuild)"
-    codesign --force --deep --sign - "${APP_DIR}"
+    codesign --force --deep --entitlements "${ENTITLEMENTS}" --sign - "${APP_DIR}"
 fi
 codesign --verify --deep --strict "${APP_DIR}"
 echo "==> Architectures: $(lipo -archs "${APP_DIR}/Contents/MacOS/${EXECUTABLE}")"

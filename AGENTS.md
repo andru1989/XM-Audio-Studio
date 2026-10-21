@@ -50,9 +50,11 @@ python3 tools/fixtures/generate_eq_vectors.py
 
 1. **No inventar comandos Bluetooth.** Todo byte de escritura debe venir de una fuente documentada
    (captura real o referencia MIT) y quedar en `shared/protocol-spec/PROTOCOL.md` y en los fixtures.
-2. **No enviar nada a modelos sin adaptador.** `ProtocolAdapter.forModel` (Kotlin) y el
-   controlador Swift solo hablan con WH-1000XM6. En MDR v1 el opcode `0x22` es *apagar*; en v2 es
-   *batería*: reutilizar tablas entre familias puede apagar los audífonos.
+2. **No enviar nada a modelos sin adaptador.** `ProtocolAdapter.forModel` (Kotlin) decide qué modelos
+   reciben bytes: XM6 (`Xm6Adapter`), XM5 (`Xm5Adapter`, v2) y XM4/XM3/XM2 (`MdrV1Adapter`); MDR-1000X no.
+   macOS solo controla el XM6 (los códecs v1/XM5 existen en Swift pero no están conectados al controlador).
+   En MDR v1 el opcode `0x22` es *apagar*; en v2 es *batería*: el adaptador v1 bloquea cualquier payload que
+   empiece por `0x22`. Si el init responde con otra familia que la esperada, la sesión aborta sin escribir.
 3. **Leer el estado real antes de escribir** tras cada (re)conexión; nunca restaurar presets obsoletos.
 4. **No declarar soporte de hardware sin prueba real.** Usa los niveles de
    `docs/compatibility/FEATURE-STATUS.md` (hardware / simulación / pendiente / experimental).

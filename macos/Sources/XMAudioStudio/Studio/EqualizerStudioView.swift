@@ -3,6 +3,7 @@ import AppKit
 import UniformTypeIdentifiers
 import SonyHeadphonesKit
 import AudioStudioKit
+import AudioDSPKit
 
 private let chartGrid = FrequencyGrid.logSpaced(min: 20, max: 20_000, count: 200)
 
@@ -10,22 +11,34 @@ private func predicted(_ spec: EqualizerSpec, _ steps: [Int]) -> [Double] {
     AutoEqImporter.deviceModel(spec).responseDb(steps: steps, at: chartGrid)
 }
 
+/// Which equalizer the studio is editing. Blue and amber never share a screen, so a
+/// change can't be mistaken for the other one.
+enum StudioDestination: String {
+    case headphones
+    case dsp
+}
+
 /// The equalizer studio window: which EQ is being edited, the predicted response, the
-/// band faders, and the profile library. Everything here edits the headphones' own EQ
-/// (blue); the local DSP mode (amber) is announced but not built yet (ADR-0008).
+/// band faders, and the profile library. The "Headphone EQ" tab (blue) edits the
+/// headphones' own EQ; the "Advanced EQ" tab (amber) is the optional local DSP on
+/// this Mac (AudioDSPKit, ADR-0009).
 struct EqualizerStudioView: View {
     @EnvironmentObject private var controller: HeadphonesController
     @EnvironmentObject private var studio: EqStudioModel
+    @EnvironmentObject private var dsp: DSPStudioModel
 
     @State private var namePrompt: NamePrompt?
     @State private var showAutoEqInput = false
+    @AppStorage("studioDestination") private var destination: StudioDestination = .headphones
 
     var body: some View {
         HSplitView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 14) {
-                    destinationBanner
-                    if controller.connectionState != .connected && controller.equalizer == nil {
+                    destinationPicker
+                    if destination == .dsp {
+                        DSPEqualizerView()
+                    } else if controller.connectionState != .connected && controller.equalizer == nil {
                         notConnected
                     } else {
                         editor
@@ -63,26 +76,33 @@ struct EqualizerStudioView: View {
 
     // MARK: - Header
 
-    private var destinationBanner: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                Circle().fill(StudioColor.deviceEq).frame(width: 9, height: 9)
-                Text("Headphone EQ")
-                    .font(.headline)
+    private var destinationPicker: some View {
+        HStack(spacing: 10) {
+            DestinationTile(color: StudioColor.deviceEq, title: "Headphone EQ", isSelected: destination == .headphones) {
                 Text("Stored in the \(studio.model.displayName). Works on every device you pair them with.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+            } action: {
+                destination = .headphones
             }
-            HStack(spacing: 8) {
-                Circle().fill(StudioColor.dspEq.opacity(0.45)).frame(width: 9, height: 9)
-                Text("Advanced EQ (this Mac's DSP): planned, not active. Nothing is processed on this Mac.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            DestinationTile(color: StudioColor.dspEq, title: "Advanced EQ (this Mac's DSP)", isSelected: destination == .dsp, badge: true) {
+                Text(dspSummary)
+            } action: {
+                destination = .dsp
             }
         }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .cardSurface()
+    }
+
+    private var dspSummary: String {
+        switch dsp.state {
+        case .off:
+            return NSLocalizedString("Off. Parametric EQ applied on this Mac to the output you choose.", comment: "")
+        case .running(let info):
+            return String(format: NSLocalizedString("On: processing %@%@.", comment: ""), info.deviceName,
+                          dsp.settings.isBypassed ? NSLocalizedString(" (bypassed)", comment: "") : "")
+        case .waiting:
+            return NSLocalizedString("On, paused: waiting for the output.", comment: "")
+        case .failed:
+            return NSLocalizedString("Stopped after an error.", comment: "")
+        }
     }
 
     private var notConnected: some View {
@@ -225,6 +245,45 @@ struct EqualizerStudioView: View {
             .frame(width: 18, height: 8)
             Text(title).foregroundStyle(.secondary)
         }
+    }
+}
+
+// MARK: - Destination tabs
+
+/// One of the two studio tabs: blue (headphones) or amber (this Mac's DSP).
+private struct DestinationTile<Subtitle: View>: View {
+    let color: Color
+    let title: LocalizedStringKey
+    let isSelected: Bool
+    var badge = false
+    @ViewBuilder let subtitle: Subtitle
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Circle().fill(color).frame(width: 9, height: 9)
+                    Text(title).font(.headline)
+                    if badge { BetaBadge() }
+                    Spacer(minLength: 0)
+                }
+                subtitle
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
+                .fill(isSelected ? AnyShapeStyle(color.opacity(0.08)) : AnyShapeStyle(Surface.card)))
+            .overlay(RoundedRectangle(cornerRadius: Radius.card, style: .continuous)
+                .strokeBorder(isSelected ? color : Surface.cardEdge, lineWidth: isSelected ? 1.5 : 1))
+            .contentShape(RoundedRectangle(cornerRadius: Radius.card, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }
 

@@ -57,11 +57,17 @@ struct NoiseControlCard: View {
                         set: { newValue in
                             var updated = state
                             updated.level = Int(newValue.rounded())
-                            controller.setAmbientSound(updated)
+                            // Mid-drag writes carry "changing"; release sends the committed value.
+                            controller.setAmbientSound(updated, committed: false)
                         }
                     ),
                     in: 1...20,
-                    step: 1
+                    step: 1,
+                    onEditingChanged: { editing in
+                        if !editing, let current = controller.ambientSound {
+                            controller.setAmbientSound(current, committed: true)
+                        }
+                    }
                 )
                 .accessibilityLabel("Ambient sound level")
 

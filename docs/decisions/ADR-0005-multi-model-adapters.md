@@ -1,14 +1,16 @@
 # ADR-0005 — `HeadphoneDevice`, adaptadores por generación y catálogo de capacidades
 
-Fecha: 2026-10-21 · Estado: Aceptada (Android implementado; macOS parcial)
+Fecha: 2026-10-21 · Estado: Aceptada (actualizada 2026-10-21: adaptadores XM5 y v1 en Android)
 
 ## Decisión
 - Interfaz independiente del modelo: `HeadphoneDevice` (Kotlin: `core/device/HeadphoneDevice.kt`).
   Expone `snapshot` (fase de conexión + estado + capacidades), `execute(DeviceCommand)`, `refresh`,
   `connect`, `disconnect`, `setSurfaceVisible`.
 - La sesión (transporte, ACK, ciclo de vida) es común. Lo específico de cada generación vive en un
-  `ProtocolAdapter` (consultas iniciales, codificación de intenciones, decodificación). Hoy existe
-  `Xm6Adapter` (MDR v2). Pendientes: `MdrV2FiveBandAdapter` (XM5) y `MdrV1Adapter` (XM2–XM4).
+  `ProtocolAdapter` (consultas iniciales, codificación de intenciones, decodificación). Existen (Android)
+  `Xm6Adapter`, `Xm5Adapter` (MDR v2) y `MdrV1Adapter` (XM2–XM4), todos sin prueba en hardware salvo
+  la lectura del XM6. macOS: solo XM6 conectado; códecs v1/XM5 con tests de conformidad. Detalle:
+  `docs/compatibility/OTHER-MODELS.md`.
 - `DeviceCatalog` = matriz de capacidades por modelo, con nivel de evidencia por función. Fuente
   de verdad compartida: `shared/protocol-spec/models.json` (ambas plataformas lo verifican en tests).
 - Detección: nombre Bluetooth (pista) → protocolo del init (confirmación) → `04 01` nombre de modelo y

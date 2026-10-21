@@ -21,6 +21,16 @@ XM Audio Studio incorpora o se basa en el trabajo siguiente. Se conservan los av
 - Cambios propios posteriores: renombrado, consultas de identificación, ajustes de tests (ver historial git).
 - La reimplementación Kotlin del mismo diseño (`android/core/session`) es código propio, no una copia.
 
+### ParaEQ — motor DSP local de macOS (`macos/Sources/AudioDSPKit`)
+- Fuente: https://github.com/wabsto1/ParaEQ, commit `51d6f6d` (2026-07-09).
+- Licencia: MIT, Copyright (c) 2026 wabsto1. El texto completo de la licencia está en la cabecera de
+  cada archivo adaptado.
+- Archivos adaptados: `BiquadBank.swift` (de `Sources/BiquadEQ.swift`), `PeakLimiter.swift` (de
+  `Sources/Limiter.swift`), `AudioOutputDevices.swift` (de `Sources/AudioDeviceManager.swift`) y
+  `ProcessTapEngine.swift` (ciclo de vida tap + agregado + IOProc, listeners y watchdog de
+  `Sources/AudioEngine.swift` y `Prototypes/TapProto/main.swift`). Cada cabecera describe los cambios.
+- Los coeficientes RBJ son los de `AudioStudioKit` (código propio); el resto de `AudioDSPKit` es propio.
+
 ### mlazzarotto — manifiesto SwiftPM
 - PR #2 a ruimartins23/xm6-control (MIT), ya integrado en upstream.
 
@@ -32,12 +42,12 @@ XM Audio Studio incorpora o se basa en el trabajo siguiente. Se conservan los av
 | Proyecto | Licencia | Uso |
 |---|---|---|
 | [Gadgetbridge](https://codeberg.org/Freeyourgadget/Gadgetbridge) | AGPL-3.0-or-later | Solo hechos de protocolo (interoperabilidad). XM6 Control declara que sus layouts se leyeron de Gadgetbridge. |
-| [mos9527/SonyHeadphonesClient](https://github.com/mos9527/SonyHeadphonesClient) | MIT | Tablas de protocolo v1/v2, identificación, NCASM 0x17/0x19, EQ. Reutilizable con aviso. |
-| [Plutoberth/SonyHeadphonesClient](https://github.com/Plutoberth/SonyHeadphonesClient) | MIT | Referencia histórica. |
-| [marconvcm/sony-device-center](https://github.com/marconvcm/sony-device-center) | MIT | Capturas XM6 del EQ (fw 3.1.5). |
+| [mos9527/SonyHeadphonesClient](https://github.com/mos9527/SonyHeadphonesClient) | MIT | Tablas de protocolo v1/v2, identificación, NCASM 0x17/0x19, EQ. Payloads de sus capturas WH-1000XM3 fw 4.5.2 y WF-1000XM5 fw 6.1.0 en `shared/protocol-fixtures/*-v1.json` y `*-xm5.json`. Reutilizable con aviso. |
+| [Plutoberth/SonyHeadphonesClient](https://github.com/Plutoberth/SonyHeadphonesClient) | MIT | Referencia histórica (setter NC/ASM v1). |
+| [marconvcm/sony-device-center](https://github.com/marconvcm/sony-device-center) | MIT | Capturas XM6 del EQ (fw 3.1.5); notas de hardware XM4 (fw 3.0.1) y XM5 (fw 2.3.1) usadas como evidencia de los adaptadores v1/XM5. |
 | [shellingtonshreyas/xm6-macos-controller](https://github.com/shellingtonshreyas/xm6-macos-controller) | GPL-3.0 | Solo referencia. |
 | [ibatra/sony-headphones-client](https://github.com/ibatra/sony-headphones-client) | MIT declarado sin texto | Solo referencia. |
-| [ParaEQ](https://github.com/wabsto1/ParaEQ) | MIT | Diseño del futuro motor DSP macOS (ADR-0008). Aún no incorporado. |
+| [ParaEQ](https://github.com/wabsto1/ParaEQ) | MIT | Base del motor DSP de macOS (ADR-0008/0009). Código incorporado: ver arriba. |
 | [AutoEq](https://github.com/jaakkopasanen/AutoEq) | MIT (software) | Formatos `ParametricEQ.txt`/`GraphicEQ.txt`. **Los datos de medición no tienen licencia y no se incluyen.** |
 
 Nota: las tablas de mos9527 provienen de ingeniería inversa de la app oficial de Sony con fines de
