@@ -37,7 +37,10 @@ import androidx.compose.ui.unit.dp
 import io.github.andru1989.xmaudiostudio.R
 import io.github.andru1989.xmaudiostudio.bluetooth.PairedDevices
 import io.github.andru1989.xmaudiostudio.core.device.Feature
+import io.github.andru1989.xmaudiostudio.core.device.HeadphoneState
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundMode
+import io.github.andru1989.xmaudiostudio.core.model.AudioStreamType
+import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.ListeningMode
 import io.github.andru1989.xmaudiostudio.ui.MainViewModel
 import io.github.andru1989.xmaudiostudio.ui.UiState
@@ -180,6 +183,55 @@ fun DashboardScreen(
             SaveSceneButton(state, vm, showDetail = false)
         }
 
+        val showCodec = caps?.supports(Feature.AUDIO_CODEC) == true
+        val showPriority = caps?.supports(Feature.CONNECTION_PRIORITY) == true
+        if (showCodec || showPriority) {
+            BluetoothConnectionCard(s, showCodec, showPriority, snap.stateIsLive, vm::setConnectionPriority)
+        }
+
         Text(stringResource(R.string.disclaimer), color = Studio.colors.muted, style = MaterialTheme.typography.bodySmall)
+    }
+}
+
+/**
+ * The Bluetooth link as Sony's app shows it: codec in use (plus LE Audio / classic when the
+ * headphones said so) and the sound-quality vs stable-connection priority. Only the two
+ * priorities verified on hardware are offered; low latency is shown read-only.
+ */
+@Composable
+private fun BluetoothConnectionCard(
+    s: HeadphoneState,
+    showCodec: Boolean,
+    showPriority: Boolean,
+    stateIsLive: Boolean,
+    onSelect: (ConnectionPriority) -> Unit,
+) {
+    val c = Studio.colors
+    SectionCard(stringResource(R.string.bt_connection_title)) {
+        if (showCodec) {
+            val codec = s.audioCodecCode?.let { code -> s.audioCodec?.displayName ?: stringResource(R.string.bt_codec_unknown, code) }
+            val stream = when (s.audioStream) {
+                AudioStreamType.LE_AUDIO -> stringResource(R.string.bt_stream_le_audio)
+                AudioStreamType.CLASSIC -> stringResource(R.string.bt_stream_classic)
+                else -> null
+            }
+            val line = listOfNotNull(codec, stream).joinToString(" · ")
+                .ifEmpty { if (stateIsLive) stringResource(R.string.bt_not_reported) else "—" }
+            Text(stringResource(R.string.bt_codec, line), style = MaterialTheme.typography.bodyMedium)
+        }
+        if (showPriority) {
+            val options = listOf(
+                ConnectionPriority.SOUND_QUALITY to stringResource(R.string.bt_priority_quality),
+                ConnectionPriority.STABLE_CONNECTION to stringResource(R.string.bt_priority_stable),
+            ).filter { s.canWrite(it.first) }
+            if (options.isNotEmpty()) Segmented(options, s.connectionPriority, onSelect = onSelect)
+            when {
+                s.connectionPriority == ConnectionPriority.LOW_LATENCY ->
+                    Text(stringResource(R.string.bt_priority_low_latency), color = c.muted, style = MaterialTheme.typography.bodySmall)
+                s.connectionPriority == null && stateIsLive ->
+                    Text(stringResource(R.string.bt_priority_not_reported), color = c.muted, style = MaterialTheme.typography.bodySmall)
+            }
+            Text(stringResource(R.string.bt_priority_warning), color = c.warning, style = MaterialTheme.typography.bodySmall)
+        }
     }
 }

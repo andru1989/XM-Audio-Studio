@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bluetooth connection: codec and connection priority. Keep values/strings_connection.xml in step. -->
+<resources>
+    <string name="bt_connection_title">Bluetooth connection</string>
+    <string name="bt_codec">Codec: %1$s</string>
+    <string name="bt_codec_unknown">unknown (0x%1$02X)</string>
+    <string name="bt_not_reported">not reported</string>
+    <string name="bt_stream_classic">Classic Bluetooth</string>
+    <string name="bt_stream_le_audio">LE Audio</string>
+    <string name="bt_priority_quality">Prioritize sound quality</string>
+    <string name="bt_priority_stable">Prioritize stable connection</string>
+    <string name="bt_priority_low_latency">Current priority: low latency (read-only, not changed from here).</string>
+    <string name="bt_priority_not_reported">The headphones did not report their connection priority.</string>
+    <string name="bt_priority_warning">Changing it can cut the Bluetooth audio for a moment.</string>
+</resources>

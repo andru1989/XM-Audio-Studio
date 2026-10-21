@@ -14,6 +14,7 @@ import io.github.andru1989.xmaudiostudio.core.eq.FitResult
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundMode
 import io.github.andru1989.xmaudiostudio.core.model.AutomaticPowerOffMode
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
+import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerPreset
 import io.github.andru1989.xmaudiostudio.core.model.ListeningMode
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
@@ -188,6 +189,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setAutoPowerOff(mode: AutomaticPowerOffMode) = session.execute(DeviceCommand.SetAutomaticPowerOff(mode))
     fun setPauseWhenTakenOff(enabled: Boolean) = session.execute(DeviceCommand.SetPauseWhenTakenOff(enabled))
     fun switchPlayback(mac: String) = session.execute(DeviceCommand.SwitchPlayback(mac))
+    /** Low latency (or a priority the headphones did not offer) is never sent; see Xm6Adapter. */
+    fun setConnectionPriority(priority: ConnectionPriority) = session.execute(DeviceCommand.SetConnectionPriority(priority))
 
     // endregion
     // region Equalizer
