@@ -9,21 +9,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Regenerate fixtures and require no diff
-        run: |
-          python3 tools/fixtures/generate_frames.py
-          python3 tools/fixtures/generate_eq_vectors.py
-          git diff --exit-code shared/
+      - name: Regenerated fixtures match the committed ones (float tolerance)
+        run: python3 tools/fixtures/check_up_to_date.py
 
   macos:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - name: Swift tests (protocol, session, conformance, EQ, profiles)
+      - name: Swift tests (protocol, session, conformance, EQ, profiles, DSP, widget bridge)
         working-directory: macos
         run: swift test
-      - name: Universal app bundle (ad-hoc signed)
+      - name: App bundle (arm64; the universal build needs a newer Xcode than the runner's)
         working-directory: macos
+        env:
+          XMAS_ARCHS: arm64
         run: Scripts/build_app.sh release
 
   android:
@@ -34,7 +33,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Core tests and debug APK
+      # The runner image ships an Android SDK (ANDROID_HOME); install only what the build needs.
+      - name: Android SDK packages
+        run: |
+          SDKMANAGER="$(ls -d "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | sort -V | tail -1)"
+          yes | "$SDKMANAGER" --licenses > /dev/null || true
+          "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" "platform-tools" > /dev/null
+      - name: Core and app unit tests, debug APK
         working-directory: android
-        run: ./gradlew :core:test :app:assembleDebug --console=plain
+        run: ./gradlew :core:test :app:testDebugUnitTest :app:assembleDebug --console=plain
