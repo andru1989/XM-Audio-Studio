@@ -1,0 +1,942 @@
+[
+  {
+    "model": "wh-1000xm6",
+    "name": "Singapore Spring (Loud and Wireless)",
+    "purpose": "V suave: más sub-bajo y mucho más aire/brillo; 'des-emborrona' el sonido de fábrica",
+    "category": "subjective",
+    "steps": [
+      2,
+      3,
+      1,
+      -1,
+      1,
+      1,
+      0,
+      0,
+      4,
+      5
+    ],
+    "clearBass": null,
+    "sourceScale": "Sound Connect XM6: -6..+6 en pasos enteros (igual que el protocolo, raw 0..12). Orden: 31,63,125,250,500,1k,2k,4k,8k,16k",
+    "originalValues": [
+      2,
+      3,
+      1,
+      -1,
+      1,
+      1,
+      0,
+      0,
+      4,
+      5
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=3UhCS97tlUA",
+        "author": "Aaron (canal Aaron X Loud and Wireless)",
+        "date": "2025-05-24",
+        "validation": "64k vistas, ~1,7k likes; ~60 comentarios afirmando que suena mejor (p.ej. 'Best XM6 EQ I've tried so far!' 46 likes, 'Stellar EQ' 30 likes, varios dicen que evitó que devolvieran los cascos). Algunos bajan 16k a +3 si resulta áspero."
+      },
+      {
+        "url": "https://www.loudnwireless.com/blog/make-wh-1000xm6-sound-better-now-best-custom-eq",
+        "author": "Loud and Wireless (blog)",
+        "date": "2025-05-27",
+        "validation": "Mismo preset en texto, valores explícitos banda a banda."
+      }
+    ],
+    "notes": "Validación: ALTA (la más respaldada por usuarios para XM6). Partir de Custom plano, no de 'Off' (Off tiene su propia curva). +6 en 16k el autor lo descartó por demasiado brillante. Nombre propio del autor: acreditar o renombrar."
+  },
+  {
+    "model": "wh-1000xm6",
+    "name": "Super* Review — ajuste del vídeo",
+    "purpose": "Claridad/medios adelantados, menos bajo medio, agudos abiertos",
+    "category": "measured",
+    "steps": [
+      1,
+      -3,
+      0,
+      0,
+      4,
+      2,
+      2,
+      3,
+      1,
+      5
+    ],
+    "clearBass": null,
+    "sourceScale": "Sound Connect XM6: -6..+6 en pasos enteros (igual que el protocolo, raw 0..12). Orden: 31,63,125,250,500,1k,2k,4k,8k,16k",
+    "originalValues": [
+      1,
+      -3,
+      0,
+      0,
+      4,
+      2,
+      2,
+      3,
+      1,
+      5
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=vXe5OzSrpp8",
+        "author": "Super* Review (Mark)",
+        "date": "2025-06-06",
+        "validation": "38,5k vistas, ~1k likes; >20 comentarios confirmando mejora ('your fix is so much better' 34 likes, 'This really improved the sound' 16 likes). Algún usuario sube 63 Hz de -3 a -2 para más pegada."
+      }
+    ],
+    "notes": "Validación: MEDIA-ALTA. Diseñado por un revisor que mide (sus medidas están en AutoEq); no es un ajuste automático a un target, sino EQ guiada por medición + preferencia. Valores publicados en la descripción del vídeo. El autor vende un 'EQ pack' en squig.link: usar solo los valores in-app, acreditar."
+  },
+  {
+    "model": "wh-1000xm6",
+    "name": "Super* Review — 'Neutral recipe'",
+    "purpose": "Neutro/equilibrado guiado por medición",
+    "category": "measured",
+    "steps": [
+      1,
+      -1,
+      -4,
+      1,
+      2,
+      5,
+      -2,
+      5,
+      3,
+      1
+    ],
+    "clearBass": null,
+    "sourceScale": "Sound Connect XM6: -6..+6 en pasos enteros (igual que el protocolo, raw 0..12). Orden: 31,63,125,250,500,1k,2k,4k,8k,16k",
+    "originalValues": [
+      1,
+      -1,
+      -4,
+      1,
+      2,
+      5,
+      -2,
+      5,
+      3,
+      1
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=vXe5OzSrpp8",
+        "author": "Super* Review (comentario fijado del autor)",
+        "date": "2025-06-08",
+        "validation": "Comentario fijado 76 likes / 21 respuestas; un usuario lo califica de 'significativamente mejor' que el del vídeo. Misma forma que AutoEq/Headphone Corner (recorte 125 Hz, +1k, +4k)."
+      }
+    ],
+    "notes": "Validación: MEDIA. Actualización del autor dos días después del vídeo."
+  },
+  {
+    "model": "wh-1000xm6",
+    "name": "Super* Review — 'Hyper recipe'",
+    "purpose": "Enérgico/brillante con bajo controlado",
+    "category": "measured",
+    "steps": [
+      1,
+      1,
+      -3,
+      -3,
+      4,
+      2,
+      1,
+      6,
+      2,
+      6
+    ],
+    "clearBass": null,
+    "sourceScale": "Sound Connect XM6: -6..+6 en pasos enteros (igual que el protocolo, raw 0..12). Orden: 31,63,125,250,500,1k,2k,4k,8k,16k",
+    "originalValues": [
+      1,
+      1,
+      -3,
+      -3,
+      4,
+      2,
+      1,
+      6,
+      2,
+      6
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=vXe5OzSrpp8",
+        "author": "Super* Review (comentario fijado del autor)",
+        "date": "2025-06-08",
+        "validation": "Mismo comentario fijado (76 likes); menciones sueltas de usuarios ('is it the hyper recipe?'). Evidencia propia menor."
+      }
+    ],
+    "notes": "Validación: BAJA-MEDIA. Incluido por diversidad (perfil 'vivo')."
+  },
+  {
+    "model": "wh-1000xm6",
+    "name": "Headphone Corner — Harman 2018",
+    "purpose": "Corrección hacia el target Harman 2018 (ANC ON)",
+    "category": "measured",
+    "steps": [
+      2,
+      1,
+      -1,
+      1,
+      1,
+      5,
+      -1,
+      3,
+      3,
+      -2
+    ],
+    "clearBass": null,
+    "sourceScale": "Sound Connect XM6: -6..+6 en pasos enteros (igual que el protocolo, raw 0..12). Orden: 31,63,125,250,500,1k,2k,4k,8k,16k",
+    "originalValues": [
+      2,
+      1,
+      -1,
+      1,
+      1,
+      5,
+      -1,
+      3,
+      3,
+      -2
+    ],
+    "sources": [
+      {
+        "url": "https://kuulokenurkka.com/en/review-sony-wh-1000xm6/",
+        "author": "Sword of Damocles (Headphone Corner / Kuulokenurkka)",
+        "date": "2025-07-20 (act. 2026-01-17)",
+        "validation": "Basado en medición propia (acoplador IEC-60318-4 + pabellón KB501X) contra Harman 2018. Sin métricas de adopción comunitaria; coincide en dirección con AutoEq y Super* Review (más 1k y 4k/8k, menos 125 Hz relativo)."
+      }
+    ],
+    "notes": "Validación comunitaria: BAJA, pero es el preset más 'objetivo'. Medido con ANC ON (con ANC OFF hay más bajo). El autor: se puede subir 31 Hz al gusto para más bajo. Q≈0,9 por banda (16k Q≈0,4). Discrepa en 16k (-2) frente a presets subjetivos (+5): hay pico ~10 kHz que el EQ no puede corregir bien."
+  },
+  {
+    "model": "wh-1000xm6",
+    "name": "RecordingNOW V1 — Pop / Hip-Hop",
+    "purpose": "Bajo más limpio y controlado, voces adelante, menos sibilancia",
+    "category": "subjective",
+    "steps": [
+      -5,
+      4,
+      -1,
+      -3,
+      0,
+      4,
+      1,
+      -2,
+      -4,
+      1
+    ],
+    "clearBass": null,
+    "sourceScale": "Sound Connect XM6: -6..+6 en pasos enteros (igual que el protocolo, raw 0..12). Orden: 31,63,125,250,500,1k,2k,4k,8k,16k",
+    "originalValues": [
+      -5,
+      4,
+      -1,
+      -3,
+      0,
+      4,
+      1,
+      -2,
+      -4,
+      1
+    ],
+    "sources": [
+      {
+        "url": "https://recordingnow.com/blog/sony-wh-1000xm6-review/",
+        "author": "Odi Productions (RecordingNOW)",
+        "date": "2025-06-11 (sección EQ)",
+        "validation": "Revisor con vídeos de XM6 de 65k-92k vistas que remiten a la web; comentarios piden/usan sus EQ, pero pocas confirmaciones explícitas para XM6."
+      }
+    ],
+    "notes": "Validación: BAJA-MEDIA. Incluido por cubrir un objetivo distinto (género). Curiosidad: corta 31 Hz y sube 63 Hz."
+  },
+  {
+    "model": "wh-1000xm6",
+    "name": "RecordingNOW V2.1 — Rock / Metal",
+    "purpose": "Rock/metal: menos barro en 250 Hz, medios y presencia",
+    "category": "subjective",
+    "steps": [
+      -4,
+      3,
+      1,
+      -4,
+      1,
+      3,
+      1,
+      2,
+      -4,
+      -2
+    ],
+    "clearBass": null,
+    "sourceScale": "Sound Connect XM6: -6..+6 en pasos enteros (igual que el protocolo, raw 0..12). Orden: 31,63,125,250,500,1k,2k,4k,8k,16k",
+    "originalValues": [
+      -4,
+      3,
+      1,
+      -4,
+      1,
+      3,
+      1,
+      2,
+      -4,
+      -2
+    ],
+    "sources": [
+      {
+        "url": "https://recordingnow.com/blog/sony-wh-1000xm6-review/",
+        "author": "Odi Productions (RecordingNOW)",
+        "date": "2025-06 (revisado)",
+        "validation": "Igual que V1 (misma fuente, revisada por el autor)."
+      }
+    ],
+    "notes": "Validación: BAJA-MEDIA."
+  },
+  {
+    "model": "wh-1000xm6",
+    "name": "RecordingNOW V3 — EDM / Extra Bass",
+    "purpose": "Más grave para EDM/hip-hop manteniendo claridad",
+    "category": "subjective",
+    "steps": [
+      -3,
+      4,
+      1,
+      -2,
+      1,
+      4,
+      2,
+      -1,
+      -4,
+      1
+    ],
+    "clearBass": null,
+    "sourceScale": "Sound Connect XM6: -6..+6 en pasos enteros (igual que el protocolo, raw 0..12). Orden: 31,63,125,250,500,1k,2k,4k,8k,16k",
+    "originalValues": [
+      -3,
+      4,
+      1,
+      -2,
+      1,
+      4,
+      2,
+      -1,
+      -4,
+      1
+    ],
+    "sources": [
+      {
+        "url": "https://recordingnow.com/blog/sony-wh-1000xm6-review/",
+        "author": "Odi Productions (RecordingNOW)",
+        "date": "2025-06",
+        "validation": "Igual que V1."
+      }
+    ],
+    "notes": "Validación: BAJA-MEDIA. Única opción 'con más bajo' razonablemente documentada para XM6."
+  },
+  {
+    "model": "wh-1000xm5",
+    "name": "Sword of Damocles (Head-Fi)",
+    "purpose": "Neutro con bajo suficiente; reduce el 'boom' 100-300 Hz subiendo medios (ANC ON)",
+    "category": "measured",
+    "steps": [
+      4,
+      6,
+      4,
+      1,
+      2
+    ],
+    "clearBass": 1,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      4,
+      6,
+      4,
+      1,
+      2,
+      1
+    ],
+    "sources": [
+      {
+        "url": "https://www.head-fi.org/threads/sony-wh-1000xm5-wireless-noise-cancelling.963073/page-21",
+        "author": "Sword of Damocles (Head-Fi)",
+        "date": "2022 (págs. 20-22 del hilo)",
+        "validation": "Perfil más citado del hilo XM5 de Head-Fi; acompañado de medición MiniDSP EARS; otros miembros publican variantes (CB +2..+4, 2.5k +7, 6.3k +4) y uno dice que es el mejor de una docena probados de Head-Fi/Reddit/YouTube."
+      },
+      {
+        "url": "https://kuulokenurkka.com/en/review-sony-wh-1000xm5/",
+        "author": "Sword of Damocles (Headphone Corner)",
+        "date": "2022-07-10",
+        "validation": "Versión de la reseña con medición: 400 +3, 1k +5, 2.5k +3, 6.3k +1, 16k +5, CB 0."
+      }
+    ],
+    "notes": "Validación: MEDIA-ALTA. Pensado para ANC ON. Clear Bass actúa sobre todo <100 Hz; 400 Hz toca medios, por eso se 'sube todo lo demás'. Volumen relativo: valores positivos no saturan (el DSP limita)."
+  },
+  {
+    "model": "wh-1000xm5",
+    "name": "Guía Reddit 'maximizing audio quality'",
+    "purpose": "Tipo Harman: menos bajo medio, medios-altos presentes, mucho aire, sub-bajo recuperado con Clear Bass",
+    "category": "subjective",
+    "steps": [
+      -3,
+      4,
+      5,
+      1,
+      9
+    ],
+    "clearBass": 8,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      -3,
+      4,
+      5,
+      1,
+      9,
+      8
+    ],
+    "sources": [
+      {
+        "url": "https://www.reddit.com/r/SonyHeadphones/comments/14plfz0/wh1000xm5_a_guide_for_maximizing_audio_quality/",
+        "author": "usuario de r/SonyHeadphones (no verificado)",
+        "date": "≈2023-07 (estimado por el ID)",
+        "validation": "No se pudo abrir Reddit (bloqueado para el rastreador): upvotes no verificados. Adoptado como base por un proyecto independiente (GitHub RubenKelevra/Sony-WH-1000XM5)."
+      },
+      {
+        "url": "https://github.com/RubenKelevra/Sony-WH-1000XM5",
+        "author": "RubenKelevra",
+        "date": "2024-10",
+        "validation": "Captura de la app con los valores (leída del pantallazo)."
+      }
+    ],
+    "notes": "Validación: NO VERIFICABLE (marcar como 'pendiente'). Método desconocido (por eso 'subjective'), aunque la forma coincide con la corrección AutoEq de oratory1990 para XM5 (recorte 125-250 Hz, realce 1-2 kHz y 16 kHz). Valores leídos de captura: confirmar antes de publicar."
+  },
+  {
+    "model": "wh-1000xm5",
+    "name": "backchatter — 'todas las Sony'",
+    "purpose": "Brillante y limpio ('Bright' suavizado): quita lo apagado sin añadir bajo",
+    "category": "subjective",
+    "steps": [
+      0,
+      3,
+      6,
+      7,
+      5
+    ],
+    "clearBass": -1,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      0,
+      3,
+      6,
+      7,
+      5,
+      -1
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=Z7kAnU4F7k0",
+        "author": "backchatter",
+        "date": "2022-07-18",
+        "validation": "111k vistas, 1,3k likes; comentario que transcribe los valores con 192 likes/11 respuestas ('really cleaned up the muffled sound'); otro (20 likes) lo usa con CB +10. Curva casi idéntica publicada de forma independiente en Head-Fi (Augustin79: 0,+6,+8,+5,+5, CB 0) y YouTube (weera6871: 0,+5,+8,+4,+4, CB +3)."
+      }
+    ],
+    "notes": "Validación: ALTA (patrón repetido en ≥3 fuentes). Vídeo genérico para la app de Sony (5 bandas): válido para XM3/XM4/XM5. Valores tomados del comentario que los transcribe."
+  },
+  {
+    "model": "wh-1000xm5",
+    "name": "Bright + Clear Bass +2",
+    "purpose": "Preset 'Bright' de Sony con algo más de grave",
+    "category": "subjective",
+    "steps": [
+      0,
+      5,
+      7,
+      7,
+      9
+    ],
+    "clearBass": 2,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      0,
+      5,
+      7,
+      7,
+      9,
+      2
+    ],
+    "sources": [
+      {
+        "url": "https://github.com/B-Howell/soundconnect-desktop/blob/HEAD/tests/fixtures/eq-presets/WH-1000XM4-2.9.0.json",
+        "author": "B-Howell/soundconnect-desktop (MIT)",
+        "date": "2026-10",
+        "validation": "Valores del preset Bright de Sony grabados del propio auricular (XM4 fw 2.9.0): 0,+5,+7,+7,+9, CB -1."
+      },
+      {
+        "url": "https://www.head-fi.org/threads/sony-wh-1000xm5-wireless-noise-cancelling.963073/",
+        "author": "Killedkella (Head-Fi) y otros",
+        "date": "2022",
+        "validation": "'Bright + Clear Bass +2' recomendado en Head-Fi XM5; 'Bright' citado en YouTube XM5 (61 likes) y como favorito en XM3/XM4/XM5."
+      }
+    ],
+    "notes": "Validación: ALTA como patrón ('Bright' + subir Clear Bass). Asume que el preset Bright del XM5 = XM4 (misma app; no verificado en XM5). CB habitual entre 0 y +8 según gusto."
+  },
+  {
+    "model": "wh-1000xm5",
+    "name": "'Cerca de Bose QC' (NorbReviews, comentario)",
+    "purpose": "V brillante con grave: agudos muy abiertos y Clear Bass alto",
+    "category": "subjective",
+    "steps": [
+      -2,
+      1,
+      4,
+      7,
+      10
+    ],
+    "clearBass": 4,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      -2,
+      1,
+      4,
+      7,
+      10,
+      4
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=JqPn_S0nJ4s",
+        "author": "@agnihotrimanoj (comentario)",
+        "date": "≈2025",
+        "validation": "105 likes, 22 respuestas en un vídeo de 147k vistas."
+      }
+    ],
+    "notes": "Validación: MEDIA (un autor, bastante apoyo). 16k a +10 puede ser áspero; la comparación con Bose es subjetiva."
+  },
+  {
+    "model": "wh-1000xm5",
+    "name": "Monitor (reducción de graves)",
+    "purpose": "Sonido más 'de estudio': graves recortados vía Clear Bass, medios presentes",
+    "category": "subjective",
+    "steps": [
+      0,
+      3,
+      6,
+      3,
+      1
+    ],
+    "clearBass": -4,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      0,
+      3,
+      6,
+      3,
+      1,
+      -4
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=JqPn_S0nJ4s",
+        "author": "@vjs857 (comentario)",
+        "date": "≈2023",
+        "validation": "37 likes, 11 respuestas. Patrón coherente con otros 'naturales' (p.ej. @Suphakon4781: CB -2, 0,+3,+3,+1,+2; 13 likes)."
+      }
+    ],
+    "notes": "Validación: BAJA-MEDIA. Útil como opción 'menos bajo'."
+  },
+  {
+    "model": "wh-1000xm5",
+    "name": "RecordingNOW — Rock / Metal",
+    "purpose": "Rock/metal: menos 400 Hz, presencia en 2.5k",
+    "category": "subjective",
+    "steps": [
+      -3,
+      0,
+      3,
+      -2,
+      2
+    ],
+    "clearBass": 0,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      -3,
+      0,
+      3,
+      -2,
+      2,
+      0
+    ],
+    "sources": [
+      {
+        "url": "https://recordingnow.com/blog/sony-wh-1000xm5-review/",
+        "author": "Odi Productions (RecordingNOW)",
+        "date": "2025-05-21",
+        "validation": "El autor dice partir de 'ajustes populares de Reddit' y personalizarlos; sin métricas propias."
+      }
+    ],
+    "notes": "Validación: BAJA-MEDIA."
+  },
+  {
+    "model": "wh-1000xm5",
+    "name": "RecordingNOW — Pop / Hip-Hop (bass reduction)",
+    "purpose": "Recorte fuerte del bajo medio (400 -6) con voces y aire",
+    "category": "subjective",
+    "steps": [
+      -6,
+      1,
+      5,
+      -4,
+      3
+    ],
+    "clearBass": -2,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      -6,
+      1,
+      5,
+      -4,
+      3,
+      -2
+    ],
+    "sources": [
+      {
+        "url": "https://recordingnow.com/blog/sony-wh-1000xm5-review/",
+        "author": "Odi Productions (RecordingNOW)",
+        "date": "2025-05-21",
+        "validation": "Igual que el anterior."
+      }
+    ],
+    "notes": "Validación: BAJA-MEDIA. Es la opción de 'reducción de graves' más explícita para XM5."
+  },
+  {
+    "model": "wh-1000xm4",
+    "name": "'Harman' de Reddit (0,4,6,2,0)",
+    "purpose": "Aproximación al target Harman con la app",
+    "category": "measured",
+    "steps": [
+      0,
+      4,
+      6,
+      2,
+      0
+    ],
+    "clearBass": -1,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      0,
+      4,
+      6,
+      2,
+      0,
+      -1
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=2i7uB_AlDzs",
+        "author": "Spencer's Stuff (cita un post de Reddit)",
+        "date": "≈2022",
+        "validation": "El creador lo adopta ('I ended up using settings on Reddit… They follow the Harman curve', 16 likes/14 resp.); @dudemanaric lo publica en 3 vídeos distintos; variantes casi iguales: @miggyyusay 0,+4,+6,+1,0 CB -1 (58 likes) y @ColtraneNYC 0,+4,+6,+3,0 CB 0."
+      }
+    ],
+    "notes": "Validación: ALTA (misma curva en ≥4 fuentes independientes). Post original de Reddit no accesible; la etiqueta 'Harman' es declarada por los usuarios, no verificada."
+  },
+  {
+    "model": "wh-1000xm4",
+    "name": "Tom's Guide (Lee Dunkley)",
+    "purpose": "Ajuste suave: abre el sonido sin cambiar el carácter",
+    "category": "subjective",
+    "steps": [
+      1,
+      2,
+      2,
+      3,
+      2
+    ],
+    "clearBass": 1,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      1,
+      2,
+      2,
+      3,
+      2,
+      1
+    ],
+    "sources": [
+      {
+        "url": "https://www.tomsguide.com/opinion/sonys-wh-1000xm4-headphones-are-great-heres-how-i-made-them-sound-even-better",
+        "author": "Lee Dunkley (Tom's Guide)",
+        "date": "2022-12-10",
+        "validation": "Recomendación editorial de un medio grande; sin métricas de usuarios."
+      }
+    ],
+    "notes": "Validación: BAJA-MEDIA (un experto). Útil como preset 'sutil'."
+  },
+  {
+    "model": "wh-1000xm4",
+    "name": "backchatter — 'todas las Sony'",
+    "purpose": "Brillante y limpio ('Bright' suavizado)",
+    "category": "subjective",
+    "steps": [
+      0,
+      3,
+      6,
+      7,
+      5
+    ],
+    "clearBass": -1,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      0,
+      3,
+      6,
+      7,
+      5,
+      -1
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=Z7kAnU4F7k0",
+        "author": "backchatter",
+        "date": "2022-07-18",
+        "validation": "111k vistas, 1,3k likes; comentario con los valores 192 likes."
+      }
+    ],
+    "notes": "Validación: ALTA (ver entrada XM5)."
+  },
+  {
+    "model": "wh-1000xm4",
+    "name": "Excited + 16k +10 + Clear Bass +10",
+    "purpose": "Divertido/bass-heavy con brillo",
+    "category": "subjective",
+    "steps": [
+      -1,
+      1,
+      0,
+      3,
+      10
+    ],
+    "clearBass": 10,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      -1,
+      1,
+      0,
+      3,
+      10,
+      10
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=db41kVy3jzw",
+        "author": "@j1shin (comentario)",
+        "date": "≈2020",
+        "validation": "1,1k likes y 113 respuestas en un vídeo XM4 de 304k vistas (comentario más votado)."
+      },
+      {
+        "url": "https://github.com/B-Howell/soundconnect-desktop/blob/HEAD/tests/fixtures/eq-presets/WH-1000XM4-2.9.0.json",
+        "author": "B-Howell/soundconnect-desktop (MIT)",
+        "date": "2026-10",
+        "validation": "Valores del preset Excited grabados del XM4 fw 2.9.0: -1,+1,0,+3,+5, CB +8."
+      }
+    ],
+    "notes": "Validación: ALTA en votos, pero es gusto extremo (CB y 16k al máximo). originalValues = Excited con 16k y CB al máximo."
+  },
+  {
+    "model": "wh-1000xm4",
+    "name": "Brillante con menos bajo (+2 +3 +4 +4 +5, CB -3)",
+    "purpose": "Reduce el exceso de bajo y sube agudos progresivamente",
+    "category": "subjective",
+    "steps": [
+      2,
+      3,
+      4,
+      4,
+      5
+    ],
+    "clearBass": -3,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      2,
+      3,
+      4,
+      4,
+      5,
+      -3
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=db41kVy3jzw",
+        "author": "@alex8games (comentario)",
+        "date": "≈2020",
+        "validation": "99 likes, 16 respuestas. El autor indica 'bass -3/-4'."
+      }
+    ],
+    "notes": "Validación: MEDIA."
+  },
+  {
+    "model": "wh-1000xm4",
+    "name": "Tipo Beyerdynamic DT 1990 (plano)",
+    "purpose": "Plano/estudio: graves y 400 Hz recortados",
+    "category": "subjective",
+    "steps": [
+      -4,
+      1,
+      -1,
+      -2,
+      1
+    ],
+    "clearBass": -4,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      -4,
+      1,
+      -1,
+      -2,
+      1,
+      -4
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=Ng0zpx95tA0",
+        "author": "@spinaltap22 (comentario en el vídeo de crinacle)",
+        "date": "≈2025",
+        "validation": "188 likes, 8 respuestas. El autor dice que con CB +4 es 'mucho más divertido'."
+      }
+    ],
+    "notes": "Validación: MEDIA. Igualado de oído contra otro auricular, no medido."
+  },
+  {
+    "model": "wh-1000xm3",
+    "name": "Bright + Clear Bass +7",
+    "purpose": "Claridad del preset Bright con grave fuerte (rap/electrónica)",
+    "category": "subjective",
+    "steps": [
+      0,
+      5,
+      7,
+      7,
+      9
+    ],
+    "clearBass": 7,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      0,
+      5,
+      7,
+      7,
+      9,
+      7
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=P7AwX1J0nbI",
+        "author": "@expazatrix (comentario)",
+        "date": "≈2020",
+        "validation": "213 likes, 24 respuestas en el vídeo de EQ de XM3 de Loud and Wireless (105k vistas)."
+      },
+      {
+        "url": "https://github.com/B-Howell/soundconnect-desktop/blob/HEAD/tests/fixtures/eq-presets/WH-1000XM4-2.9.0.json",
+        "author": "B-Howell/soundconnect-desktop (MIT)",
+        "date": "2026-10",
+        "validation": "Valores de Bright grabados en XM4 (se asume igual en XM3: no verificado)."
+      }
+    ],
+    "notes": "Validación: MEDIA-ALTA como patrón. Verificar que el preset Bright del XM3 tenga los mismos valores."
+  },
+  {
+    "model": "wh-1000xm3",
+    "name": "backchatter — 'todas las Sony'",
+    "purpose": "Brillante y limpio",
+    "category": "subjective",
+    "steps": [
+      0,
+      3,
+      6,
+      7,
+      5
+    ],
+    "clearBass": -1,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      0,
+      3,
+      6,
+      7,
+      5,
+      -1
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=Z7kAnU4F7k0",
+        "author": "backchatter",
+        "date": "2022-07-18",
+        "validation": "111k vistas, 1,3k likes (vídeo genérico para la app de Sony)."
+      }
+    ],
+    "notes": "Validación: MEDIA para XM3 (la evidencia no es específica del XM3)."
+  },
+  {
+    "model": "wh-1000xm3",
+    "name": "'Harman' de Reddit (XM4) aplicado al XM3",
+    "purpose": "Aproximación Harman (heredada del XM4)",
+    "category": "measured",
+    "steps": [
+      0,
+      4,
+      6,
+      2,
+      0
+    ],
+    "clearBass": -1,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      0,
+      4,
+      6,
+      2,
+      0,
+      -1
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=2i7uB_AlDzs",
+        "author": "Spencer's Stuff / Reddit (XM4)",
+        "date": "≈2022",
+        "validation": "Validado en XM4 (ver entrada XM4); para XM3 sin evidencia directa."
+      }
+    ],
+    "notes": "Validación: BAJA para XM3. Las correcciones AutoEq de oratory1990 para XM3 y XM4 tienen forma parecida (recorte ~125 Hz, realce 1-4 kHz), por eso es razonable, pero no probado."
+  },
+  {
+    "model": "wh-1000xm3",
+    "name": "Bright (Sony) + Clear Bass 0",
+    "purpose": "Bright de Sony con el grave en neutro",
+    "category": "subjective",
+    "steps": [
+      0,
+      5,
+      7,
+      7,
+      9
+    ],
+    "clearBass": 0,
+    "sourceScale": "Headphones/Sound Connect 5 bandas: -10..+10 por banda y Clear Bass -10..+10. Orden originalValues: 400,1k,2.5k,6.3k,16k,ClearBass",
+    "originalValues": [
+      0,
+      5,
+      7,
+      7,
+      9,
+      0
+    ],
+    "sources": [
+      {
+        "url": "https://www.youtube.com/watch?v=9lIgqLwifvQ",
+        "author": "@alscarpa6177 (comentario)",
+        "date": "≈2022",
+        "validation": "'nothing beats the Bright setting on the XM3, XM4 and XM5' (22 likes); mismo usuario usa Bright + CB 0 en XM4."
+      }
+    ],
+    "notes": "Validación: BAJA-MEDIA."
+  }
+]
