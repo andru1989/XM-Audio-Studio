@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_widget_label">Ecualizador XM</string>
+    <string name="eq_widget_description">Elige tus perfiles de ecualización con un toque.</string>
+    <string name="eq_widget_prev">Perfil anterior</string>
+    <string name="eq_widget_next">Perfil siguiente</string>
+    <string name="eq_widget_custom">Personalizado (sin guardar)</string>
+    <string name="eq_widget_unknown">Ecualizador</string>
+    <string name="eq_widget_blocked">EQ desactivado por el modo de escucha</string>
+    <string name="eq_widget_empty">Elige tus audífonos en la app para ver tus perfiles</string>
+    <string name="eq_widget_apply_description">Aplicar el perfil %1$s</string>
+    <string name="eq_widget_active_description">%1$s, perfil activo</string>
+    <string name="eq_widget_preview_title">Voces claras</string>
+    <string name="eq_widget_preview_status">WH-1000XM6 · Conectado</string>
+</resources>

@@ -18,6 +18,8 @@
 - Prioridad de conexión Bluetooth (calidad de sonido / conexión estable) y códec actual, con tipo de
   conexión (clásico / LE Audio), en macOS y Android (WH-1000XM6). Baja latencia solo se muestra.
 - Android: segmentos de igual altura; botones del ecualizador en filas en lugar de scroll horizontal.
+- Android: widget del ecualizador — perfil activo, ◀ / ▶ y lista de todos los perfiles; un toque
+  aplica el EQ tras leer el estado real (bloqueado con Música de fondo o Cine).
 - CI (GitHub Actions), `.dmg`, APK de versión firmado con clave local, guía de instalación, problemas conocidos.
 - Prueba automática de escrituras con restauración: `tools/hardware/xm6_write_test.py`.
 

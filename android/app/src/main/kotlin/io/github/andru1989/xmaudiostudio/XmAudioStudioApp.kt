@@ -12,6 +12,8 @@ import io.github.andru1989.xmaudiostudio.core.session.SimulatedXm6Channel
 import io.github.andru1989.xmaudiostudio.data.AppSettings
 import io.github.andru1989.xmaudiostudio.data.ProtocolLog
 import io.github.andru1989.xmaudiostudio.platform.Availability
+import io.github.andru1989.xmaudiostudio.platform.EqProfileControl
+import io.github.andru1989.xmaudiostudio.platform.EqProfileLogic
 import io.github.andru1989.xmaudiostudio.platform.LastKnownStore
 import io.github.andru1989.xmaudiostudio.platform.NoiseControl
 import io.github.andru1989.xmaudiostudio.platform.NoiseControlLogic
@@ -36,7 +38,7 @@ class XmAudioStudioApp : Application() {
  * Process-wide objects. The session lives on the main thread for the lifetime of the
  * process; it holds the control channel only while a screen is visible or a command is in
  * flight (see ADR-0003), so no foreground service is needed. The Quick Settings tile and the
- * home-screen widget use the same session (docs/android/BACKGROUND.md).
+ * home-screen widgets use the same session (docs/android/BACKGROUND.md).
  */
 class AppContainer(private val app: Application) {
     val settings = AppSettings(app)
@@ -64,10 +66,21 @@ class AppContainer(private val app: Application) {
         store = lastKnown,
         demoMode = { settings.demoMode },
         hasBluetoothPermission = { RfcommControlChannel.hasConnectPermission(app) },
+        profiles = profiles::forModel,
+        lastAppliedProfileId = { settings.lastAppliedProfileId },
         scope = appScope,
     )
 
     val noiseControl = NoiseControl(device = { session }, prepare = ::prepareForPlatformCommand)
+
+    /** The equalizer widget's actions; the profile it applies becomes the app's "last applied". */
+    val eqControl = EqProfileControl(
+        device = { session },
+        prepare = ::prepareForEqCommand,
+        profiles = profiles::forModel,
+        lastAppliedId = { settings.lastAppliedProfileId },
+        rememberApplied = { settings.lastAppliedProfileId = it },
+    )
 
     init {
         // The tile or the widget may start the process without any screen: select the saved
@@ -112,6 +125,15 @@ class AppContainer(private val app: Application) {
     private fun prepareForPlatformCommand(): Availability {
         restoreSavedTarget()
         return NoiseControlLogic.availability(
+            target = session.snapshot.value.target,
+            demoMode = settings.demoMode,
+            hasBluetoothPermission = RfcommControlChannel.hasConnectPermission(app),
+        )
+    }
+
+    private fun prepareForEqCommand(): Availability {
+        restoreSavedTarget()
+        return EqProfileLogic.availability(
             target = session.snapshot.value.target,
             demoMode = settings.demoMode,
             hasBluetoothPermission = RfcommControlChannel.hasConnectPermission(app),

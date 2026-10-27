@@ -314,6 +314,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun refreshProfiles() {
         _ui.update { it.copy(profiles = library.forModel(modelId()), activeProfile = matchActiveProfile(it.snapshot)) }
+        // The equalizer widget lists the same profiles.
+        container.platform.refresh()
     }
 
     private fun matchActiveProfile(snap: SessionSnapshot): EqProfile? {

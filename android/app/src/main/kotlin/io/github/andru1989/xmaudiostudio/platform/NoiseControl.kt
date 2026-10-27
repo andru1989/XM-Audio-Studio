@@ -2,14 +2,9 @@ package io.github.andru1989.xmaudiostudio.platform
 
 import io.github.andru1989.xmaudiostudio.core.device.HeadphoneDevice
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundMode
-import io.github.andru1989.xmaudiostudio.core.session.ConnectionPhase
 import io.github.andru1989.xmaudiostudio.core.session.SessionError
-import io.github.andru1989.xmaudiostudio.core.session.SessionSnapshot
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Noise-control actions for surfaces outside the app (Quick Settings tile, home-screen widget).
@@ -56,7 +51,7 @@ class NoiseControl(
 
     suspend fun perform(request: Request): Outcome {
         val outcome = decisions.withLock { decideAndSend(request) }
-        if (outcome is Outcome.Sent) awaitDelivery()
+        if (outcome is Outcome.Sent) awaitDelivery(device(), deliveryTimeoutMs, ackGraceMs)
         return outcome
     }
 
@@ -64,7 +59,7 @@ class NoiseControl(
         val availability = prepare()
         if (availability != Availability.READY) return Outcome.Unavailable(availability)
         val session = device()
-        val snapshot = awaitLiveState(session) ?: return Outcome.NotConnected(session.snapshot.value.error)
+        val snapshot = awaitLiveSnapshot(session, liveTimeoutMs) ?: return Outcome.NotConnected(session.snapshot.value.error)
         // Includes intents still in flight, so a second tap builds on the first one.
         val current = snapshot.state.ambientSound ?: return Outcome.StateUnknown
         val mode = when (request) {
@@ -74,26 +69,6 @@ class NoiseControl(
         if (mode == current.mode) return Outcome.AlreadyInMode(mode)
         session.execute(NoiseControlLogic.command(mode, current))
         return Outcome.Sent(mode)
-    }
-
-    private suspend fun awaitLiveState(session: HeadphoneDevice): SessionSnapshot? {
-        val now = session.snapshot.value
-        if (now.stateIsLive) return now
-        // User activity: opens the channel (or takes it back after YIELDED/FAILED) and reads first.
-        session.connect()
-        return withTimeoutOrNull(liveTimeoutMs) {
-            session.snapshot.first { it.stateIsLive || it.phase == ConnectionPhase.FAILED || it.phase == ConnectionPhase.YIELDED }
-        }?.takeIf { it.stateIsLive }
-    }
-
-    /**
-     * Waits until the intent has been encoded and written, plus a short grace for the ACK, so a
-     * broadcast receiver can keep the process alive for that long and no longer.
-     */
-    private suspend fun awaitDelivery() {
-        val session = device()
-        withTimeoutOrNull(deliveryTimeoutMs) { session.snapshot.first { it.pendingCommands == 0 } }
-        delay(ackGraceMs)
     }
 
     companion object {

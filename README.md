@@ -45,6 +45,8 @@ Te será útil si:
 - **Usas los audífonos con tu Mac** y quieres cambiar la cancelación de ruido, el ecualizador o el
   dispositivo que reproduce sin tomar el teléfono: desde la barra de menús, la ventana principal o un
   widget del escritorio.
+- **Cambias de ecualización a menudo**: en Android, un widget de la pantalla de inicio lista tus
+  perfiles y cambia de uno a otro con un toque.
 - **Quieres más control del sonido** del que ofrece Sound Connect: perfiles ilimitados con nombre,
   comparación A/B, deshacer, la curva de respuesta a la vista y correcciones medidas de AutoEq
   adaptadas a las bandas de tus audífonos.
@@ -94,7 +96,7 @@ Monorepo con dos apps nativas que **no comparten código, sino especificación y
 | Ruta | Contenido |
 |---|---|
 | [`macos/`](macos/) | App SwiftUI (barra de menús, ventana, estudio de EQ, widgets, EQ DSP). Basada en [XM6 Control](https://github.com/ruimartins23/xm6-control) (MIT) y la gestión de canal de Anneo22 (Apache-2.0). |
-| [`android/`](android/) | App Kotlin/Jetpack Compose. `core/` (JVM puro: protocolo, sesión, EQ, perfiles) y `app/` (Bluetooth, UI, Ajustes rápidos, widget). |
+| [`android/`](android/) | App Kotlin/Jetpack Compose. `core/` (JVM puro: protocolo, sesión, EQ, perfiles) y `app/` (Bluetooth, UI, Ajustes rápidos, widgets de ruido y de ecualizador). |
 | [`shared/`](shared/) | Especificación del protocolo Sony MDR, fixtures de bytes, catálogo de modelos, formato de perfiles, vectores de AutoEQ y tokens de diseño. Ambas apps se prueban contra estos mismos archivos. |
 | [`tools/`](tools/) | Generadores de fixtures y la prueba de escrituras con hardware. |
 | [`docs/`](docs/) | Arquitectura, decisiones (ADR), Bluetooth, DSP, compatibilidad, pruebas, backlog. |

@@ -1,4 +1,4 @@
-# Android: mosaico de Ajustes rápidos y widget en segundo plano
+# Android: mosaico de Ajustes rápidos y widgets en segundo plano
 
 Etapa 6. Código: `android/app/src/main/kotlin/.../platform/`. Política del canal:
 [ADR-0003](../decisions/ADR-0003-on-demand-control-channel.md) y
@@ -6,8 +6,9 @@ Etapa 6. Código: `android/app/src/main/kotlin/.../platform/`. Política del can
 
 ## Sin servicio en primer plano
 
-El mosaico (`NoiseControlTileService`), el widget (`NoiseWidgetProvider`) y sus botones
-(`NoiseControlReceiver`, no exportado) usan **la misma `HeadphoneSession` del proceso**
+El mosaico (`NoiseControlTileService`), el widget de control de ruido (`NoiseWidgetProvider`,
+botones en `NoiseControlReceiver`) y el widget del ecualizador (`EqWidgetProvider`, toques en
+`EqProfileReceiver`; ambos receptores no exportados) usan **la misma `HeadphoneSession` del proceso**
 (`XmAudioStudioApp.container.session`). No hay servicio en primer plano ni sondeo periódico
 (`updatePeriodMillis = 0`). Si el proceso arranca por el mosaico o el widget, `AppContainer`
 selecciona los audífonos guardados (o el XM6 simulado en modo demostración) sin abrir el canal.
@@ -31,20 +32,44 @@ selecciona los audífonos guardados (o el XM6 simulado en modo demostración) si
 5. El receptor del widget usa `goAsync()` solo hasta que la intención se escribe más ~0,75 s para el
    ACK (como máximo 9 s); la sesión continúa después.
 
+## Widget del ecualizador
+
+Elige un perfil de EQ de la app con un toque: cabecera con el perfil activo y el estado, ◀ / ▶ para
+pasar al perfil anterior o siguiente (con vuelta al principio) y la lista completa de perfiles del
+modelo seleccionado: primero los del usuario, luego medidos, subjetivos y presets de Sony. El activo
+lleva el borde de acento; tocar una fila lo aplica.
+
+- `EqProfileControl` sigue la misma política que `NoiseControl`: el toque abre el canal si hace
+  falta, **lee el estado real** y decide sobre él (el perfil activo y el modo de escucha salen de
+  esa lectura); tocar el perfil ya activo no escribe nada. Los toques se serializan, así que dos ▶
+  seguidos avanzan dos perfiles.
+- Solo se aplica el **EQ** (`SetEqualizerPreset` o `SetEqualizerBands`, con Clear Bass a 0 si el
+  perfil no lo define en XM3-XM5). Las escenas («configuración completa») necesitan la confirmación
+  de la app, así que desde el widget solo cambia su ecualización.
+- Con **Música de fondo o Cine** activos el firmware ignora el EQ: no se escribe nada y la cabecera
+  dice "EQ desactivado por el modo de escucha".
+- El perfil aplicado pasa a ser el "último aplicado" de la app (desempate entre perfiles con la
+  misma curva). Una curva que no coincide con ningún perfil se muestra como "Personalizado (sin guardar)".
+- La lista va dentro de las vistas en Android 12+ (`RemoteCollectionItems`); en 8–11 la sirve
+  `EqWidgetService` (no exportado, `BIND_REMOTEVIEWS`) con el último estado publicado.
+- Guardar, renombrar, borrar o importar perfiles en la app actualiza el widget al momento.
+
 ## Qué muestran
 
 - Mientras vive el proceso, `PlatformSync` (en `AppContainer`) reduce cada `snapshot` a un
-  `NoiseControlStatus` y, si cambió, lo envía a los widgets con `AppWidgetManager`. El mosaico no es
+  `NoiseControlStatus` y un `EqWidgetStatus` y, si cambiaron, los envía a los widgets con
+  `AppWidgetManager`. El mosaico no es
   "activo": Android lo enlaza al abrir Ajustes rápidos y en ese rato sigue el mismo estado.
 - **Último estado conocido**: `LastKnownStore` guarda en `SharedPreferences` (`platform.xml`,
-  clave `lastKnownState`) un JSON mínimo: dirección, modelo, modo, batería, carga y marca de tiempo.
+  clave `lastKnownState`) un JSON mínimo: dirección, modelo, modo, batería, carga, perfil de EQ
+  reconocido y marca de tiempo.
   Se escribe cuando cambia el estado en vivo y otra vez cuando deja de estarlo (con esa hora). Solo
   se muestra si es de los audífonos seleccionados y **nunca se escribe en los audífonos**.
 - El widget muestra la hora absoluta ("Último estado conocido · 13:05"), porque puede seguir en
   pantalla mucho después de que muera el proceso.
 - No disponible: sin audífonos elegidos, modelo sin adaptador o, fuera del modo demostración, sin el
   permiso `BLUETOOTH_CONNECT` (solo la app puede pedirlo). El mosaico queda en `STATE_UNAVAILABLE` y
-  los botones del widget abren la app.
+  los botones de los widgets abren la app.
 
 ## Límites de Android
 

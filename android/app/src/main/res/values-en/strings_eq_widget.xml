@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_widget_label">XM Equalizer</string>
+    <string name="eq_widget_description">Pick your equalizer profiles with one tap.</string>
+    <string name="eq_widget_prev">Previous profile</string>
+    <string name="eq_widget_next">Next profile</string>
+    <string name="eq_widget_custom">Custom (unsaved)</string>
+    <string name="eq_widget_unknown">Equalizer</string>
+    <string name="eq_widget_blocked">EQ turned off by the listening mode</string>
+    <string name="eq_widget_empty">Choose your headphones in the app to see your profiles</string>
+    <string name="eq_widget_apply_description">Apply the %1$s profile</string>
+    <string name="eq_widget_active_description">%1$s, active profile</string>
+    <string name="eq_widget_preview_title">Clear vocals</string>
+    <string name="eq_widget_preview_status">WH-1000XM6 · Connected</string>
+</resources>

@@ -20,6 +20,8 @@ data class LastKnownState(
     val charging: Boolean = false,
     /** When this state was last confirmed by the headphones (epoch ms). */
     val timestampMs: Long,
+    /** The equalizer profile the headphones matched, for the equalizer widget. */
+    val eqProfileId: String? = null,
 ) {
     fun sameContentAs(other: LastKnownState?): Boolean =
         other != null && copy(timestampMs = 0) == other.copy(timestampMs = 0)
@@ -33,8 +35,11 @@ data class LastKnownState(
         fun decode(text: String?): LastKnownState? =
             text?.let { runCatching { json.decodeFromString(serializer(), it) }.getOrNull() }
 
-        /** A record of [snapshot] if it carries live state worth keeping, else null. */
-        fun from(snapshot: SessionSnapshot, nowMs: Long): LastKnownState? {
+        /**
+         * A record of [snapshot] if it carries live state worth keeping, else null. [eqProfileId]
+         * is the profile matched to its live EQ (profiles live in the app, not in the snapshot).
+         */
+        fun from(snapshot: SessionSnapshot, nowMs: Long, eqProfileId: String? = null): LastKnownState? {
             val target = snapshot.target ?: return null
             if (!snapshot.stateIsLive) return null
             val state = snapshot.state
@@ -46,6 +51,7 @@ data class LastKnownState(
                 batteryLevel = state.battery?.level,
                 charging = state.battery?.isCharging == true,
                 timestampMs = nowMs,
+                eqProfileId = eqProfileId,
             )
         }
     }
@@ -60,8 +66,8 @@ class LastKnownTracker {
     private var live: LastKnownState? = null
 
     /** Returns the record to persist for this snapshot, or null when nothing changed. */
-    fun onSnapshot(snapshot: SessionSnapshot, nowMs: Long): LastKnownState? {
-        val current = LastKnownState.from(snapshot, nowMs)
+    fun onSnapshot(snapshot: SessionSnapshot, nowMs: Long, eqProfileId: String? = null): LastKnownState? {
+        val current = LastKnownState.from(snapshot, nowMs, eqProfileId)
         if (current != null) {
             if (current.sameContentAs(live)) return null
             live = current
