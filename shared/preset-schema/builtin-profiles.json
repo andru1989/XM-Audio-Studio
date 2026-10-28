@@ -51,8 +51,7 @@
           0,
           0
         ]
-      },
-      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+      }
     },
     {
       "id": "builtin.clear-vocals",
@@ -72,8 +71,7 @@
           0,
           0
         ]
-      },
-      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+      }
     },
     {
       "id": "builtin.electronic",
@@ -93,8 +91,7 @@
           2,
           2
         ]
-      },
-      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+      }
     },
     {
       "id": "builtin.rock",
@@ -114,8 +111,27 @@
           2,
           1
         ]
-      },
-      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+      }
+    },
+    {
+      "id": "builtin.hip-hop",
+      "name": "Rap / Hip hop",
+      "category": "subjective",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          3,
+          4,
+          0,
+          -2,
+          -2,
+          0,
+          2,
+          2,
+          1,
+          0
+        ]
+      }
     },
     {
       "id": "builtin.classical",
@@ -135,8 +151,7 @@
           2,
           1
         ]
-      },
-      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+      }
     },
     {
       "id": "builtin.movies",
@@ -156,8 +171,7 @@
           0,
           0
         ]
-      },
-      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+      }
     },
     {
       "id": "builtin.gaming",
@@ -177,8 +191,7 @@
           1,
           0
         ]
-      },
-      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+      }
     },
     {
       "id": "builtin.podcast",
@@ -198,8 +211,107 @@
           -1,
           -2
         ]
+      }
+    },
+    {
+      "id": "builtin.community-v-bright",
+      "name": "V brillante · Loud and Wireless",
+      "category": "subjective",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          2,
+          3,
+          1,
+          -1,
+          1,
+          1,
+          0,
+          0,
+          4,
+          5
+        ]
       },
-      "notes": "Perfil subjetivo diseñado por gusto, no una corrección medida."
+      "source": {
+        "url": "https://www.youtube.com/watch?v=3UhCS97tlUA",
+        "attribution": "Aaron, Loud and Wireless"
+      },
+      "notes": "Comunidad: «Singapore Spring» de Loud and Wireless (2025), muy bien valorado. Más sub-bajo, aire y brillo."
+    },
+    {
+      "id": "builtin.community-super-review",
+      "name": "Claridad · Super* Review",
+      "category": "measured",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          1,
+          -3,
+          0,
+          0,
+          4,
+          2,
+          2,
+          3,
+          1,
+          5
+        ]
+      },
+      "source": {
+        "url": "https://www.youtube.com/watch?v=vXe5OzSrpp8",
+        "attribution": "Super* Review"
+      },
+      "notes": "Comunidad: ajuste del vídeo de Super* Review (2025), por medición y preferencia. Menos bajo medio, medios adelante."
+    },
+    {
+      "id": "builtin.community-super-review-neutral",
+      "name": "Neutro · Super* Review",
+      "category": "measured",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          1,
+          -1,
+          -4,
+          1,
+          2,
+          5,
+          -2,
+          5,
+          3,
+          1
+        ]
+      },
+      "source": {
+        "url": "https://www.youtube.com/watch?v=vXe5OzSrpp8",
+        "attribution": "Super* Review (comentario fijado)"
+      },
+      "notes": "Comunidad: receta neutra de Super* Review (2025), guiada por medición."
+    },
+    {
+      "id": "builtin.community-harman-hc",
+      "name": "Harman · Headphone Corner",
+      "category": "measured",
+      "model": "wh-1000xm6",
+      "deviceEq": {
+        "steps": [
+          2,
+          1,
+          -1,
+          1,
+          1,
+          5,
+          -1,
+          3,
+          3,
+          -2
+        ]
+      },
+      "source": {
+        "url": "https://kuulokenurkka.com/en/review-sony-wh-1000xm6/",
+        "attribution": "Sword of Damocles, Headphone Corner (Kuulokenurkka)"
+      },
+      "notes": "Comunidad: medición de Headphone Corner (2025) hacia la curva Harman 2018, con cancelación de ruido activa."
     },
     {
       "id": "builtin.sony-heavy",

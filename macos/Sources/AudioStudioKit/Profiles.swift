@@ -167,16 +167,23 @@ public enum ProfileCodec {
 }
 
 /// Profiles shipped with the app. Must equal `shared/preset-schema/builtin-profiles.json`.
+/// Our own curves are subjective; the community ones are EQ settings their authors published,
+/// credited in `source` and the notes (docs/research/community-eq-presets.md).
 public enum BuiltinProfiles {
-    private static let subjective = "Perfil subjetivo diseñado por gusto, no una corrección medida."
     private static let xm6 = HeadphoneModel.wh1000xm6.rawValue
 
     private static func preset(_ id: String, _ name: String, _ code: Int, _ notes: String? = nil) -> EqProfile {
         EqProfile(id: "builtin.\(id)", name: name, category: .devicePreset, model: xm6, deviceEq: DeviceEqSetting(presetCode: code), notes: notes)
     }
 
-    private static func curve(_ id: String, _ name: String, _ steps: [Int], _ notes: String = subjective) -> EqProfile {
+    private static func curve(_ id: String, _ name: String, _ steps: [Int], _ notes: String? = nil) -> EqProfile {
         EqProfile(id: "builtin.\(id)", name: name, category: .subjective, model: xm6, deviceEq: DeviceEqSetting(steps: steps), notes: notes)
+    }
+
+    private static func community(_ id: String, _ name: String, _ category: ProfileCategory, _ steps: [Int],
+                                  _ notes: String, _ url: String, _ attribution: String) -> EqProfile {
+        EqProfile(id: "builtin.\(id)", name: name, category: category, model: xm6, deviceEq: DeviceEqSetting(steps: steps),
+                  source: ProfileSource(url: url, attribution: attribution), notes: notes)
     }
 
     public static let all: [EqProfile] = [
@@ -186,10 +193,23 @@ public enum BuiltinProfiles {
         curve("clear-vocals", "Voces claras", [-2, -1, -1, 0, 1, 2, 3, 2, 0, 0]),
         curve("electronic", "Música electrónica", [4, 3, 1, 0, -1, -1, 0, 1, 2, 2]),
         curve("rock", "Rock", [3, 2, 0, -1, -1, 0, 1, 2, 2, 1]),
+        curve("hip-hop", "Rap / Hip hop", [3, 4, 0, -2, -2, 0, 2, 2, 1, 0]),
         curve("classical", "Música clásica", [1, 1, 0, 0, -1, -1, 0, 1, 2, 1]),
         curve("movies", "Películas", [3, 2, 1, 0, 0, 1, 2, 1, 0, 0]),
         curve("gaming", "Videojuegos", [1, 1, 0, -1, 0, 1, 3, 3, 1, 0]),
         curve("podcast", "Podcast", [-4, -3, -2, 0, 1, 2, 2, 1, -1, -2]),
+        community("community-v-bright", "V brillante · Loud and Wireless", .subjective, [2, 3, 1, -1, 1, 1, 0, 0, 4, 5],
+                  "Comunidad: «Singapore Spring» de Loud and Wireless (2025), muy bien valorado. Más sub-bajo, aire y brillo.",
+                  "https://www.youtube.com/watch?v=3UhCS97tlUA", "Aaron, Loud and Wireless"),
+        community("community-super-review", "Claridad · Super* Review", .measured, [1, -3, 0, 0, 4, 2, 2, 3, 1, 5],
+                  "Comunidad: ajuste del vídeo de Super* Review (2025), por medición y preferencia. Menos bajo medio, medios adelante.",
+                  "https://www.youtube.com/watch?v=vXe5OzSrpp8", "Super* Review"),
+        community("community-super-review-neutral", "Neutro · Super* Review", .measured, [1, -1, -4, 1, 2, 5, -2, 5, 3, 1],
+                  "Comunidad: receta neutra de Super* Review (2025), guiada por medición.",
+                  "https://www.youtube.com/watch?v=vXe5OzSrpp8", "Super* Review (comentario fijado)"),
+        community("community-harman-hc", "Harman · Headphone Corner", .measured, [2, 1, -1, 1, 1, 5, -1, 3, 3, -2],
+                  "Comunidad: medición de Headphone Corner (2025) hacia la curva Harman 2018, con cancelación de ruido activa.",
+                  "https://kuulokenurkka.com/en/review-sony-wh-1000xm6/", "Sword of Damocles, Headphone Corner (Kuulokenurkka)"),
         preset("sony-heavy", "Sony Heavy", 0x30),
         preset("sony-clear", "Sony Clear", 0x31),
         preset("sony-hard", "Sony Hard", 0x32),

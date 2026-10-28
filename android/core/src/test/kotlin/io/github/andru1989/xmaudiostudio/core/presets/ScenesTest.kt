@@ -59,7 +59,7 @@ class ScenesTest {
         assertEquals(profiles, ProfileCodec.decode(encoded))
         // The built-in profiles (a version 1 file) are unchanged and carry no scene.
         assertTrue(BuiltinProfiles.all.all { it.scene == null })
-        assertEquals(14, BuiltinProfiles.all.size)
+        assertEquals(19, BuiltinProfiles.all.size)
     }
 
     @Test

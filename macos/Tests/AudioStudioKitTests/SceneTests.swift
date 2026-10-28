@@ -36,7 +36,7 @@ final class SceneTests: XCTestCase {
         XCTAssertFalse(String(decoding: encoded, as: UTF8.self).contains("\"scene\""), "an EQ-only profile writes no scene key")
         XCTAssertEqual(try ProfileCodec.decode(encoded), profiles)
         XCTAssertTrue(BuiltinProfiles.all.allSatisfy { $0.scene == nil })
-        XCTAssertEqual(BuiltinProfiles.all.count, 14)
+        XCTAssertEqual(BuiltinProfiles.all.count, 19)
     }
 
     func testV2ExampleDecodesAndRoundTrips() throws {

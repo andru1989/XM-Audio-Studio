@@ -44,7 +44,7 @@ class EqProfileLogicTest {
         val ordered = EqProfileLogic.ordered(profiles)
         assertEquals("u1", ordered.first().id)
         val categories = ordered.map { it.category }.distinct()
-        assertEquals(listOf(ProfileCategory.USER, ProfileCategory.SUBJECTIVE, ProfileCategory.DEVICE_PRESET), categories)
+        assertEquals(listOf(ProfileCategory.USER, ProfileCategory.MEASURED, ProfileCategory.SUBJECTIVE, ProfileCategory.DEVICE_PRESET), categories)
         assertEquals(profiles.size, ordered.size)
     }
 

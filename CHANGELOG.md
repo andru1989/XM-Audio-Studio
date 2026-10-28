@@ -22,6 +22,8 @@
   aplica el EQ tras leer el estado real (bloqueado con Música de fondo o Cine).
 - Android: A/B ya no hace saltar la vista del ecualizador (avisos debajo de los botones; el aviso de
   «curva que aún no está en tu biblioteca» no reaparece al volver con A/B a un preset). Misma regla en macOS.
+- Perfiles incluidos (XM6): «Rap / Hip hop» y cuatro ajustes publicados por la comunidad, con crédito
+  (Loud and Wireless, Super* Review ×2, Headphone Corner). Quitada la nota repetida de los perfiles subjetivos.
 - CI (GitHub Actions), `.dmg`, APK de versión firmado con clave local, guía de instalación, problemas conocidos.
 - Prueba automática de escrituras con restauración: `tools/hardware/xm6_write_test.py`.
 

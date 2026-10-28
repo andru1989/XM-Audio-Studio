@@ -53,6 +53,19 @@ XM Audio Studio incorpora o se basa en el trabajo siguiente. Se conservan los av
 Nota: las tablas de mos9527 provienen de ingeniería inversa de la app oficial de Sony con fines de
 interoperabilidad. Este proyecto no distribuye binarios, imágenes, logotipos ni recursos de Sony.
 
+## Ajustes de EQ de la comunidad
+
+Cuatro perfiles incluidos del WH-1000XM6 reproducen valores de EQ publicados en abierto por sus
+autores; se usan con nombre descriptivo y crédito (`source` y notas de cada perfil). Investigación y
+evidencia: `docs/research/community-eq-presets.md`.
+
+| Perfil en la app | Autor y fuente |
+|---|---|
+| V brillante · Loud and Wireless | Aaron, Loud and Wireless — «Singapore Spring», https://www.youtube.com/watch?v=3UhCS97tlUA |
+| Claridad · Super* Review | Super* Review — https://www.youtube.com/watch?v=vXe5OzSrpp8 |
+| Neutro · Super* Review | Super* Review, comentario fijado del mismo vídeo |
+| Harman · Headphone Corner | Sword of Damocles, Headphone Corner (Kuulokenurkka) — https://kuulokenurkka.com/en/review-sony-wh-1000xm6/ |
+
 ## Imágenes
 
 Las fotos de producto de `shared/model-images/` (y sus copias en las apps) son **© Sony

@@ -33,7 +33,7 @@ Reglas (iguales en `Scenes.kt` y `Scenes.swift`):
 - Una escena vacía `{}` se rechaza, y también una escena dentro de un archivo de versión 1.
 - Un campo que el modelo del perfil no admite (nivel de soporte no usable) invalida el perfil:
   por ejemplo `listeningMode` en un WH-1000XM5. `deviceEq` sigue siendo obligatorio.
-- Los 14 perfiles incluidos (`builtin-profiles.json`, versión 1) no tienen escena.
+- Los 19 perfiles incluidos (`builtin-profiles.json`, versión 1) no tienen escena.
 
 ## Captura
 

@@ -2,7 +2,9 @@
 
 > Investigación del 2026-10-23. Valores listos para el dispositivo en
 > [`community-eq-shortlist.json`](community-eq-shortlist.json) (26 presets: XM6 8, XM5 8, XM4 6, XM3 4).
-> Nada de esto está en la app todavía: pendiente de elegir qué incluir.
+> En la app (perfiles incluidos del XM6, con crédito en `source` y en las notas): Singapore Spring como
+> «V brillante · Loud and Wireless», Super* Review vídeo («Claridad») y Neutral («Neutro»), y Headphone
+> Corner Harman. El resto sigue pendiente de elegir.
 
 ## Escala del XM6
 La app Sound Connect muestra el EQ del XM6 en **−6…+6, pasos enteros, 10 bandas (31 Hz–16 kHz)**, igual
