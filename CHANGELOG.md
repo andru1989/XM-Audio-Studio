@@ -20,6 +20,8 @@
 - Android: segmentos de igual altura; botones del ecualizador en filas en lugar de scroll horizontal.
 - Android: widget del ecualizador — perfil activo, ◀ / ▶ y lista de todos los perfiles; un toque
   aplica el EQ tras leer el estado real (bloqueado con Música de fondo o Cine).
+- Android: A/B ya no hace saltar la vista del ecualizador (avisos debajo de los botones; el aviso de
+  «curva que aún no está en tu biblioteca» no reaparece al volver con A/B a un preset). Misma regla en macOS.
 - CI (GitHub Actions), `.dmg`, APK de versión firmado con clave local, guía de instalación, problemas conocidos.
 - Prueba automática de escrituras con restauración: `tools/hardware/xm6_write_test.py`.
 

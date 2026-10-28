@@ -16,6 +16,7 @@ import io.github.andru1989.xmaudiostudio.core.model.AutomaticPowerOffMode
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
 import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerPreset
+import io.github.andru1989.xmaudiostudio.core.model.EqualizerState
 import io.github.andru1989.xmaudiostudio.core.model.ListeningMode
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
 import io.github.andru1989.xmaudiostudio.core.presets.AutoEqImporter
@@ -71,8 +72,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val history = ArrayDeque<DeviceEqSetting>()
     private var compareWith: DeviceEqSetting? = null
     private var dragOrigin: DeviceEqSetting? = null
-    /** The last band curve this app wrote; a reported curve equal to it is our own edit. */
-    private var appWrittenBands: List<Int>? = null
+    /**
+     * The last EQ this app wrote, a curve or a preset code; a reported EQ equal to it is our own
+     * change. Presets count too: A/B back to a Sound Connect setting must not re-offer its import.
+     */
+    private var appWritten: DeviceEqSetting? = null
     private var snapshotJob: Job? = null
     private var surfaceVisible = false
 
@@ -217,7 +221,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun send(setting: DeviceEqSetting) {
         setting.presetCode?.let { session.execute(DeviceCommand.SetEqualizerPreset(it)) }
-        setting.steps?.let { appWrittenBands = it }
+        appWritten = setting
         setting.steps?.let { session.execute(DeviceCommand.SetEqualizerBands(it, clearBass = setting.clearBass ?: neutralClearBass())) }
     }
 
@@ -225,7 +229,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun applyProfile(profile: EqProfile) {
         remember(currentSetting())
         settings.lastAppliedProfileId = profile.id
-        profile.deviceEq.steps?.let { appWrittenBands = it }
+        appWritten = profile.deviceEq
         val scene = profile.scene
         val caps = _ui.value.snapshot.capabilities
         if (scene == null || caps == null) {
@@ -256,7 +260,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             ?: List(_ui.value.snapshot.capabilities?.equalizer?.bandCount ?: return) { 0 }
         val updated = bands.toMutableList().also { it[index] = step }
         settings.lastAppliedProfileId = null
-        appWrittenBands = updated
+        appWritten = DeviceEqSetting(steps = updated)
         // Clear Bass (5-band models) is left as the headphones report it.
         session.execute(DeviceCommand.SetEqualizerBands(updated))
     }
@@ -275,7 +279,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
      * Whether [bands] (as reported) should be offered for import: only curves that came from
      * the headphones, never while a drag is in progress or for the curve this app just wrote.
      */
-    fun isCurveFromHeadphones(bands: List<Int>): Boolean = dragOrigin == null && bands != appWrittenBands
+    fun isCurveFromHeadphones(eq: EqualizerState): Boolean {
+        if (dragOrigin != null) return false
+        val written = appWritten ?: return true
+        return if (eq.presetCode == EqualizerPreset.CUSTOM.code) eq.bands != written.steps else eq.presetCode != written.presetCode
+    }
 
     fun finishBandEdit() {
         remember(dragOrigin)
@@ -286,7 +294,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val count = _ui.value.snapshot.capabilities?.equalizer?.bandCount ?: return
         remember(currentSetting())
         settings.lastAppliedProfileId = "builtin.flat"
-        appWrittenBands = List(count) { 0 }
+        appWritten = DeviceEqSetting(steps = List(count) { 0 })
         session.execute(DeviceCommand.SetEqualizerBands(List(count) { 0 }, clearBass = neutralClearBass()))
     }
 

@@ -126,7 +126,7 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
 
         val importable = eq != null && eq.bands.size == spec.bandCount &&
             (eq.presetCode == EqualizerPreset.CUSTOM.code || vm.isUserPresetFromOfficialApp(snap))
-        val showImportBanner = snap.stateIsLive && importable && state.activeProfile == null && vm.isCurveFromHeadphones(eq!!.bands)
+        val showImportBanner = snap.stateIsLive && importable && state.activeProfile == null && vm.isCurveFromHeadphones(eq!!)
         if (showImportBanner) {
             val suggested = stringResource(R.string.device_curve_name)
             SectionCard {
@@ -171,15 +171,6 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
                 }
             }
             if (clearBassRange != null) Text(stringResource(R.string.clear_bass_note), color = c.muted, style = MaterialTheme.typography.labelSmall)
-            when {
-                listeningBlocksEq -> Text(stringResource(R.string.eq_disabled_listening), color = c.warning, style = MaterialTheme.typography.bodySmall)
-                eq != null && eq.presetCode != EqualizerPreset.CUSTOM.code -> {
-                    val name = spec.presets.firstOrNull { it.code == eq.presetCode }?.name ?: "0x%02x".format(eq.presetCode)
-                    Text(stringResource(R.string.eq_preset_active, name), color = c.muted, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            val maxBoost = (steps.maxOrNull() ?: 0) * spec.stepDb
-            if (maxBoost >= 4) Text(stringResource(R.string.eq_clip_risk, maxBoost.toInt()), color = c.warning, style = MaterialTheme.typography.bodySmall)
 
             // Wraps onto further lines instead of scrolling sideways when the buttons don't fit.
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -192,6 +183,17 @@ fun EqualizerScreen(state: UiState, vm: MainViewModel, modifier: Modifier = Modi
                 }
                 FilledTonalButton(onClick = { nameDialog = NameDialog.SaveAs }, enabled = eq != null) { Text(stringResource(R.string.save_as)) }
             }
+            // Below the buttons on purpose: these lines come and go with the curve (A/B, undo,
+            // presets); above the buttons they would move them under the finger.
+            when {
+                listeningBlocksEq -> Text(stringResource(R.string.eq_disabled_listening), color = c.warning, style = MaterialTheme.typography.bodySmall)
+                eq != null && eq.presetCode != EqualizerPreset.CUSTOM.code -> {
+                    val name = spec.presets.firstOrNull { it.code == eq.presetCode }?.name ?: "0x%02x".format(eq.presetCode)
+                    Text(stringResource(R.string.eq_preset_active, name), color = c.muted, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            val maxBoost = (steps.maxOrNull() ?: 0) * spec.stepDb
+            if (maxBoost >= 4) Text(stringResource(R.string.eq_clip_risk, maxBoost.toInt()), color = c.warning, style = MaterialTheme.typography.bodySmall)
             // Shown in the banner above while the headphones' curve is not in the library.
             if (!showImportBanner) SaveSceneButton(state, vm)
         }
