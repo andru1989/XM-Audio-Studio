@@ -32,7 +32,11 @@
   ≤ 3 s con la app visible y al instante cuando este Mac/teléfono empieza o deja de sonar; aviso cuando
   este dispositivo suena pero los botones controlan otro, y cuando la música se detiene porque los
   audífonos pasaron a otro dispositivo («Volver y reanudar»). Opción «Seguir la reproducción
-  automáticamente» (apagada por defecto). En Android la lista multipunto pasa de Ajustes al inicio.
+  automáticamente». En Android la lista multipunto pasa de Ajustes al inicio.
+- **Cambio automático entre dispositivos** (ADR-0011): el dispositivo que empieza a sonar se queda con el
+  audio de los audífonos, aunque la app esté cerrada (Mac: barra de menús, ignora sonidos del sistema;
+  Android: servicio con notificación). Un reclamo por inicio, sin escribir nada si ya lo tenía. Activado
+  por defecto.
 
 ## 0.1.0 — 2026-10-21 (primera entrega, sin validación en hardware)
 

@@ -44,7 +44,8 @@ Actualizado: 2026-10-31. Niveles (encargo §15):
 | "Este dispositivo" en la lista (macOS por dirección BT; Android por nombre) | — | SIM | SIM |
 | Audio local: CoreAudio (macOS) / AudioPlaybackCallback (Android) | — | PEND (sin probar con audio real) | PEND (emulador sin A2DP) |
 | Aviso "los controles van a otro dispositivo" y "la música se detuvo al cambiar" + recuperar | — | SIM | SIM |
-| Seguir la reproducción automáticamente (opcional, apagado por defecto) | — | SIM | SIM (solo con la app visible) |
+| Gana el que empieza a sonar: reclamo automático del audio (ADR-0011, activado por defecto) | — | SIM (barra de menús, CoreAudio por proceso) | SIM (servicio en primer plano) |
+| Seguir la reproducción con la app abierta (controles al que suena si el otro está parado; recuperar música cortada) | — | SIM | SIM |
 | EQ presets Sony (00, 30–33) | HW‑up | SIM | SIM |
 | EQ 10 bandas −6…+6 | HW‑up | SIM | SIM |
 | Capacidad EQ `50 04 01` (bandas/pasos) | REF | SIM (solo lectura) | SIM (solo lectura) |

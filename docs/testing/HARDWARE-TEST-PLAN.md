@@ -30,6 +30,7 @@ Nada de este procedimiento escribe firmware, restablece los audífonos ni toca e
 | 11 | Mac ↔ Android: cambiar el EQ en uno, abrir el otro | El segundo muestra el estado real, no uno obsoleto |
 | 12 | Cambiar fuente de reproducción (multipunto) | La reproducción pasa al otro dispositivo |
 | 12b | Mac + teléfono conectados, registro de protocolo activo. a) Música en el teléfono: la tarjeta «Dónde suena» del Mac lo muestra en ≤ 3 s con estado y pista. b) ⏯ en el Mac pausa el teléfono. c) «Reproducir aquí» en el Mac: cambia, sin parpadeo, y llega `3d 01`. d) Con el teléfono sonando, salir de Deezer: si la música se detiene, aparece «La música en … se detuvo…» y «Volver y reanudar» la recupera. e) Con «Seguir la reproducción» activo, repetir d) | a–c funcionan; d/e quedan registrados en `protocol.log` aunque fallen |
+| 12c | «Seguir la reproducción» activo (por defecto), app del Mac solo en la barra de menús y app de Android cerrada. Música en el Mac; luego reproducir en el teléfono; luego volver a reproducir en el Mac. Probar también una notificación del Mac mientras suena el teléfono | Cada vez se oye el último que empezó (≤ 3–4 s); la notificación no quita el audio al teléfono |
 | 13 | Modo BGM → mirar el EQ | La app avisa que el firmware desactiva el EQ |
 | 14 | Apagar los audífonos con la app abierta | Estado "cedido/desconectado" sin bucle de reconexión |
 
