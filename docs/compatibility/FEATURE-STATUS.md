@@ -45,6 +45,7 @@ Actualizado: 2026-10-31. Niveles (encargo §15):
 | Audio local: CoreAudio (macOS) / AudioPlaybackCallback (Android) | — | PEND (sin probar con audio real) | PEND (emulador sin A2DP) |
 | Aviso "los controles van a otro dispositivo" y "la música se detuvo al cambiar" + recuperar | — | SIM | SIM |
 | Gana el que empieza a sonar: reclamo automático del audio (ADR-0011, activado por defecto) | — | SIM (barra de menús, CoreAudio por proceso) | SIM (servicio en primer plano) |
+| Pausar el dispositivo que pierde el audio (pausa por AVRCP antes del cambio; reanuda si el cambio se rechaza) | REF | SIM | SIM |
 | Seguir la reproducción con la app abierta (controles al que suena si el otro está parado; recuperar música cortada) | — | SIM | SIM |
 | EQ presets Sony (00, 30–33) | HW‑up | SIM | SIM |
 | EQ 10 bandas −6…+6 | HW‑up | SIM | SIM |
