@@ -29,6 +29,7 @@ Nada de este procedimiento escribe firmware, restablece los audífonos ni toca e
 | 10 | Cerrar Sound Connect, tocar un control en el Mac | Recupera el control y **lee el estado antes de escribir** |
 | 11 | Mac ↔ Android: cambiar el EQ en uno, abrir el otro | El segundo muestra el estado real, no uno obsoleto |
 | 12 | Cambiar fuente de reproducción (multipunto) | La reproducción pasa al otro dispositivo |
+| 12b | Mac + teléfono conectados, registro de protocolo activo. a) Música en el teléfono: la tarjeta «Dónde suena» del Mac lo muestra en ≤ 3 s con estado y pista. b) ⏯ en el Mac pausa el teléfono. c) «Reproducir aquí» en el Mac: cambia, sin parpadeo, y llega `3d 01`. d) Con el teléfono sonando, salir de Deezer: si la música se detiene, aparece «La música en … se detuvo…» y «Volver y reanudar» la recupera. e) Con «Seguir la reproducción» activo, repetir d) | a–c funcionan; d/e quedan registrados en `protocol.log` aunque fallen |
 | 13 | Modo BGM → mirar el EQ | La app avisa que el firmware desactiva el EQ |
 | 14 | Apagar los audífonos con la app abierta | Estado "cedido/desconectado" sin bucle de reconexión |
 
@@ -37,6 +38,8 @@ Nada de este procedimiento escribe firmware, restablece los audífonos ni toca e
 - Tipo de batería real (`23 00` o `23 08`).
 - Significado de los bytes [7] y [8] de `67 19` (auto‑ambiente, sensibilidad).
 - dB por paso del EQ: comparar con una medición (fuera de alcance del software).
+- `a2 01` / `a6 01` en el XM6: ¿el estado es el del dispositivo con el derecho de reproducción? ¿notifica `a5 01` al pausar desde el teléfono?
+- ¿El XM6 notifica `39 02` cuando la fuente cambia sola (sin `3c 01`)? ¿Responde `3d 01` al cambiar desde la app?
 
 En macOS también existe la herramienta de sondeo: `open "XM Audio Studio.app" --args --probe "50 04 01" "5a 04"`
 (solo para comandos de **lectura**; registra en `probe.log`).

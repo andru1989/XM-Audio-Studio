@@ -11,3 +11,4 @@
 | [0007](ADR-0007-toolchains.md) | Versiones de toolchain y mínimos de plataforma | Aceptada |
 | [0008](ADR-0008-dsp-engine-macos.md) | Motor DSP macOS basado en ParaEQ (process taps) | Propuesta; precisada por 0009 |
 | [0009](ADR-0009-dsp-engine-implementation.md) | Motor DSP macOS implementado: tap por dispositivo, biquads en doble precisión | Aceptada (beta) |
+| [0010](ADR-0010-playback-source-tracking.md) | Dónde suena: estado de reproducción, refresco rápido, señal local, recuperación y seguimiento opcional | Aceptada (simulación) |

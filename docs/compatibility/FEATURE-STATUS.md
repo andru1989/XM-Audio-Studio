@@ -1,6 +1,6 @@
 # Estado de funciones
 
-Actualizado: 2026-10-21. Niveles (encargo §15):
+Actualizado: 2026-10-31. Niveles (encargo §15):
 
 | Nivel | Significado |
 |---|---|
@@ -38,7 +38,13 @@ Actualizado: 2026-10-21. Niveles (encargo §15):
 | Lista multipunto | HW‑up | **HW** |
 | Prioridad de conexión (calidad de sonido / conexión estable; baja latencia solo lectura) | HW‑up (Anneo22, fw 3.1.5) | SIM | SIM |
 | Códec actual y tipo de conexión (clásico / LE Audio) | REF | SIM | SIM | SIM |
-| Cambiar fuente de reproducción | PEND | SIM | SIM |
+| Cambiar fuente de reproducción (confirmación `3d 01`, sin parpadeo, motivo del rechazo) | PEND | SIM | SIM |
+| Dónde suena: estado de reproducción y pista (`a2/a6 01`), refresco cada 3 s con la app visible | REF (CAP en WF-XM5/WF-LC900) | SIM | SIM |
+| Reproducir / pausar / saltar a través de los audífonos (`a4 01`) | REF | SIM | SIM |
+| "Este dispositivo" en la lista (macOS por dirección BT; Android por nombre) | — | SIM | SIM |
+| Audio local: CoreAudio (macOS) / AudioPlaybackCallback (Android) | — | PEND (sin probar con audio real) | PEND (emulador sin A2DP) |
+| Aviso "los controles van a otro dispositivo" y "la música se detuvo al cambiar" + recuperar | — | SIM | SIM |
+| Seguir la reproducción automáticamente (opcional, apagado por defecto) | — | SIM | SIM (solo con la app visible) |
 | EQ presets Sony (00, 30–33) | HW‑up | SIM | SIM |
 | EQ 10 bandas −6…+6 | HW‑up | SIM | SIM |
 | Capacidad EQ `50 04 01` (bandas/pasos) | REF | SIM (solo lectura) | SIM (solo lectura) |

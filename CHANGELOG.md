@@ -26,6 +26,13 @@
   (Loud and Wireless, Super* Review ×2, Headphone Corner). Quitada la nota repetida de los perfiles subjetivos.
 - CI (GitHub Actions), `.dmg`, APK de versión firmado con clave local, guía de instalación, problemas conocidos.
 - Prueba automática de escrituras con restauración: `tools/hardware/xm6_write_test.py`.
+- **Dónde suena (multipunto), macOS y Android** (ADR-0010): tarjeta con el dispositivo que tiene los
+  controles de los audífonos, estado (reproduciendo / pausa / llamada), pista actual y ⏮ ⏯ ⏭ a través de
+  los audífonos; «Reproducir aquí» con confirmación de los audífonos y motivo si lo rechazan; detección en
+  ≤ 3 s con la app visible y al instante cuando este Mac/teléfono empieza o deja de sonar; aviso cuando
+  este dispositivo suena pero los botones controlan otro, y cuando la música se detiene porque los
+  audífonos pasaron a otro dispositivo («Volver y reanudar»). Opción «Seguir la reproducción
+  automáticamente» (apagada por defecto). En Android la lista multipunto pasa de Ajustes al inicio.
 
 ## 0.1.0 — 2026-10-21 (primera entrega, sin validación en hardware)
 

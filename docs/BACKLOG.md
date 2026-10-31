@@ -1,11 +1,15 @@
 # Backlog priorizado (por dependencias)
 
-Actualizado: 2026-10-21. Estado detallado en `compatibility/FEATURE-STATUS.md`.
+Actualizado: 2026-10-31. Estado detallado en `compatibility/FEATURE-STATUS.md`.
 
 ## P0 — Validación con hardware (bloquea todo lo demás)
 1. Ejecutar `testing/HARDWARE-TEST-PLAN.md` con WH-1000XM6 reales en Mac y Android; subir niveles a HW.
 2. Confirmar con lecturas: `50 04 01` (bandas/pasos), tipo de batería, bytes [7]/[8] de `67 19`.
 3. Corregir lo que falle en el transporte Android (`RfcommControlChannel`) con logs reales.
+
+4b. Probar «Dónde suena» con Mac + teléfono reales (`testing/HARDWARE-TEST-PLAN.md`, caso 12b): confirmar
+   `a3/a7 01` y `3d 01` en el XM6, si el estado es el del dueño del derecho, y si el XM6 notifica `39 02`
+   al cambiar solo de fuente. Activar el registro de protocolo y guardar la captura.
 
 ## P1 — Paridad y robustez
 4. ~~macOS: leer estado real antes de escribir~~ — hecho (0.2.0).
