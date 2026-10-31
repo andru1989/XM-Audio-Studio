@@ -153,6 +153,12 @@ public final class HeadphonesController: ObservableObject {
         pairedDevices = pairedDevicesProvider()
     }
 
+    /// The paired WH-1000XM6 `autoConnect()` would pick, without connecting.
+    public func pairedXM6() -> PairedDeviceInfo? {
+        refreshPairedDevices()
+        return pairedDevices.first { $0.name.localizedCaseInsensitiveContains("WH-1000XM6") }
+    }
+
     /// Attempts to find and connect to a paired WH-1000XM6. If none is found by name,
     /// call `refreshPairedDevices()` and let the user pick manually via `connect(toAddress:)`.
     public func autoConnect() {
@@ -443,6 +449,23 @@ public final class HeadphonesController: ObservableObject {
             // The headphones answer `3d 01` and push a new list; read it anyway as a fallback.
             return [(.command2, payload), (.command2, SonyCommands.buildDeviceListGet())]
         }
+    }
+
+    /// This Mac just started playing: give it the audio (the newest device to start wins).
+    /// Connects when needed, whatever the release setting, and is resolved against the list read
+    /// after connecting: nothing is written when this Mac already has the playback right, is not in
+    /// the list or not connected, a switch is pending, or a call is in progress.
+    public func claimPlaybackHere() {
+        enqueueCommand(key: "source") { [unowned self] in
+            guard let here = PlaybackSourceAdvisor.claimTarget(
+                self.playbackSource, localAddress: self.localAddressProvider(), localName: Host.current().localizedName),
+                  let payload = SonyCommands.buildSourceSwitchSet(macAddress: here.macAddress) else { return [] }
+            self.playbackSource.beginSwitch(to: here.macAddress)
+            self.resumeOnSwitchTo = nil
+            self.expireSwitchLater(here.macAddress)
+            return [(.command2, payload), (.command2, SonyCommands.buildDeviceListGet())]
+        }
+        if !releaseWhenIdle { connectIfNeeded() }
     }
 
     /// Play/pause/skip on the device holding the playback right, relayed by the headphones.

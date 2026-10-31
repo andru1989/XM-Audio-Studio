@@ -12,6 +12,7 @@ import io.github.andru1989.xmaudiostudio.core.session.SimulatedXm6Channel
 import io.github.andru1989.xmaudiostudio.data.AppSettings
 import io.github.andru1989.xmaudiostudio.data.ProtocolLog
 import io.github.andru1989.xmaudiostudio.platform.Availability
+import io.github.andru1989.xmaudiostudio.platform.AutoSwitchClock
 import io.github.andru1989.xmaudiostudio.platform.EqProfileControl
 import io.github.andru1989.xmaudiostudio.platform.EqProfileLogic
 import io.github.andru1989.xmaudiostudio.platform.LastKnownStore
@@ -37,8 +38,9 @@ class XmAudioStudioApp : Application() {
 /**
  * Process-wide objects. The session lives on the main thread for the lifetime of the
  * process; it holds the control channel only while a screen is visible or a command is in
- * flight (see ADR-0003), so no foreground service is needed. The Quick Settings tile and the
- * home-screen widgets use the same session (docs/android/BACKGROUND.md).
+ * flight (see ADR-0003). The Quick Settings tile, the home-screen widgets and, while
+ * "Seguir la reproducción" is on, FollowPlaybackService use the same session
+ * (docs/android/BACKGROUND.md).
  */
 class AppContainer(private val app: Application) {
     val settings = AppSettings(app)
@@ -58,6 +60,9 @@ class AppContainer(private val app: Application) {
         private set
 
     val lastKnown = LastKnownStore(app)
+
+    /** Last automatic playback-source action, shared by FollowPlaybackService and the open app. */
+    val autoSwitch = AutoSwitchClock()
 
     /** Pushes session changes to the widget and the tile; persists the last known state. */
     val platform = PlatformSync(

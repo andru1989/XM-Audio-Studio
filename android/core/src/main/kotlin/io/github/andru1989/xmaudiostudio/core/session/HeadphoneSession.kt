@@ -349,8 +349,9 @@ class HeadphoneSession(
                     if (command === resolvedSwitch) {
                         resolvedSwitch = null
                     } else {
+                        val before = confirmed.switchingTo
                         confirmed = confirmed.applyOptimistic(command)
-                        if (command is DeviceCommand.SwitchPlayback) expireSwitchLater(command.macAddress)
+                        confirmed.switchingTo?.takeIf { it != before }?.let(::expireSwitchLater)
                     }
                 }
                 awaiting = null
@@ -394,7 +395,7 @@ class HeadphoneSession(
             event is MdrEvent.SourceSwitched -> {
                 sourceSwitchJob?.cancel()
                 resolvedSwitch = (listOfNotNull(awaiting?.command) + outgoing.mapNotNull { it.command })
-                    .lastOrNull { it is DeviceCommand.SwitchPlayback && it.macAddress == event.macAddress }
+                    .lastOrNull { it is DeviceCommand.SwitchPlayback && it.macAddress == event.macAddress || it is DeviceCommand.ClaimPlayback }
                 val success = event.result == SourceSwitchResult.SUCCESS
                 if (resumeOnSwitchTo == event.macAddress) {
                     resumeOnSwitchTo = null
@@ -542,7 +543,7 @@ class HeadphoneSession(
             is DeviceCommand.SetSpeakToChat, is DeviceCommand.SetSpeakToChatConfig -> Feature.SPEAK_TO_CHAT
             is DeviceCommand.SetAutomaticPowerOff -> Feature.AUTO_POWER_OFF
             is DeviceCommand.SetPauseWhenTakenOff -> Feature.WEAR_DETECTION
-            is DeviceCommand.SwitchPlayback -> Feature.PLAYBACK_SOURCE_SWITCH
+            is DeviceCommand.SwitchPlayback, is DeviceCommand.ClaimPlayback -> Feature.PLAYBACK_SOURCE_SWITCH
             is DeviceCommand.ControlPlayback -> Feature.PLAYBACK_CONTROL
             is DeviceCommand.SetConnectionPriority -> Feature.CONNECTION_PRIORITY
             is DeviceCommand.Raw -> null

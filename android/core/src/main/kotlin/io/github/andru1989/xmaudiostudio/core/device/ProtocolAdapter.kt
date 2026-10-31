@@ -116,6 +116,9 @@ object Xm6Adapter : ProtocolAdapter {
             val payload = MdrCommands.sourceSwitchSet(command.macAddress)
             if (payload == null) emptyList() else listOf(c2(payload), c2(MdrCommands.deviceListGet()))
         }
+        is DeviceCommand.ClaimPlayback ->
+            PlaybackSourceAdvisor.claimTarget(state, command.localAddress, command.localName)
+                ?.let { encode(DeviceCommand.SwitchPlayback(it.macAddress), state) }.orEmpty()
         // The headphones notify the new state; the read is a fallback for firmware that does not.
         is DeviceCommand.ControlPlayback ->
             listOf(c1(MdrCommands.playbackControlSet(command.action)), c1(MdrCommands.playbackStatusGet()))

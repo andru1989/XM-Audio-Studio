@@ -72,6 +72,10 @@ Las fotos de producto de `shared/model-images/` (y sus copias en las apps) son *
 Corporation**, tomadas de sony.com. **No** están bajo la licencia del proyecto; el propietario decidió
 publicarlas asumiendo el riesgo. Detalle: `shared/model-images/SOURCES.md`.
 
+El icono de la notificación «Seguir la reproducción» de Android
+(`android/app/src/main/res/drawable/ic_follow_playback.xml`) es el glifo «headphones» de Material Icons
+(Google, Apache-2.0).
+
 ## Dependencias de compilación (Android)
 AndroidX (Apache-2.0), Jetpack Compose (Apache-2.0), Kotlin stdlib/coroutines/serialization (Apache-2.0).
 macOS no tiene dependencias externas (solo frameworks del sistema).

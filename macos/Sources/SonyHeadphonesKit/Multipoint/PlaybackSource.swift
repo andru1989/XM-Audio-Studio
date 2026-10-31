@@ -157,6 +157,26 @@ public enum PlaybackSourceAdvisor {
     /// At most one automatic switch in this window, so two devices can never ping-pong.
     public static let minInterval: TimeInterval = 15
 
+    /// The device a claim moves the audio to, judged on fresh state: this device, when it is
+    /// connected, does not already hold the playback right, no switch is pending and no call is in
+    /// progress. Nil means "write nothing". Same as Kotlin's `claimTarget`.
+    public static func claimTarget(_ state: PlaybackSourceState, localAddress: String?, localName: String?) -> MultipointDevice? {
+        guard let here = Multipoint.thisDevice(state.reportedDevices ?? state.devices, localAddress: localAddress, localName: localName),
+              here.isConnected, !here.isPlayback, state.switchingTo == nil, state.playbackStatus?.isCall != true else { return nil }
+        return here
+    }
+
+    /// Whether this device should claim the audio now: following is on, it has been playing for
+    /// `settle` (a notification sound never counts), this playback start was not claimed yet, and
+    /// the last automatic action was at least `minInterval` ago. One claim per start, so two devices
+    /// that both keep playing never ping-pong: the newest start wins.
+    public static func shouldClaim(followPlayback: Bool, localPlayingSince: Date?, now: Date,
+                                   claimedStart: Date?, lastAutoSwitch: Date?) -> Bool {
+        guard followPlayback, let since = localPlayingSince, now.timeIntervalSince(since) >= settle,
+              claimedStart != since else { return false }
+        return lastAutoSwitch.map { now.timeIntervalSince($0) >= minInterval } ?? true
+    }
+
     /// Never suggests taking the controls from a device that is playing, during a call, or while a
     /// switch is already pending.
     public static func advise(

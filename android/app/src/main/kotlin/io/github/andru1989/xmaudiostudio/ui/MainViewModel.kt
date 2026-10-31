@@ -1,6 +1,7 @@
 package io.github.andru1989.xmaudiostudio.ui
 
 import android.app.Application
+import android.content.Intent
 import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -39,6 +40,8 @@ import io.github.andru1989.xmaudiostudio.core.session.ConnectionPhase
 import io.github.andru1989.xmaudiostudio.core.session.DeviceTarget
 import io.github.andru1989.xmaudiostudio.core.session.HeadphoneSession
 import io.github.andru1989.xmaudiostudio.core.session.SessionSnapshot
+import io.github.andru1989.xmaudiostudio.platform.FollowPlayback
+import io.github.andru1989.xmaudiostudio.platform.FollowPlaybackService
 import io.github.andru1989.xmaudiostudio.platform.LocalPlayback
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -99,8 +102,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var localName: String? = null
     private var interruption: InterruptedPlayback? = null
     private var interruptedSinceMs: Long? = null
-    /** Last automatic switch of either kind (follow or recover), so they can never ping-pong. */
-    private var lastAutoSwitchMs: Long? = null
+    /** Last automatic action of any kind (here, or a claim by FollowPlaybackService), so they never ping-pong. */
+    private val autoSwitch get() = container.autoSwitch
     private var adviceTicker: Job? = null
 
     init {
@@ -115,6 +118,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         restoreTarget()
         refreshProfiles()
         startLocalPlayback()
+        FollowPlayback.sync(app)
     }
 
     private fun observeSession() {
@@ -164,7 +168,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             localPlayingSinceMs = localPlayback.playingSince.value,
             nowMs = now,
             followPlayback = settings.followPlayback,
-            lastAutoSwitchMs = lastAutoSwitchMs,
+            lastAutoSwitchMs = autoSwitch.lastMs,
             interruptedSinceMs = interruptedSinceMs,
         )
         if (_ui.value.sourceAdvice != advice) _ui.update { it.copy(sourceAdvice = advice) }
@@ -174,11 +178,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         val recoverTo = advice.interrupted
         when {
             canAct && advice.switchHereNow && thisDevice != null -> {
-                lastAutoSwitchMs = now
+                autoSwitch.lastMs = now
                 session.execute(DeviceCommand.SwitchPlayback(thisDevice.macAddress))
             }
             canAct && advice.recoverNow && recoverTo != null -> {
-                lastAutoSwitchMs = now
+                autoSwitch.lastMs = now
                 session.execute(DeviceCommand.SwitchPlayback(recoverTo.fromMac, resumePlayback = true))
             }
         }
@@ -200,7 +204,17 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setFollowPlayback(enabled: Boolean) {
         settings.followPlayback = enabled
         _ui.update { it.copy(followPlayback = enabled) }
+        FollowPlayback.sync(getApplication())
         evaluatePlaybackSource()
+    }
+
+    /** API 33+: ask once for the notification that keeps following alive with the app closed. */
+    fun shouldAskNotificationPermission(): Boolean =
+        settings.followPlayback && !settings.askedNotificationPermission
+
+    fun notificationPermissionAsked() {
+        settings.askedNotificationPermission = true
+        FollowPlayback.sync(getApplication())
     }
 
     fun switchPlayback(mac: String) = session.execute(DeviceCommand.SwitchPlayback(mac))
@@ -224,6 +238,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         _ui.update { it.copy(devices = PairedDevices.list(getApplication())) }
         // The Bluetooth permission may have just been granted.
         if (!settings.demoMode) localName = LocalPlayback.bluetoothName(getApplication())
+        FollowPlayback.sync(getApplication())
     }
 
     /** Same rule as the tile and the widget, which may have created the process (AppContainer). */
@@ -239,6 +254,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         compareWith = null
         session.selectTarget(DeviceTarget(device.address, device.name, model))
         refreshProfiles()
+        FollowPlayback.sync(getApplication())
     }
 
     /** A rebuilt session starts with no surfaces; re-announce this screen so it acquires as usual. */
@@ -257,6 +273,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         rebuildSession()
         refreshProfiles()
         startLocalPlayback()
+        // Restart the service so it listens with the new mode's rules (Bluetooth output or not).
+        getApplication<Application>().stopService(Intent(getApplication(), FollowPlaybackService::class.java))
+        FollowPlayback.sync(getApplication())
         _ui.update { it.copy(demoMode = enabled) }
     }
 

@@ -146,5 +146,9 @@
     <string name="playback_pause">Pause</string>
     <string name="playback_next">Next</string>
     <string name="follow_playback">Follow playback automatically</string>
-    <string name="follow_playback_detail">Moves the controls to the device that is playing and brings the music back if the headphones cut it off when switching devices. Only while the app is open.</string>
+    <string name="follow_playback_detail">The device that starts playing gets the headphones\' audio, even with the app closed (shows a notification). It also brings the music back if the headphones cut it off when switching devices.</string>
+    <string name="follow_channel_name">Follow playback</string>
+    <string name="follow_channel_description">Ongoing notice while the app follows where the music is playing.</string>
+    <string name="follow_notification_title">Following playback</string>
+    <string name="follow_notification_text">If this phone starts playing, the headphones switch to it.</string>
 </resources>

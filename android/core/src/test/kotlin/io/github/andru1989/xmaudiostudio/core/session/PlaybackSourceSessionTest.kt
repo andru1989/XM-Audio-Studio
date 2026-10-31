@@ -173,4 +173,40 @@ class PlaybackSourceSessionTest {
         assertEquals(mac, r.state.interruptedPlayback?.fromMac)
         assertEquals(pixel, r.state.interruptedPlayback?.toMac)
     }
+
+    @Test
+    fun claimWithTheChannelReleasedConnectsReadsAndTakesTheAudio() = runTest {
+        val r = rig()
+        r.session.selectTarget(xm6)
+        // The phone ("Pixel") starts playing while the Mac holds the playback right.
+        r.session.execute(DeviceCommand.ClaimPlayback(localName = "Pixel"))
+        settle()
+        assertEquals(1, r.device.playbackIndex)
+        assertEquals(pixel, r.state.playbackDevice?.macAddress)
+        val payloads = r.device.received.filter { it.type != MessageType.ACK }.map { it.payload }
+        val claim = payloads.indexOfFirst { it.u(0) == 0x3c }
+        val listRead = payloads.indexOfFirst { it.u(0) == 0x36 }
+        assertTrue("the list is read before the claim is encoded", listRead in 0 until claim)
+    }
+
+    @Test
+    fun claimByTheDeviceThatAlreadyHasTheAudioWritesNothing() = runTest {
+        val r = rig()
+        r.session.selectTarget(xm6)
+        r.session.execute(DeviceCommand.ClaimPlayback(localName = "MacBook Pro"))
+        settle()
+        assertEquals(1, r.device.openCount)
+        assertTrue(r.device.received.none { it.payload.isNotEmpty() && it.payload.u(0) == 0x3c })
+        assertNull(r.state.switchingTo)
+    }
+
+    @Test
+    fun unknownLocalNameWritesNothing() = runTest {
+        val r = rig()
+        r.session.selectTarget(xm6)
+        r.session.execute(DeviceCommand.ClaimPlayback(localName = "Some other phone"))
+        settle()
+        assertTrue(r.device.received.none { it.payload.isNotEmpty() && it.payload.u(0) == 0x3c })
+        assertEquals(mac, r.state.playbackDevice?.macAddress)
+    }
 }

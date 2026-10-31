@@ -60,8 +60,9 @@ final class AppSettings: ObservableObject {
         }
     }
 
-    /// Move the headphones' controls to where the audio is, and give back music the headphones
-    /// cut off when they switched devices. Off by default: it writes without a click.
+    /// The device that starts playing takes the audio (claimed when this Mac starts), controls
+    /// follow where the audio is, and music the headphones cut off is given back. On by default:
+    /// the owner asked for automatic switching (ADR-0011).
     @Published var followPlayback: Bool {
         didSet { UserDefaults.standard.set(followPlayback, forKey: Self.followPlaybackKey) }
     }
@@ -106,7 +107,7 @@ final class AppSettings: ObservableObject {
         releaseWhenIdle = UserDefaults.standard.object(forKey: Self.releaseWhenIdleKey) as? Bool ?? true
         menuBarOnly = UserDefaults.standard.bool(forKey: Self.menuBarOnlyKey)
         demoOnNextLaunch = UserDefaults.standard.bool(forKey: Self.demoModeKey)
-        followPlayback = UserDefaults.standard.bool(forKey: Self.followPlaybackKey)
+        followPlayback = UserDefaults.standard.object(forKey: Self.followPlaybackKey) as? Bool ?? true
         controller.releaseWhenIdle = releaseWhenIdle
         terminationObserver = NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)
             .sink { [weak controller] _ in controller?.disconnect() }

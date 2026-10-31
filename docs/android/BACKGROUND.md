@@ -4,14 +4,37 @@ Etapa 6. Código: `android/app/src/main/kotlin/.../platform/`. Política del can
 [ADR-0003](../decisions/ADR-0003-on-demand-control-channel.md) y
 [SESSION-LIFECYCLE.md](../bluetooth/SESSION-LIFECYCLE.md).
 
-## Sin servicio en primer plano
+## Un único servicio en primer plano: «Seguir la reproducción»
 
 El mosaico (`NoiseControlTileService`), el widget de control de ruido (`NoiseWidgetProvider`,
 botones en `NoiseControlReceiver`) y el widget del ecualizador (`EqWidgetProvider`, toques en
 `EqProfileReceiver`; ambos receptores no exportados) usan **la misma `HeadphoneSession` del proceso**
-(`XmAudioStudioApp.container.session`). No hay servicio en primer plano ni sondeo periódico
-(`updatePeriodMillis = 0`). Si el proceso arranca por el mosaico o el widget, `AppContainer`
-selecciona los audífonos guardados (o el XM6 simulado en modo demostración) sin abrir el canal.
+(`XmAudioStudioApp.container.session`). No hay sondeo periódico (`updatePeriodMillis = 0`). Si el
+proceso arranca por el mosaico o el widget, `AppContainer` selecciona los audífonos guardados (o el
+XM6 simulado en modo demostración) sin abrir el canal.
+
+La excepción es `FollowPlaybackService` ([ADR-0011](../decisions/ADR-0011-newest-playback-wins.md)),
+un servicio en primer plano de tipo `connectedDevice` con una notificación mínima, que solo corre
+mientras **«Seguir la reproducción automáticamente»** está activado (lo está por defecto):
+
+- Solo escucha eventos de audio locales (`AudioPlaybackCallback` + `isMusicActive` con salida
+  Bluetooth, en `LocalPlayback`); no lee qué suena ni de qué app.
+- **No retiene el canal.** Cuando este teléfono lleva 2 s sonando (una notificación nunca cuenta),
+  encola `DeviceCommand.ClaimPlayback` en la sesión del proceso: el canal se abre, se lee el estado
+  real y la intención se resuelve entonces (`PlaybackSourceAdvisor.claimTarget`): no escribe nada si
+  el teléfono ya tiene el audio, no está conectado a los audífonos o hay una llamada. El canal se
+  libera a los 20 s como con los widgets. Una petición por cada inicio de reproducción y como
+  máximo una acción automática cada 15 s (`AutoSwitchClock`, compartido con la app abierta).
+- La música que ya sonaba al arrancar el servicio no cuenta como inicio.
+- `FollowPlayback.sync` lo arranca o lo detiene según el ajuste (al abrir la app, al cambiar el
+  ajuste, el modo demostración o los audífonos, y tras conceder el permiso de Bluetooth);
+  `FollowPlaybackBootReceiver` lo vuelve a arrancar tras reiniciar o actualizar la app. Necesita
+  audífonos guardados y `BLUETOOTH_CONNECT` (Android 14+ lo exige para el tipo `connectedDevice`,
+  también en modo demostración); sin ellos no arranca.
+- En Android 13+ la app pide una vez el permiso de notificaciones; sin él el servicio funciona igual,
+  con la notificación oculta.
+- Abrir el canal para reclamar el audio quita el control a otra app conectada (Sound Connect o la
+  app del Mac), igual que un toque en el widget.
 
 ## Cómo adquieren y liberan el canal
 

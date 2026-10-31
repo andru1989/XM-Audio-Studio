@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.andru1989.xmaudiostudio.R
+import io.github.andru1989.xmaudiostudio.bluetooth.PairedDevices
 import io.github.andru1989.xmaudiostudio.ui.dashboard.DashboardScreen
 import io.github.andru1989.xmaudiostudio.ui.equalizer.EqualizerScreen
 import io.github.andru1989.xmaudiostudio.ui.settings.SettingsScreen
@@ -40,6 +41,17 @@ fun AppScaffold(vm: MainViewModel) {
     val permissionLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
         vm.refreshDevices()
         vm.connect()
+    }
+    // "Seguir la reproducción" runs with a notification; Android 13+ asks for it once. Following works
+    // either way (the notification is just hidden without the permission).
+    val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        vm.notificationPermissionAsked()
+    }
+    val bluetoothReady = state.devices is PairedDevices.Result.Devices
+    LaunchedEffect(state.followPlayback, bluetoothReady) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && bluetoothReady && vm.shouldAskNotificationPermission()) {
+            notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
     }
     val requestPermission = {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) permissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT)
