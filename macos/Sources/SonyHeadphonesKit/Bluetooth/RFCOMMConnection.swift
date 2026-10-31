@@ -55,6 +55,11 @@ public final class RFCOMMConnection: NSObject, HeadphonesConnection {
         }
     }
 
+    /// This Mac's Bluetooth address ("xx-xx-xx-xx-xx-xx"), to find it in the headphones' multipoint list.
+    public static func localAddress() -> String? {
+        IOBluetoothHostController.default()?.addressAsString()
+    }
+
     public static func findLikelyXM6() -> PairedDeviceInfo? {
         pairedDevices().first { $0.name.localizedCaseInsensitiveContains("WH-1000XM6") }
     }

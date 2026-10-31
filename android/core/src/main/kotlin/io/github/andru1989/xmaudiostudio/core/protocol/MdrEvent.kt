@@ -10,6 +10,9 @@ import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerCapability
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerState
 import io.github.andru1989.xmaudiostudio.core.model.MultipointDevice
+import io.github.andru1989.xmaudiostudio.core.model.NowPlaying
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackStatus
+import io.github.andru1989.xmaudiostudio.core.model.SourceSwitchResult
 import io.github.andru1989.xmaudiostudio.core.model.ProtocolVersion
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
 
@@ -26,6 +29,15 @@ sealed interface MdrEvent {
     data class BgmMode(val enabled: Boolean, val roomSize: BgmRoomSize) : MdrEvent
     data class UpmixCinema(val enabled: Boolean) : MdrEvent
     data class DeviceList(val devices: List<MultipointDevice>) : MdrEvent
+
+    /** `3d 01`: outcome of a playback source switch to [macAddress]. */
+    data class SourceSwitched(val result: SourceSwitchResult, val macAddress: String) : MdrEvent
+
+    /** `a3/a5 01`: play state of the device holding the playback right. */
+    data class Playback(val status: PlaybackStatus) : MdrEvent
+
+    /** `a7/a9 01`: track names shared by that device. */
+    data class Track(val nowPlaying: NowPlaying) : MdrEvent
     data class ModelName(val name: String) : MdrEvent
     data class FirmwareVersion(val version: String) : MdrEvent
     data class EqCapability(val capability: EqualizerCapability) : MdrEvent
@@ -56,6 +68,9 @@ object MdrEventDecoder {
         if (type == MessageType.COMMAND_2) {
             if (MdrCommands.isDeviceListReply(op)) {
                 MdrCommands.decodeDeviceList(payload)?.let { return MdrEvent.DeviceList(it) }
+            }
+            if (op == Opcode.PERI_NOTIFY_EXTENDED) {
+                MdrCommands.decodeSourceSwitchResult(payload)?.let { return MdrEvent.SourceSwitched(it.first, it.second) }
             }
             return null
         }
@@ -94,6 +109,12 @@ object MdrEventDecoder {
         }
         if (MdrCommands.isEqualizerReply(op)) {
             MdrCommands.decodeEqualizer(payload)?.let { return MdrEvent.Equalizer(it) }
+        }
+        if (MdrCommands.isPlaybackStatusReply(op)) {
+            return MdrCommands.decodePlaybackStatus(payload)?.let { MdrEvent.Playback(it) }
+        }
+        if (MdrCommands.isNowPlayingReply(op)) {
+            return MdrCommands.decodeNowPlaying(payload)?.let { MdrEvent.Track(it) }
         }
         if (MdrCommands.isAudioParamReply(op)) {
             MdrCommands.decodeConnectionPriority(payload)?.let { return MdrEvent.ConnectionPriorityReport(it.first, it.second) }

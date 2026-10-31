@@ -73,6 +73,21 @@ object CanonicalEvents {
                 }
             })
         }
+        is MdrEvent.SourceSwitched -> buildJsonObject {
+            put("event", "sourceSwitchResult"); put("result", lowerCamel(event.result.name)); put("mac", event.macAddress)
+        }
+        is MdrEvent.Playback -> buildJsonObject {
+            put("event", "playbackStatus")
+            put("state", lowerCamel(event.status.state.name))
+            put("call", event.status.isCall)
+            put("controlsAvailable", event.status.controlsAvailable)
+        }
+        is MdrEvent.Track -> buildJsonObject {
+            put("event", "nowPlaying")
+            event.nowPlaying.title?.let { put("title", it) }
+            event.nowPlaying.album?.let { put("album", it) }
+            event.nowPlaying.artist?.let { put("artist", it) }
+        }
         is MdrEvent.ModelName -> buildJsonObject { put("event", "modelName"); put("name", event.name) }
         is MdrEvent.FirmwareVersion -> buildJsonObject { put("event", "firmwareVersion"); put("version", event.version) }
         is MdrEvent.ConnectionPriorityCapability -> buildJsonObject {

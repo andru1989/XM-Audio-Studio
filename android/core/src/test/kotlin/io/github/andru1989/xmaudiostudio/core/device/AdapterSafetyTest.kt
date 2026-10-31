@@ -6,6 +6,7 @@ import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
 import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerState
 import io.github.andru1989.xmaudiostudio.core.model.ListeningMode
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackAction
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatSensitivity
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatTimeout
@@ -33,6 +34,8 @@ class AdapterSafetyTest {
         DeviceCommand.SetAutomaticPowerOff(AutomaticPowerOffMode.OFF),
         DeviceCommand.SetPauseWhenTakenOff(true),
         DeviceCommand.SwitchPlayback("AA:BB:CC:DD:EE:01"),
+        DeviceCommand.ControlPlayback(PlaybackAction.PAUSE),
+        DeviceCommand.ControlPlayback(PlaybackAction.NEXT),
         DeviceCommand.SetConnectionPriority(ConnectionPriority.STABLE_CONNECTION),
     )
 
@@ -45,9 +48,19 @@ class AdapterSafetyTest {
         assertEquals(
             listOf(
                 "04 01", "04 02", "66 15", "66 17", "66 19", "22 00", "f6 0c", "fa 0c", "26 05", "f6 01",
-                "56 04", "56 00", "50 04 01", "e6 09", "e6 04", "e0 05", "e6 05", "12 02", "T2 36 02",
+                "56 04", "56 00", "50 04 01", "e6 09", "e6 04", "e0 05", "e6 05", "12 02", "T2 36 02", "a2 01", "a6 01",
             ),
             hex(Xm6Adapter.stateQueries()),
+        )
+        // Repeated while the app is visible: list (table 2), play state, track. Reads only.
+        assertEquals(listOf("T2 36 02", "a2 01", "a6 01"), hex(Xm6Adapter.playbackSourceQueries()))
+        assertEquals(
+            listOf("a4 01 00 01", "a2 01"),
+            hex(Xm6Adapter.encode(DeviceCommand.ControlPlayback(PlaybackAction.PAUSE), HeadphoneState())),
+        )
+        assertEquals(
+            listOf("T2 3c 01 41 41 3a 42 42 3a 43 43 3a 44 44 3a 45 45 3a 30 32", "T2 36 02"),
+            hex(Xm6Adapter.encode(DeviceCommand.SwitchPlayback("AA:BB:CC:DD:EE:02"), HeadphoneState())),
         )
         // The optional Clear Bass field does not change the XM6 bytes.
         assertEquals(
@@ -127,6 +140,7 @@ class AdapterSafetyTest {
             DeviceCommand.SetListeningMode(ListeningMode.CINEMA),
             DeviceCommand.SetBgmRoomSize(BgmRoomSize.SMALL),
             DeviceCommand.SwitchPlayback("AA:BB:CC:DD:EE:01"),
+            DeviceCommand.ControlPlayback(PlaybackAction.PLAY),
             DeviceCommand.SetEqualizerBands(List(10) { 0 }),
             DeviceCommand.SetConnectionPriority(ConnectionPriority.STABLE_CONNECTION),
         )) {
@@ -137,5 +151,11 @@ class AdapterSafetyTest {
             listOf("04 01", "04 02", "66 17", "22 00", "f6 0c", "fa 0c", "56 00", "50 00 01"),
             hex(Xm5Adapter.stateQueries()),
         )
+        assertEquals(emptyList<Outgoing>(), Xm5Adapter.playbackSourceQueries())
+        for (model in listOf(HeadphoneModel.WH_1000XM4, HeadphoneModel.WH_1000XM3, HeadphoneModel.WH_1000XM2)) {
+            // v1 has its own PLAY layouts; nothing from the v2 family is ever sent to it.
+            assertEquals(emptyList<Outgoing>(), MdrV1Adapter(model).playbackSourceQueries())
+            assertEquals(emptyList<Outgoing>(), MdrV1Adapter(model).encode(DeviceCommand.ControlPlayback(PlaybackAction.PAUSE), fiveBandState))
+        }
     }
 }

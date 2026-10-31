@@ -38,7 +38,8 @@ La familia de protocolo la fija el UUID al que se conecta; el init la confirma.
 2. Lecturas: `04 01` modelo, `04 02` firmware, `66 15`/`66 17`/`66 19` NC/ambiente, `22 00`
    batería, `F6 0C` speak-to-chat, `FA 0C` config. STC, `26 05` apagado automático, `F6 01` pausa al
    quitarse, `56 04` y `56 00` EQ, `50 04 01` capacidad EQ, `E6 09` BGM, `E6 04` cine, `E0 05` y `E6 05`
-   prioridad de conexión, `12 02` códec, tabla 2 `36 02` multipunto.
+   prioridad de conexión, `12 02` códec, tabla 2 `36 02` multipunto, `a2 01` estado de reproducción,
+   `a6 01` pista.
 3. Solo después se envían intenciones del usuario.
 
 ## 4. Comandos WH-1000XM6 (MDR v2, tabla 1 salvo indicación)
@@ -61,8 +62,11 @@ La familia de protocolo la fija el UUID al que se conecta; el init la confirma.
 | Config. STC | `FA 0C` | `FB/FD 0C sens tiempo` | `FC 0C sens tiempo` | sens 00 auto/01 alta/02 baja; tiempo 00–03 | REF |
 | Apagado automático | `26 05` | `27/29 05 modo 00` | `28 05 modo 00` | solo `10` (al quitarse) y `11` (nunca); **no** usar `F8 05` (palabra de activación) | HW |
 | Pausa al quitarse | `F6 01` | `F7/F9 01 off` | `F8 01 off` | invertido; `26 01` se confirma pero no responde | HW |
-| Lista multipunto (T2) | `36 02` | `37/39 02 n (MAC17 estado COD3 lenNombre nombre)* estadoReproducción` | — | | HW |
-| Cambiar fuente (T2) | — | — | `3C 01 MAC17` | | REF |
+| Lista multipunto (T2) | `36 02` | `37/39 02 n (MAC17 estado COD3 lenNombre nombre)* derechoReproducción` | — | `estado` = ranura de conexión (01, 02; 00 = emparejado sin conexión); el dispositivo cuya ranura coincide con el último byte tiene el derecho de reproducción (sus botones y play/pausa van a él). Captura WF-LC900 con el derecho en la ranura 1 | HW |
+| Cambiar fuente (T2) | — | `3D 01 resultado MAC17` (20 B) | `3C 01 MAC17` | resultado `00` éxito, `01` fallo, `02` llamada en curso, `03` sin A2DP, `04` prioridad del asistente de voz; otro byte = sin confirmar. `37/39 01 …` (control de cambio) no es una lista y se ignora | REF |
+| Estado de reproducción | `A2 01` | `A3/A5 01 habilitado estado música/llamada` (exactamente 5 B) | — | habilitado `00` sí / `01` no; estado `00` sin definir, `01` reproduciendo, `02` pausa, `03` detenido; `00` música / `01` llamada. Del dueño del derecho de reproducción. La disposición v1 de 4 bytes se rechaza | CAP (WF-XM5 y WF-LC900 `a3 01 00 02 00`) |
+| Pista actual | `A6 01` | `A7/A9 01 (estadoNombre len nombre)×4` | — | título, álbum, artista y un cuarto nombre sin usar; nombres vacíos = ausentes; entrada truncada = se rechaza. `A7 20` es el volumen, no la pista | CAP (WF-LC900 `a7/a9 01`) |
+| Reproducir / pausar / saltar | — | `A5 01 …` | `A4 01 00 control` | control `01` pausa, `02` siguiente, `03` anterior, `07` reproducir; el `00` (ENABLE) es obligatorio. Los audífonos lo reenvían por AVRCP al dueño del derecho. mos9527 lo da por funcional en el XM6 | REF |
 
 Presets EQ XM6: `00` Off, `30` Heavy, `31` Clear, `32` Hard, `33` Soft, `A0` Custom, `A1+` ajustes de
 usuario. Con BGM o Cine activos el EQ queda deshabilitado por el firmware.

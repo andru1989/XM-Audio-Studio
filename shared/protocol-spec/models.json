@@ -32,6 +32,7 @@
         "eqCustomBands": "verified-hardware",
         "multipointList": "verified-hardware",
         "playbackSourceSwitch": "pending-hardware",
+        "playbackControl": "pending-hardware",
         "connectionPriority": "verified-hardware",
         "audioCodec": "pending-hardware"
       },

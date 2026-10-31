@@ -63,6 +63,15 @@ enum Opcode {
     static let periSetExtendedParam: UInt8 = 0x3c
     static let periNotifyExtendedParam: UInt8 = 0x3d
 
+    /// PLAYBACK_CONTROLLER family (table 1): status, track names, play/pause/skip.
+    static let playGetStatus: UInt8 = 0xa2
+    static let playRetStatus: UInt8 = 0xa3
+    static let playSetStatus: UInt8 = 0xa4
+    static let playNotifyStatus: UInt8 = 0xa5
+    static let playGetParam: UInt8 = 0xa6
+    static let playRetParam: UInt8 = 0xa7
+    static let playNotifyParam: UInt8 = 0xa9
+
     /// Shared family: wide-area-tap / connect-two-devices (subtype 0xd1), touch sensor
     /// panel (0xd2), capture-voice-during-call (0xd3).
     static let touchSensorGet: UInt8 = 0xd6
@@ -111,6 +120,11 @@ enum Subtype {
     static let connectionPriority: UInt8 = 0x05
     /// COMMON status type "audio codec".
     static let audioCodec: UInt8 = 0x02
+    /// PLAY inquired type "playback control with call volume adjustment".
+    static let playbackController: UInt8 = 0x01
+    /// PERIPHERAL inquired types (table 2).
+    static let periSourceSwitch: UInt8 = 0x01
+    static let periDeviceList: UInt8 = 0x02
 }
 
 func boolFromByte(_ b: UInt8) -> Bool? {

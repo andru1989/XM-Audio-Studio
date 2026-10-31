@@ -63,6 +63,15 @@ object Opcode {
     const val PERI_NOTIFY = 0x39
     const val PERI_SET_EXTENDED = 0x3c
     const val PERI_NOTIFY_EXTENDED = 0x3d
+
+    /** PLAYBACK_CONTROLLER family (table 1): status, track names, play/pause/skip. */
+    const val PLAY_GET_STATUS = 0xa2
+    const val PLAY_RET_STATUS = 0xa3
+    const val PLAY_SET_STATUS = 0xa4
+    const val PLAY_NTFY_STATUS = 0xa5
+    const val PLAY_GET_PARAM = 0xa6
+    const val PLAY_RET_PARAM = 0xa7
+    const val PLAY_NTFY_PARAM = 0xa9
 }
 
 object Subtype {
@@ -82,4 +91,9 @@ object Subtype {
     const val DEVICE_INFO_FIRMWARE = 0x02
     const val BATTERY_SINGLE = 0x00
     const val BATTERY_SINGLE_WITH_THRESHOLD = 0x08
+    /** PLAY inquired type "playback control with call volume adjustment". */
+    const val PLAYBACK_CONTROLLER = 0x01
+    /** PERIPHERAL inquired types (table 2). */
+    const val PERI_SOURCE_SWITCH = 0x01
+    const val PERI_DEVICE_LIST = 0x02
 }

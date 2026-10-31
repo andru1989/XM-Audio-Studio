@@ -24,6 +24,13 @@ interface ProtocolAdapter {
     /** Reads issued after every (re)connect, before any pending intent is written. */
     fun stateQueries(): List<Outgoing>
 
+    /**
+     * Cheap reads that tell where the audio is: multipoint list (playback right), play state and
+     * track. Repeated while a control surface is visible, because the headphones do not always
+     * notify a source change. Empty for models without multipoint support here.
+     */
+    fun playbackSourceQueries(): List<Outgoing> = emptyList()
+
     /** Encodes [command] against the device's freshly read [state]; empty if unsupported. */
     fun encode(command: DeviceCommand, state: HeadphoneState): List<Outgoing>
 
@@ -71,7 +78,12 @@ object Xm6Adapter : ProtocolAdapter {
         c1(MdrCommands.connectionPriorityCapabilityGet()),
         c1(MdrCommands.connectionPriorityGet()),
         c1(MdrCommands.audioCodecGet()),
+    ) + playbackSourceQueries()
+
+    override fun playbackSourceQueries(): List<Outgoing> = listOf(
         c2(MdrCommands.deviceListGet()),
+        c1(MdrCommands.playbackStatusGet()),
+        c1(MdrCommands.nowPlayingGet()),
     )
 
     override fun encode(command: DeviceCommand, state: HeadphoneState): List<Outgoing> = when (command) {
@@ -104,6 +116,9 @@ object Xm6Adapter : ProtocolAdapter {
             val payload = MdrCommands.sourceSwitchSet(command.macAddress)
             if (payload == null) emptyList() else listOf(c2(payload), c2(MdrCommands.deviceListGet()))
         }
+        // The headphones notify the new state; the read is a fallback for firmware that does not.
+        is DeviceCommand.ControlPlayback ->
+            listOf(c1(MdrCommands.playbackControlSet(command.action)), c1(MdrCommands.playbackStatusGet()))
         is DeviceCommand.Raw -> listOf(Outgoing(command.type, command.payload))
     }
 

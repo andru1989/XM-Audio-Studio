@@ -13,6 +13,12 @@ public enum HeadphonesEvent: Sendable {
     case bgmMode(enabled: Bool, roomSize: BGMRoomSize)
     case upmixCinema(Bool)
     case deviceList([MultipointDevice])
+    /// `3d 01`: outcome of a playback source switch to `macAddress`.
+    case sourceSwitchResult(SourceSwitchResult, macAddress: String)
+    /// `a3/a5 01`: play state of the device holding the playback right.
+    case playbackStatus(PlaybackStatus)
+    /// `a7/a9 01`: track names shared by that device.
+    case nowPlaying(NowPlaying)
     case modelName(String)
     case firmwareVersion(String)
     case equalizerCapability(EqualizerCapability)
@@ -42,6 +48,10 @@ public enum SonyEventDecoder {
             if SonyCommands.isDeviceListReply(opcode: opcode),
                let devices = SonyCommands.decodeDeviceList(payload) {
                 return .deviceList(devices)
+            }
+            if opcode == Opcode.periNotifyExtendedParam,
+               let (result, mac) = SonyCommands.decodeSourceSwitchResult(payload) {
+                return .sourceSwitchResult(result, macAddress: mac)
             }
             return nil
         }
@@ -89,6 +99,12 @@ public enum SonyEventDecoder {
         if SonyCommands.isEqualizerReply(opcode: opcode),
            let state = SonyCommands.decodeEqualizer(payload) {
             return .equalizer(state)
+        }
+        if SonyCommands.isPlaybackStatusReply(opcode: opcode) {
+            return SonyCommands.decodePlaybackStatus(payload).map { .playbackStatus($0) }
+        }
+        if SonyCommands.isNowPlayingReply(opcode: opcode) {
+            return SonyCommands.decodeNowPlaying(payload).map { .nowPlaying($0) }
         }
         if SonyCommands.isAudioParamReply(opcode: opcode) {
             if let report = SonyCommands.decodeConnectionPriority(payload) {

@@ -10,8 +10,14 @@ import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.DeviceInfo
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerCapability
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerState
+import io.github.andru1989.xmaudiostudio.core.model.InterruptedPlayback
 import io.github.andru1989.xmaudiostudio.core.model.ListeningMode
 import io.github.andru1989.xmaudiostudio.core.model.MultipointDevice
+import io.github.andru1989.xmaudiostudio.core.model.NowPlaying
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackAction
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackState
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackStatus
+import io.github.andru1989.xmaudiostudio.core.model.SourceSwitchResult
 import io.github.andru1989.xmaudiostudio.core.model.ProtocolVersion
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
 import io.github.andru1989.xmaudiostudio.core.protocol.MdrEvent
@@ -29,7 +35,22 @@ data class HeadphoneState(
     val bgmEnabled: Boolean? = null,
     val bgmRoomSize: BgmRoomSize? = null,
     val cinemaEnabled: Boolean? = null,
+    /** Multipoint list as shown: [reportedDevices] with a pending switch ([switchingTo]) applied. */
     val devices: List<MultipointDevice>? = null,
+    /** Multipoint list exactly as the headphones last reported it. */
+    val reportedDevices: List<MultipointDevice>? = null,
+    /** MAC of a source switch sent but not yet confirmed (`3d 01`) nor expired. */
+    val switchingTo: String? = null,
+    /** Why the last source switch was refused; cleared by the next switch or a success. */
+    val sourceSwitchFailure: SourceSwitchResult? = null,
+    /** Play state of the device holding the playback right (`a3/a5 01`). */
+    val playbackStatus: PlaybackStatus? = null,
+    /** Track names that device shares (`a7/a9 01`). */
+    val nowPlaying: NowPlaying? = null,
+    /** The source the user last chose here; a move to it is never an interruption. */
+    val requestedSource: String? = null,
+    /** Music that stopped because the headphones handed the playback right to another device. */
+    val interruptedPlayback: InterruptedPlayback? = null,
     val deviceInfo: DeviceInfo = DeviceInfo(),
     val equalizerCapability: EqualizerCapability? = null,
     val connectionPriority: ConnectionPriority? = null,
@@ -54,6 +75,41 @@ data class HeadphoneState(
     /** Null both when unreported and when the byte is outside the reference table (check [audioCodecCode]). */
     val audioCodec: AudioCodec? get() = audioCodecCode?.let(AudioCodec::fromCode)
 
+    /** The device the headphones' buttons control (playback right), as shown. */
+    val playbackDevice: MultipointDevice? get() = devices?.firstOrNull { it.isPlayback }
+
+    /** Ends a source switch that was never confirmed: the reported list is the truth again. */
+    fun expireSourceSwitch(macAddress: String): HeadphoneState =
+        if (switchingTo != macAddress) this else copy(switchingTo = null, devices = reportedDevices ?: devices)
+
+    /**
+     * A new list from the headphones. A move of the playback right away from a device that was
+     * playing, to a device nobody picked here, is remembered as an interruption.
+     */
+    private fun withReportedList(list: List<MultipointDevice>): HeadphoneState {
+        val oldHolder = reportedDevices?.firstOrNull { it.isPlayback }
+        val newHolder = list.firstOrNull { it.isPlayback }
+        val moved = oldHolder != null && newHolder != null && oldHolder.macAddress != newHolder.macAddress
+        val toChosen = newHolder != null && newHolder.macAddress == requestedSource
+        val interrupted = when {
+            switchingTo != null || toChosen -> null
+            moved && playbackStatus?.state == PlaybackState.PLAYING &&
+                list.any { it.macAddress == oldHolder!!.macAddress && it.isConnected } ->
+                InterruptedPlayback(oldHolder!!.macAddress, oldHolder.name, newHolder!!.macAddress)
+            // The source came back, or the interrupted device left: nothing to bring back.
+            interruptedPlayback != null && (newHolder?.macAddress == interruptedPlayback.fromMac ||
+                list.none { it.macAddress == interruptedPlayback.fromMac && it.isConnected }) -> null
+            else -> interruptedPlayback
+        }
+        return copy(
+            reportedDevices = list,
+            devices = withSwitch(list, switchingTo),
+            interruptedPlayback = interrupted,
+            // Once the right moved elsewhere on its own, the user's earlier choice no longer applies.
+            requestedSource = requestedSource.takeIf { switchingTo != null || newHolder == null || toChosen },
+        )
+    }
+
     /** Writable on the wire, and offered by the headphones when they reported their list. */
     fun canWrite(priority: ConnectionPriority): Boolean =
         priority.isWritable && connectionPriorities?.contains(priority) != false
@@ -74,7 +130,26 @@ data class HeadphoneState(
         is MdrEvent.Equalizer -> copy(equalizer = event.state)
         is MdrEvent.BgmMode -> copy(bgmEnabled = event.enabled, bgmRoomSize = event.roomSize)
         is MdrEvent.UpmixCinema -> copy(cinemaEnabled = event.enabled)
-        is MdrEvent.DeviceList -> copy(devices = event.devices)
+        // While a switch is pending, a list read before the headphones finished switching must
+        // not flip the UI back to the old source for a moment.
+        is MdrEvent.DeviceList -> withReportedList(event.devices)
+        is MdrEvent.SourceSwitched -> if (event.result == SourceSwitchResult.SUCCESS) {
+            val confirmed = (reportedDevices ?: devices)?.let { withSwitch(it, event.macAddress) }
+            copy(reportedDevices = confirmed, devices = confirmed, switchingTo = null, sourceSwitchFailure = null, interruptedPlayback = null)
+        } else {
+            copy(
+                devices = reportedDevices ?: devices,
+                switchingTo = null,
+                requestedSource = null,
+                sourceSwitchFailure = event.result.takeIf { switchingTo == null || switchingTo == event.macAddress } ?: sourceSwitchFailure,
+            )
+        }
+        // Something plays again: whatever stopped is no longer worth bringing back.
+        is MdrEvent.Playback -> copy(
+            playbackStatus = event.status,
+            interruptedPlayback = interruptedPlayback.takeIf { event.status.state != PlaybackState.PLAYING },
+        )
+        is MdrEvent.Track -> copy(nowPlaying = event.nowPlaying)
         is MdrEvent.ModelName -> copy(deviceInfo = deviceInfo.copy(modelName = event.name))
         is MdrEvent.FirmwareVersion -> copy(deviceInfo = deviceInfo.copy(firmwareVersion = event.version))
         is MdrEvent.EqCapability -> copy(equalizerCapability = event.capability)
@@ -115,8 +190,27 @@ data class HeadphoneState(
         is DeviceCommand.SetConnectionPriority ->
             if (canWrite(command.priority)) copy(connectionPriority = command.priority) else this
         is DeviceCommand.SwitchPlayback -> copy(
-            devices = devices?.map { it.copy(isPlayback = it.macAddress == command.macAddress) },
+            devices = (reportedDevices ?: devices)?.let { withSwitch(it, command.macAddress) },
+            switchingTo = command.macAddress,
+            requestedSource = command.macAddress,
+            sourceSwitchFailure = null,
+            interruptedPlayback = null,
         )
+        // Shown at once; the status the headphones report next reconciles it.
+        is DeviceCommand.ControlPlayback -> when (command.action) {
+            PlaybackAction.PLAY -> copy(playbackStatus = (playbackStatus ?: PlaybackStatus(PlaybackState.UNKNOWN)).copy(state = PlaybackState.PLAYING))
+            PlaybackAction.PAUSE -> copy(playbackStatus = (playbackStatus ?: PlaybackStatus(PlaybackState.UNKNOWN)).copy(state = PlaybackState.PAUSED))
+            PlaybackAction.NEXT, PlaybackAction.PREVIOUS -> this
+        }
         is DeviceCommand.Raw -> this
     }
+}
+
+/**
+ * [devices] with the playback flag moved to [macAddress], when that device is listed and connected.
+ * The headphones report the source per connection status, so a pending switch is shown on top of it.
+ */
+internal fun withSwitch(devices: List<MultipointDevice>, macAddress: String?): List<MultipointDevice> {
+    if (macAddress == null || devices.none { it.macAddress == macAddress && it.isConnected }) return devices
+    return devices.map { it.copy(isPlayback = it.macAddress == macAddress) }
 }

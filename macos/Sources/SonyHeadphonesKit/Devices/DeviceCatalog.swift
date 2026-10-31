@@ -88,6 +88,8 @@ public enum DeviceFeature: String, CaseIterable, Sendable {
     case battery, noiseCancelling, ambientSound, ambientLevel, focusOnVoice, listeningMode
     case speakToChat, wearDetection, autoPowerOff, eqPresets, eqCustomBands
     case multipointList, playbackSourceSwitch
+    /// Play state, track names and play/pause/skip relayed to the source (`a2-a7 01`).
+    case playbackControl
     /// "Priorizar calidad de sonido / conexión estable" (AUDIO type 0x05) and the read-only
     /// codec indicator (`12 02`).
     case connectionPriority, audioCodec
@@ -182,6 +184,8 @@ public enum DeviceCatalog {
                     .speakToChat: .pendingHardware, .wearDetection: .verifiedHardware, .autoPowerOff: .verifiedHardware,
                     .eqPresets: .verifiedHardware, .eqCustomBands: .verifiedHardware, .multipointList: .verifiedHardware,
                     .playbackSourceSwitch: .pendingHardware,
+                    // mos9527 reports "current playing" and track controls working on the XM6.
+                    .playbackControl: .pendingHardware,
                     // e0/e6/e8 05 captured live on an XM6 fw 3.1.5 (Anneo22/xm6-control);
                     // `12 02` comes from mos9527's tables and was never captured on an XM6.
                     .connectionPriority: .verifiedHardware, .audioCodec: .pendingHardware,

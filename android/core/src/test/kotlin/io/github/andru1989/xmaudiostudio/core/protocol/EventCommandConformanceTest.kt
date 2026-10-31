@@ -8,6 +8,7 @@ import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundState
 import io.github.andru1989.xmaudiostudio.core.model.AutomaticPowerOffMode
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
 import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackAction
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatSensitivity
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatTimeout
@@ -82,6 +83,9 @@ class EventCommandConformanceTest {
             ConnectionPriority.entries.first { lowerCamel(it.name) == a["priority"]!!.str },
         )
         "audioCodecGet" -> MdrCommands.audioCodecGet()
+        "playbackStatusGet" -> MdrCommands.playbackStatusGet()
+        "nowPlayingGet" -> MdrCommands.nowPlayingGet()
+        "playbackControlSet" -> MdrCommands.playbackControlSet(PlaybackAction.entries.first { lowerCamel(it.name) == a["action"]!!.str })
         else -> error("fixture command not mapped: $name")
     }
 
