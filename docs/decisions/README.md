@@ -13,3 +13,4 @@
 | [0009](ADR-0009-dsp-engine-implementation.md) | Motor DSP macOS implementado: tap por dispositivo, biquads en doble precisión | Aceptada (beta) |
 | [0010](ADR-0010-playback-source-tracking.md) | Dónde suena: estado de reproducción, refresco rápido, señal local, recuperación y seguimiento opcional | Aceptada (simulación); punto 6 reemplazado por 0011 |
 | [0011](ADR-0011-newest-playback-wins.md) | Gana el dispositivo que empieza a sonar; seguimiento automático por defecto y en segundo plano | Aceptada (simulación) |
+| [0012](ADR-0012-pause-the-device-losing-audio.md) | Pausar el dispositivo que pierde el audio antes de cambiar la fuente | Aceptada (simulación) |

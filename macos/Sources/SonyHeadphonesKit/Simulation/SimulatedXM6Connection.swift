@@ -45,6 +45,8 @@ final class SimulatedXM6Connection: HeadphonesConnection {
     /// Result byte of `3d 01` for the next switch (0x00 success, 0x02 refused during a call, ...).
     var sourceSwitchResult: UInt8 = 0x00
     var playbackDeviceIndex: Int { playbackIndex }
+    /// Index of the device that last received a pause through the headphones; -1 if none.
+    private(set) var lastPausedIndex = -1
 
     init(latency: TimeInterval = 0.02) {
         self.latency = latency
@@ -167,7 +169,7 @@ final class SimulatedXM6Connection: HeadphonesConnection {
         case (0xa4, 0x01):
             guard p.count == 4, p[2] == 0x00 else { return nil }
             switch p[3] {
-            case 0x01: playbackState = 0x02
+            case 0x01: playbackState = 0x02; lastPausedIndex = playbackIndex
             case 0x07: playbackState = 0x01
             case 0x02: trackIndex += 1
             case 0x03: trackIndex = max(0, trackIndex - 1)

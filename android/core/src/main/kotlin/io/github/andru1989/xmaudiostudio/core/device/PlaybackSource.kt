@@ -60,6 +60,20 @@ object PlaybackSourceAdvisor {
     }
 
     /**
+     * Whether moving the audio to [targetMac] should first pause the device that has it now, so only
+     * one keeps playing (ADR-0012). The pause (`a4 01 00 01`) goes through the headphones to the
+     * current holder of the playback right, so it must be sent before the switch. Not sent when the
+     * holder is the target, already paused or stopped, in a call, or reports its controls disabled;
+     * an unreported state still gets it (a pause to a player that is not playing does nothing).
+     */
+    fun pauseBeforeSwitch(state: HeadphoneState, targetMac: String): Boolean {
+        val holder = (state.reportedDevices ?: state.devices)?.firstOrNull { it.isPlayback } ?: return false
+        val status = state.playbackStatus
+        return holder.macAddress != targetMac && status?.isCall != true && status?.controlsAvailable != false &&
+            status?.state != PlaybackState.PAUSED && status?.state != PlaybackState.STOPPED
+    }
+
+    /**
      * Whether this device should claim the audio now: following is on, it has been playing for
      * [SETTLE_MS] (a notification sound never counts), this playback start was not claimed yet, and
      * the last automatic action was at least [MIN_INTERVAL_MS] ago. One claim per start, so two

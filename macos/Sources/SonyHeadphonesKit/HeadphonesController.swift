@@ -112,6 +112,8 @@ public final class HeadphonesController: ObservableObject {
     private var sourceSettleTask: Task<Void, Never>?
     /// Play once the switch to this MAC is confirmed (`switchPlayback(toAddress:resume:)`).
     private var resumeOnSwitchTo: String?
+    /// The previous holder was paused before switching to this MAC; if the switch fails, it resumes.
+    private var pausedForSwitchTo: String?
     /// While a control surface is visible, re-read where the audio is this often.
     var sourceWatchInterval: Duration = .seconds(3)
     /// A switch the headphones neither confirm nor refuse stops being shown after this.
@@ -446,9 +448,17 @@ public final class HeadphonesController: ObservableObject {
         enqueueCommand(key: "source") { [unowned self] in
             // Encoded when sent: the switch only counts from here.
             self.expireSwitchLater(macAddress)
-            // The headphones answer `3d 01` and push a new list; read it anyway as a fallback.
-            return [(.command2, payload), (.command2, SonyCommands.buildDeviceListGet())]
+            return self.switchMessages(to: macAddress, payload: payload)
         }
+    }
+
+    /// Pause for the device losing the audio (ADR-0012), then the switch; the headphones answer
+    /// `3d 01` and push a new list, which is read anyway as a fallback.
+    private func switchMessages(to macAddress: String, payload: [UInt8]) -> [(SonyMessageType, [UInt8])] {
+        let pause = PlaybackSourceAdvisor.pauseBeforeSwitch(playbackSource, targetMac: macAddress)
+        pausedForSwitchTo = pause ? macAddress : nil
+        let pauseMessage: [(SonyMessageType, [UInt8])] = pause ? [(.command1, SonyCommands.buildPlaybackControlSet(.pause))] : []
+        return pauseMessage + [(.command2, payload), (.command2, SonyCommands.buildDeviceListGet())]
     }
 
     /// This Mac just started playing: give it the audio (the newest device to start wins).
@@ -460,10 +470,11 @@ public final class HeadphonesController: ObservableObject {
             guard let here = PlaybackSourceAdvisor.claimTarget(
                 self.playbackSource, localAddress: self.localAddressProvider(), localName: Host.current().localizedName),
                   let payload = SonyCommands.buildSourceSwitchSet(macAddress: here.macAddress) else { return [] }
+            let messages = self.switchMessages(to: here.macAddress, payload: payload)
             self.playbackSource.beginSwitch(to: here.macAddress)
             self.resumeOnSwitchTo = nil
             self.expireSwitchLater(here.macAddress)
-            return [(.command2, payload), (.command2, SonyCommands.buildDeviceListGet())]
+            return messages
         }
         if !releaseWhenIdle { connectIfNeeded() }
     }
@@ -522,10 +533,15 @@ public final class HeadphonesController: ObservableObject {
             try? await Task.sleep(for: timeout)
             guard let self, !Task.isCancelled, self.playbackSource.switchingTo == macAddress else { return }
             self.playbackSource.expireSwitch(macAddress)
-            // Never confirmed: resume only if the list already shows the switch happened.
+            // Never confirmed: the list says whether it happened.
+            let happened = self.playbackSource.playbackDevice?.macAddress == macAddress
             if self.resumeOnSwitchTo == macAddress {
                 self.resumeOnSwitchTo = nil
-                if self.playbackSource.playbackDevice?.macAddress == macAddress { self.controlPlayback(.play) }
+                if happened { self.controlPlayback(.play) }
+            }
+            if self.pausedForSwitchTo == macAddress {
+                self.pausedForSwitchTo = nil
+                if !happened { self.controlPlayback(.play) }
             }
             self.refreshPlaybackSource()
         }
@@ -573,6 +589,7 @@ public final class HeadphonesController: ObservableObject {
         sourceSwitchTask?.cancel()
         sourceSettleTask?.cancel()
         resumeOnSwitchTo = nil
+        pausedForSwitchTo = nil
         connectionPriority = nil
         connectionPriorities = nil
         audioStream = nil
@@ -739,6 +756,11 @@ public final class HeadphonesController: ObservableObject {
             if resumeOnSwitchTo == macAddress {
                 resumeOnSwitchTo = nil
                 if result == .success { controlPlayback(.play) }
+            }
+            if pausedForSwitchTo == macAddress {
+                pausedForSwitchTo = nil
+                // Refused: the device that was paused for it still has the audio; let it play on.
+                if result != .success { controlPlayback(.play) }
             }
             // Success: read again once the audio moved. Refused: the list read shows the truth.
             rereadPlaybackSource(after: result == .success ? sourceSettleDelay : .zero)

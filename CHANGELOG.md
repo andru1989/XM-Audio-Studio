@@ -37,6 +37,9 @@
   audio de los audífonos, aunque la app esté cerrada (Mac: barra de menús, ignora sonidos del sistema;
   Android: servicio con notificación). Un reclamo por inicio, sin escribir nada si ya lo tenía. Activado
   por defecto.
+- **El otro dispositivo se pausa** (ADR-0012): al mover el audio (automático o «Reproducir aquí») se envía
+  pausa al dispositivo que lo tenía, a través de los audífonos, antes de cambiar; si el cambio se rechaza,
+  vuelve a sonar.
 
 ## 0.1.0 — 2026-10-21 (primera entrega, sin validación en hardware)
 

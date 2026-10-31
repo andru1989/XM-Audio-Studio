@@ -3,6 +3,7 @@ package io.github.andru1989.xmaudiostudio.core.device
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundState
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
 import io.github.andru1989.xmaudiostudio.core.model.ListeningMode
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackAction
 import io.github.andru1989.xmaudiostudio.core.model.ProtocolVersion
 import io.github.andru1989.xmaudiostudio.core.protocol.MdrCommands
 import io.github.andru1989.xmaudiostudio.core.protocol.MdrEvent
@@ -112,9 +113,20 @@ object Xm6Adapter : ProtocolAdapter {
         is DeviceCommand.SetConnectionPriority ->
             if (!state.canWrite(command.priority)) emptyList()
             else listOfNotNull(MdrCommands.connectionPrioritySet(command.priority)?.let(::c1))
+        // The device losing the audio is paused first (ADR-0012): the pause reaches whoever holds
+        // the playback right, so it has to go before the switch.
         is DeviceCommand.SwitchPlayback -> {
             val payload = MdrCommands.sourceSwitchSet(command.macAddress)
-            if (payload == null) emptyList() else listOf(c2(payload), c2(MdrCommands.deviceListGet()))
+            if (payload == null) {
+                emptyList()
+            } else {
+                val pause = if (PlaybackSourceAdvisor.pauseBeforeSwitch(state, command.macAddress)) {
+                    listOf(c1(MdrCommands.playbackControlSet(PlaybackAction.PAUSE)))
+                } else {
+                    emptyList()
+                }
+                pause + listOf(c2(payload), c2(MdrCommands.deviceListGet()))
+            }
         }
         is DeviceCommand.ClaimPlayback ->
             PlaybackSourceAdvisor.claimTarget(state, command.localAddress, command.localName)

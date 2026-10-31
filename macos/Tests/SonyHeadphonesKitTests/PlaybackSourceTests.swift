@@ -308,4 +308,41 @@ final class PlaybackClaimTests: XCTestCase {
             try await Task.sleep(for: .milliseconds(10))
         }
     }
+
+    func testTheDeviceLosingTheAudioIsPausedUnlessItIsAlreadyQuiet() {
+        XCTAssertTrue(PlaybackSourceAdvisor.pauseBeforeSwitch(state(PlaybackStatus(state: .playing)), targetMac: phone.macAddress))
+        XCTAssertTrue(PlaybackSourceAdvisor.pauseBeforeSwitch(state(nil), targetMac: phone.macAddress), "unreported")
+        XCTAssertFalse(PlaybackSourceAdvisor.pauseBeforeSwitch(state(), targetMac: phone.macAddress), "already paused")
+        XCTAssertFalse(PlaybackSourceAdvisor.pauseBeforeSwitch(state(PlaybackStatus(state: .stopped)), targetMac: phone.macAddress))
+        XCTAssertFalse(PlaybackSourceAdvisor.pauseBeforeSwitch(state(PlaybackStatus(state: .playing, isCall: true)), targetMac: phone.macAddress))
+        XCTAssertFalse(PlaybackSourceAdvisor.pauseBeforeSwitch(state(PlaybackStatus(state: .playing, controlsAvailable: false)), targetMac: phone.macAddress))
+        XCTAssertFalse(PlaybackSourceAdvisor.pauseBeforeSwitch(state(PlaybackStatus(state: .playing)), targetMac: mac.macAddress), "already the holder")
+        XCTAssertFalse(PlaybackSourceAdvisor.pauseBeforeSwitch(PlaybackSourceState(), targetMac: phone.macAddress), "no list")
+    }
+
+    func testTakingTheAudioPausesTheDeviceThatHadItFirst() async throws {
+        let simulator = SimulatedXM6Connection(latency: 0.002)
+        let controller = HeadphonesController(connection: simulator, pairedDevices: { [SimulatedXM6Connection.pairedDevice] },
+                                              localAddress: { "aa-bb-cc-dd-ee-02" })
+        controller.releaseWhenIdle = true
+        defer { controller.disconnect() }
+        controller.claimPlaybackHere()
+        try await waitFor { simulator.playbackDeviceIndex == 1 }
+        XCTAssertEqual(simulator.lastPausedIndex, 0, "the device that had the audio was paused, before the switch")
+    }
+
+    func testRefusedSwitchLetsThePausedDevicePlayOn() async throws {
+        let simulator = SimulatedXM6Connection(latency: 0.002)
+        simulator.sourceSwitchResult = 0x03
+        let controller = HeadphonesController(connection: simulator, pairedDevices: { [SimulatedXM6Connection.pairedDevice] },
+                                              localAddress: { SimulatedXM6Connection.localAddress })
+        controller.releaseWhenIdle = false
+        defer { controller.disconnect() }
+        controller.autoConnect()
+        try await waitFor { controller.playbackSource.nowPlaying != nil }
+        controller.switchPlayback(toAddress: "AA:BB:CC:DD:EE:02")
+        try await waitFor { controller.playbackSource.sourceSwitchFailure != nil }
+        try await waitFor { simulator.playbackState == 0x01 && simulator.lastPausedIndex == 0 }
+        XCTAssertEqual(simulator.playbackDeviceIndex, 0)
+    }
 }
