@@ -144,4 +144,17 @@ class PlaybackSourceAdvisorTest {
         assertFalse("a new start right after the last action", PlaybackSourceAdvisor.shouldClaim(true, 10_000, 12_000, 0, lastAutoSwitchMs = 2_000))
         assertTrue(PlaybackSourceAdvisor.shouldClaim(true, 20_000, 22_000, 0, lastAutoSwitchMs = 2_000))
     }
+
+    @Test
+    fun theDeviceLosingTheAudioIsPausedUnlessItIsAlreadyQuiet() {
+        val playing = state(PlaybackStatus(PlaybackState.PLAYING))
+        assertTrue(PlaybackSourceAdvisor.pauseBeforeSwitch(playing, phone.macAddress))
+        assertTrue("unreported state: a pause is harmless", PlaybackSourceAdvisor.pauseBeforeSwitch(state(null), phone.macAddress))
+        assertFalse("already paused", PlaybackSourceAdvisor.pauseBeforeSwitch(state(), phone.macAddress))
+        assertFalse("stopped", PlaybackSourceAdvisor.pauseBeforeSwitch(state(PlaybackStatus(PlaybackState.STOPPED)), phone.macAddress))
+        assertFalse("call", PlaybackSourceAdvisor.pauseBeforeSwitch(state(PlaybackStatus(PlaybackState.PLAYING, isCall = true)), phone.macAddress))
+        assertFalse("controls disabled", PlaybackSourceAdvisor.pauseBeforeSwitch(state(PlaybackStatus(PlaybackState.PLAYING, controlsAvailable = false)), phone.macAddress))
+        assertFalse("already the holder", PlaybackSourceAdvisor.pauseBeforeSwitch(playing, mac.macAddress))
+        assertFalse("no list", PlaybackSourceAdvisor.pauseBeforeSwitch(HeadphoneState(), phone.macAddress))
+    }
 }

@@ -15,6 +15,7 @@ import io.github.andru1989.xmaudiostudio.core.protocol.MdrEvent
 import io.github.andru1989.xmaudiostudio.core.protocol.MdrCommands
 import io.github.andru1989.xmaudiostudio.core.protocol.MdrMessage
 import io.github.andru1989.xmaudiostudio.core.protocol.MessageType
+import io.github.andru1989.xmaudiostudio.core.protocol.u
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -90,6 +91,8 @@ class HeadphoneSession(
     private var resolvedSwitch: DeviceCommand? = null
     /** Play once the switch to this MAC is confirmed (SwitchPlayback.resumePlayback). */
     private var resumeOnSwitchTo: String? = null
+    /** The previous holder was paused before switching to this MAC; if the switch fails, it resumes. */
+    private var pausedForSwitchTo: String? = null
 
     // region Public API
 
@@ -401,6 +404,11 @@ class HeadphoneSession(
                     resumeOnSwitchTo = null
                     if (success) execute(DeviceCommand.ControlPlayback(PlaybackAction.PLAY))
                 }
+                if (pausedForSwitchTo == event.macAddress) {
+                    pausedForSwitchTo = null
+                    // Refused: the device that was paused for it still has the audio; let it play on.
+                    if (!success) execute(DeviceCommand.ControlPlayback(PlaybackAction.PLAY))
+                }
                 // Success: read again once the audio moved. Refused: the list read shows the truth.
                 rereadPlaybackSourceAfter(if (success) config.sourceSettleMs else 0)
             }
@@ -415,16 +423,28 @@ class HeadphoneSession(
         publish()
     }
 
+    /** A switch encoded with a pause in front (ADR-0012): remember its target, read from the `3c 01` bytes. */
+    private fun rememberPauseBeforeSwitch(messages: List<Outgoing>) {
+        val switch = messages.firstOrNull { it.type == MessageType.COMMAND_2 && it.payload.size == 19 && it.payload.u(0) == 0x3c } ?: return
+        val pausedFirst = messages.takeWhile { it !== switch }.any { it.payload.size == 4 && it.payload.u(0) == 0xa4 && it.payload.u(3) == PlaybackAction.PAUSE.code }
+        pausedForSwitchTo = if (pausedFirst) String(switch.payload.copyOfRange(2, 19), Charsets.UTF_8) else null
+    }
+
     private fun expireSwitchLater(macAddress: String) {
         sourceSwitchJob?.cancel()
         sourceSwitchJob = scope.launch {
             delay(config.sourceSwitchTimeoutMs)
             if (confirmed.switchingTo == macAddress) {
                 confirmed = confirmed.expireSourceSwitch(macAddress)
-                // Never confirmed: resume only if the list already shows the switch happened.
+                // Never confirmed: the list says whether it happened.
+                val happened = confirmed.playbackDevice?.macAddress == macAddress
                 if (resumeOnSwitchTo == macAddress) {
                     resumeOnSwitchTo = null
-                    if (confirmed.playbackDevice?.macAddress == macAddress) execute(DeviceCommand.ControlPlayback(PlaybackAction.PLAY))
+                    if (happened) execute(DeviceCommand.ControlPlayback(PlaybackAction.PLAY))
+                }
+                if (pausedForSwitchTo == macAddress) {
+                    pausedForSwitchTo = null
+                    if (!happened) execute(DeviceCommand.ControlPlayback(PlaybackAction.PLAY))
                 }
                 publish()
                 refreshPlaybackSource()
@@ -496,6 +516,7 @@ class HeadphoneSession(
             val command = pending.removeFirst()
             val encodeAgainst = inFlightCommands().fold(confirmed) { s, c -> s.applyOptimistic(c) }
             val messages = adapter?.encode(command, encodeAgainst).orEmpty()
+            rememberPauseBeforeSwitch(messages)
             messages.forEachIndexed { i, out ->
                 // The command counts as accepted when its last message is acknowledged.
                 outgoing.addLast(QueuedMessage(out, if (i == messages.lastIndex) command else null))

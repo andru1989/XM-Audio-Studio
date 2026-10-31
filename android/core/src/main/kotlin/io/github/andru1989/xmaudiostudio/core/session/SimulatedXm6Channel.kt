@@ -54,6 +54,8 @@ class SimulatedXm6Channel(
     )
     /** Result byte of `3d 01` for the next switch (0x00 success, 0x02 refused during a call, ...). */
     var sourceSwitchResult = 0x00
+    /** Index of the device that last received a pause through the headphones; -1 if none. */
+    var lastPausedIndex = -1
     /** False: a source switch is ACKed but neither confirmed nor carried out (unknown firmware). */
     var answersSourceSwitch = true
 
@@ -210,7 +212,7 @@ class SimulatedXm6Channel(
                 0xa6 -> if (p.u(1) == 0x01) trackReport(0xa7) else null
                 0xa4 -> if (p.size == 4 && p.u(1) == 0x01 && p.u(2) == 0x00) {
                     when (p.u(3)) {
-                        0x01 -> playbackState = 0x02
+                        0x01 -> { playbackState = 0x02; lastPausedIndex = playbackIndex }
                         0x07 -> playbackState = 0x01
                         0x02 -> trackIndex++
                         0x03 -> trackIndex = (trackIndex - 1).coerceAtLeast(0)

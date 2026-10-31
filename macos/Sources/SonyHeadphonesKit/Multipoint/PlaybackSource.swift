@@ -166,6 +166,19 @@ public enum PlaybackSourceAdvisor {
         return here
     }
 
+    /// Whether moving the audio to `targetMac` should first pause the device that has it now, so
+    /// only one keeps playing (ADR-0012). The pause goes through the headphones to the current holder
+    /// of the playback right, so it must be sent before the switch. Not sent when the holder is the
+    /// target, already paused or stopped, in a call, or reports its controls disabled; an unreported
+    /// state still gets it (a pause to a player that is not playing does nothing). Same as Kotlin.
+    public static func pauseBeforeSwitch(_ state: PlaybackSourceState, targetMac: String) -> Bool {
+        guard let holder = (state.reportedDevices ?? state.devices)?.first(where: { $0.isPlayback }),
+              holder.macAddress != targetMac else { return false }
+        let status = state.playbackStatus
+        return status?.isCall != true && status?.controlsAvailable != false
+            && status?.state != .paused && status?.state != .stopped
+    }
+
     /// Whether this device should claim the audio now: following is on, it has been playing for
     /// `settle` (a notification sound never counts), this playback start was not claimed yet, and
     /// the last automatic action was at least `minInterval` ago. One claim per start, so two devices

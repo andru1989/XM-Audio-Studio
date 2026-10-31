@@ -209,4 +209,39 @@ class PlaybackSourceSessionTest {
         assertTrue(r.device.received.none { it.payload.isNotEmpty() && it.payload.u(0) == 0x3c })
         assertEquals(mac, r.state.playbackDevice?.macAddress)
     }
+
+    @Test
+    fun takingTheAudioPausesTheDeviceThatHadItFirst() = runTest {
+        val r = rig()
+        r.session.selectTarget(xm6)
+        // The Mac is playing and holds the audio; the phone starts playing and claims it.
+        r.session.execute(DeviceCommand.ClaimPlayback(localName = "Pixel"))
+        settle()
+        assertEquals("the Mac was paused through the headphones", 0, r.device.lastPausedIndex)
+        assertEquals(1, r.device.playbackIndex)
+        val payloads = r.device.received.filter { it.type != MessageType.ACK }.map { it.payload }
+        val pause = payloads.indexOfFirst { it.size == 4 && it.u(0) == 0xa4 && it.u(3) == 0x01 }
+        val switch = payloads.indexOfFirst { it.u(0) == 0x3c }
+        assertTrue("pause ($pause) goes before the switch ($switch)", pause in 0 until switch)
+    }
+
+    @Test
+    fun aPausedHolderIsNotPausedAgain() = runTest {
+        val r = rig { playbackState = 0x02 }
+        r.session.selectTarget(xm6)
+        r.session.execute(DeviceCommand.SwitchPlayback(pixel))
+        settle()
+        assertEquals(1, r.device.playbackIndex)
+        assertTrue(r.device.received.none { it.payload.size == 4 && it.payload.u(0) == 0xa4 })
+    }
+
+    @Test
+    fun refusedSwitchLetsThePausedDevicePlayOn() = runTest {
+        val r = visible { sourceSwitchResult = 0x03 }
+        r.session.execute(DeviceCommand.SwitchPlayback(pixel))
+        settle()
+        assertEquals(0, r.device.playbackIndex)
+        assertEquals("paused for the switch, then resumed when it was refused", 0x01, r.device.playbackState)
+        assertEquals(0, r.device.lastPausedIndex)
+    }
 }
