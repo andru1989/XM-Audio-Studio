@@ -233,3 +233,79 @@ final class PlaybackSourceControllerTests: XCTestCase {
         }
     }
 }
+
+/// Claims: the device that starts playing takes the audio (ADR-0011). Same cases as Kotlin.
+@MainActor
+final class PlaybackClaimTests: XCTestCase {
+    private let phone = MultipointDevice(macAddress: "AA:BB:CC:DD:EE:02", name: "Galaxy S25 Ultra", connectedStatus: 0x01, isPlayback: false)
+    private let mac = MultipointDevice(macAddress: "AA:BB:CC:DD:EE:01", name: "MacBook Pro", connectedStatus: 0x02, isPlayback: true)
+    private let ipad = MultipointDevice(macAddress: "AA:BB:CC:DD:EE:03", name: "iPad", connectedStatus: 0x00, isPlayback: false)
+    private let t0 = Date(timeIntervalSince1970: 0)
+
+    private func state(_ status: PlaybackStatus? = PlaybackStatus(state: .paused)) -> PlaybackSourceState {
+        var s = PlaybackSourceState()
+        s.applyList([mac, phone, ipad])
+        if let status { s.applyStatus(status) }
+        return s
+    }
+
+    func testClaimTargetIsThisDeviceOnlyWhenItCanTakeTheAudio() {
+        XCTAssertEqual(PlaybackSourceAdvisor.claimTarget(state(), localAddress: nil, localName: "Galaxy S25 Ultra"), phone)
+        XCTAssertNil(PlaybackSourceAdvisor.claimTarget(state(), localAddress: "aa:bb:cc:dd:ee:01", localName: nil), "already has it")
+        XCTAssertNil(PlaybackSourceAdvisor.claimTarget(state(), localAddress: nil, localName: "iPad"), "not connected")
+        XCTAssertNil(PlaybackSourceAdvisor.claimTarget(state(), localAddress: nil, localName: "Pixel"), "unknown")
+        XCTAssertNil(PlaybackSourceAdvisor.claimTarget(state(PlaybackStatus(state: .playing, isCall: true)), localAddress: nil, localName: "Galaxy S25 Ultra"))
+        var pending = state()
+        pending.beginSwitch(to: mac.macAddress)
+        XCTAssertNil(PlaybackSourceAdvisor.claimTarget(pending, localAddress: nil, localName: "Galaxy S25 Ultra"), "switch pending")
+        XCTAssertEqual(PlaybackSourceAdvisor.claimTarget(state(PlaybackStatus(state: .playing)), localAddress: nil, localName: "Galaxy S25 Ultra"),
+                       phone, "newest start wins over a device that is playing")
+    }
+
+    func testOneClaimPerPlaybackStartAfterTheSettleTime() {
+        func claim(_ follow: Bool, _ since: TimeInterval?, _ now: TimeInterval, _ claimed: TimeInterval?, _ last: TimeInterval?) -> Bool {
+            PlaybackSourceAdvisor.shouldClaim(followPlayback: follow, localPlayingSince: since.map { t0 + $0 }, now: t0 + now,
+                                              claimedStart: claimed.map { t0 + $0 }, lastAutoSwitch: last.map { t0 + $0 })
+        }
+        XCTAssertFalse(claim(false, 0, 5, nil, nil))
+        XCTAssertFalse(claim(true, nil, 5, nil, nil))
+        XCTAssertFalse(claim(true, 0, 1.5, nil, nil), "could be a notification")
+        XCTAssertTrue(claim(true, 0, 2, nil, nil))
+        XCTAssertFalse(claim(true, 0, 9, 0, 2), "already claimed")
+        XCTAssertFalse(claim(true, 10, 12, 0, 2))
+        XCTAssertTrue(claim(true, 20, 22, 0, 2))
+    }
+
+    func testClaimWithTheChannelReleasedConnectsReadsAndTakesTheAudio() async throws {
+        let simulator = SimulatedXM6Connection(latency: 0.002)
+        // This "Mac" is the second entry (Pixel's address) so it does not hold the audio yet.
+        let controller = HeadphonesController(connection: simulator, pairedDevices: { [SimulatedXM6Connection.pairedDevice] },
+                                              localAddress: { "aa-bb-cc-dd-ee-02" })
+        controller.releaseWhenIdle = true
+        defer { controller.disconnect() }
+        controller.claimPlaybackHere()
+        try await waitFor { simulator.playbackDeviceIndex == 1 }
+        XCTAssertEqual(controller.playbackSource.playbackDevice?.macAddress, "AA:BB:CC:DD:EE:02")
+    }
+
+    func testClaimByTheDeviceThatAlreadyHasTheAudioWritesNothing() async throws {
+        let simulator = SimulatedXM6Connection(latency: 0.002)
+        let controller = HeadphonesController(connection: simulator, pairedDevices: { [SimulatedXM6Connection.pairedDevice] },
+                                              localAddress: { SimulatedXM6Connection.localAddress })
+        controller.releaseWhenIdle = false
+        defer { controller.disconnect() }
+        controller.claimPlaybackHere()
+        try await waitFor { controller.playbackSource.nowPlaying != nil }
+        try await Task.sleep(for: .milliseconds(200))
+        XCTAssertEqual(simulator.playbackDeviceIndex, 0)
+        XCTAssertNil(controller.playbackSource.switchingTo)
+    }
+
+    private func waitFor(timeout: Duration = .seconds(5), _ condition: () -> Bool) async throws {
+        let deadline = ContinuousClock.now + timeout
+        while !condition() {
+            guard ContinuousClock.now < deadline else { return XCTFail("timed out") }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+    }
+}

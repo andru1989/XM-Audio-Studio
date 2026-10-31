@@ -121,4 +121,27 @@ class PlaybackSourceAdvisorTest {
             .expireSourceSwitch(mac.macAddress)
         assertNull(chosen.apply(MdrEvent.DeviceList(list)).interruptedPlayback)
     }
+
+    @Test
+    fun claimTargetIsThisDeviceOnlyWhenItCanTakeTheAudio() {
+        assertEquals(phone.macAddress, PlaybackSourceAdvisor.claimTarget(state(), null, "Galaxy S25 Ultra")?.macAddress)
+        assertNull("already has it", PlaybackSourceAdvisor.claimTarget(state(), "aa:bb:cc:dd:ee:01", null))
+        assertNull("not connected", PlaybackSourceAdvisor.claimTarget(state(), null, "iPad"))
+        assertNull("unknown", PlaybackSourceAdvisor.claimTarget(state(), null, "Pixel"))
+        assertNull("call", PlaybackSourceAdvisor.claimTarget(state(PlaybackStatus(PlaybackState.PLAYING, isCall = true)), null, "Galaxy S25 Ultra"))
+        assertNull("switch pending", PlaybackSourceAdvisor.claimTarget(state().applyOptimistic(DeviceCommand.SwitchPlayback(ipad.macAddress)).copy(switchingTo = ipad.macAddress), null, "Galaxy S25 Ultra"))
+        // Newest start wins: the other device playing does not stop the claim.
+        assertEquals(phone.macAddress, PlaybackSourceAdvisor.claimTarget(state(PlaybackStatus(PlaybackState.PLAYING)), null, "Galaxy S25 Ultra")?.macAddress)
+    }
+
+    @Test
+    fun oneClaimPerPlaybackStartAfterTheSettleTime() {
+        assertFalse("following off", PlaybackSourceAdvisor.shouldClaim(false, 0, 5_000, null, null))
+        assertFalse("not playing", PlaybackSourceAdvisor.shouldClaim(true, null, 5_000, null, null))
+        assertFalse("too soon: could be a notification", PlaybackSourceAdvisor.shouldClaim(true, 0, 1_500, null, null))
+        assertTrue(PlaybackSourceAdvisor.shouldClaim(true, 0, 2_000, null, null))
+        assertFalse("this start was already claimed", PlaybackSourceAdvisor.shouldClaim(true, 0, 9_000, claimedStartMs = 0, lastAutoSwitchMs = 2_000))
+        assertFalse("a new start right after the last action", PlaybackSourceAdvisor.shouldClaim(true, 10_000, 12_000, 0, lastAutoSwitchMs = 2_000))
+        assertTrue(PlaybackSourceAdvisor.shouldClaim(true, 20_000, 22_000, 0, lastAutoSwitchMs = 2_000))
+    }
 }

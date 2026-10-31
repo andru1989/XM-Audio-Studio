@@ -74,6 +74,17 @@ sealed interface DeviceCommand {
         override val coalesceKey get() = "source"
     }
 
+    /**
+     * "This device just started playing: give it the audio." Resolved only when it is sent, against
+     * the list read after (re)connecting, so it works with the channel released: the entry for this
+     * device is found by [localAddress] or a unique [localName], and nothing is written when it
+     * already has the playback right, is not connected, or a call is in progress. The newest device
+     * to start playing wins (docs/decisions/ADR-0011).
+     */
+    data class ClaimPlayback(val localName: String?, val localAddress: String? = null) : DeviceCommand {
+        override val coalesceKey get() = "source"
+    }
+
     /** Play/pause/skip on the device holding the playback right, relayed by the headphones. */
     data class ControlPlayback(val action: PlaybackAction) : DeviceCommand {
         // Play/pause replace each other while unsent (latest wins); so do the skips.

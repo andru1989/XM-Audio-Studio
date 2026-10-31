@@ -196,6 +196,10 @@ data class HeadphoneState(
             sourceSwitchFailure = null,
             interruptedPlayback = null,
         )
+        // Shown as a switch only once it resolves to this device on the state at hand.
+        is DeviceCommand.ClaimPlayback ->
+            PlaybackSourceAdvisor.claimTarget(this, command.localAddress, command.localName)
+                ?.let { applyOptimistic(DeviceCommand.SwitchPlayback(it.macAddress)) } ?: this
         // Shown at once; the status the headphones report next reconciles it.
         is DeviceCommand.ControlPlayback -> when (command.action) {
             PlaybackAction.PLAY -> copy(playbackStatus = (playbackStatus ?: PlaybackStatus(PlaybackState.UNKNOWN)).copy(state = PlaybackState.PLAYING))

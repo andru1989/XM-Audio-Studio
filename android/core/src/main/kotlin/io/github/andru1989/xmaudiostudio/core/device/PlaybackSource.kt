@@ -48,6 +48,33 @@ data class SourceAdvice(
 )
 
 object PlaybackSourceAdvisor {
+    /**
+     * The device a [DeviceCommand.ClaimPlayback] moves the audio to, judged on fresh state: this
+     * device, when it is connected, does not already hold the playback right, no switch is pending
+     * and no call is in progress. Null means "write nothing".
+     */
+    fun claimTarget(state: HeadphoneState, localAddress: String?, localName: String?): MultipointDevice? {
+        val here = Multipoint.thisDevice(state.reportedDevices ?: state.devices, localAddress, localName) ?: return null
+        if (!here.isConnected || here.isPlayback || state.switchingTo != null || state.playbackStatus?.isCall == true) return null
+        return here
+    }
+
+    /**
+     * Whether this device should claim the audio now: following is on, it has been playing for
+     * [SETTLE_MS] (a notification sound never counts), this playback start was not claimed yet, and
+     * the last automatic action was at least [MIN_INTERVAL_MS] ago. One claim per start, so two
+     * devices that both keep playing never ping-pong: the newest start wins.
+     */
+    fun shouldClaim(
+        followPlayback: Boolean,
+        localPlayingSinceMs: Long?,
+        nowMs: Long,
+        claimedStartMs: Long?,
+        lastAutoSwitchMs: Long?,
+    ): Boolean = followPlayback && localPlayingSinceMs != null && nowMs - localPlayingSinceMs >= SETTLE_MS &&
+        claimedStartMs != localPlayingSinceMs &&
+        (lastAutoSwitchMs == null || nowMs - lastAutoSwitchMs >= MIN_INTERVAL_MS)
+
     /** Local audio must last this long first: a notification sound never moves the controls. */
     const val SETTLE_MS = 2_000L
 
