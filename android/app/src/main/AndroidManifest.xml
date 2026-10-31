@@ -9,6 +9,13 @@
     <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
 
+    <!-- "Seguir la reproducción" (ADR-0011): a connectedDevice foreground service that listens to
+         local audio events and claims the headphones' audio when this phone starts playing. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <uses-feature android:name="android.hardware.bluetooth" android:required="true" />
 
     <application
@@ -35,8 +42,9 @@
             </intent-filter>
         </activity>
 
-        <!-- Etapa 6: platform surfaces. They share the app's process-wide session; no foreground
-             service (docs/android/BACKGROUND.md). -->
+        <!-- Etapa 6: platform surfaces. They share the app's process-wide session. The only foreground
+             service is FollowPlaybackService, and only while "Seguir la reproducción" is on
+             (docs/android/BACKGROUND.md). -->
         <service
             android:name=".platform.NoiseControlTileService"
             android:exported="true"
@@ -81,6 +89,22 @@
         <receiver
             android:name=".platform.EqProfileReceiver"
             android:exported="false" />
+
+        <!-- Claims the headphones' audio when this phone starts playing; never holds the channel. -->
+        <service
+            android:name=".platform.FollowPlaybackService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice" />
+
+        <!-- Restarts it after a reboot or an update when following is on. -->
+        <receiver
+            android:name=".platform.FollowPlaybackBootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
 
         <!-- The equalizer widget's list before Android 12; only the launcher may bind it. -->
         <service

@@ -29,12 +29,18 @@ class AppSettings(context: Context) {
         set(value) = prefs.edit { putBoolean("releaseWhenIdle", value) }
 
     /**
-     * Move the headphones' playback right to where the audio is, and bring back music they cut off
-     * when changing devices. Only while the app is open; off unless the user turns it on.
+     * The device that starts playing takes the headphones' audio (newest start wins), also with the
+     * app closed through FollowPlaybackService; the open app also brings back music the headphones
+     * cut off when changing devices. On unless the user turns it off (ADR-0011).
      */
     var followPlayback: Boolean
-        get() = prefs.getBoolean("followPlayback", false)
+        get() = prefs.getBoolean("followPlayback", true)
         set(value) = prefs.edit { putBoolean("followPlayback", value) }
+
+    /** POST_NOTIFICATIONS (API 33+) is asked once for the follow-playback notification. */
+    var askedNotificationPermission: Boolean
+        get() = prefs.getBoolean("askedNotificationPermission", false)
+        set(value) = prefs.edit { putBoolean("askedNotificationPermission", value) }
 
     var protocolLogging: Boolean
         get() = prefs.getBoolean("protocolLogging", false)

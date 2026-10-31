@@ -147,5 +147,9 @@
     <string name="playback_pause">Pausar</string>
     <string name="playback_next">Siguiente</string>
     <string name="follow_playback">Seguir la reproducción automáticamente</string>
-    <string name="follow_playback_detail">Lleva los controles al dispositivo que está sonando y recupera la música si los audífonos la cortan al cambiar de dispositivo. Solo mientras la app está abierta.</string>
+    <string name="follow_playback_detail">El dispositivo que empieza a sonar se queda con el audio de los audífonos, aunque la app esté cerrada (muestra una notificación). También recupera la música si los audífonos la cortan al cambiar de dispositivo.</string>
+    <string name="follow_channel_name">Seguir la reproducción</string>
+    <string name="follow_channel_description">Aviso fijo mientras la app sigue dónde suena la música.</string>
+    <string name="follow_notification_title">Siguiendo la reproducción</string>
+    <string name="follow_notification_text">Si este teléfono empieza a sonar, los audífonos pasan a él.</string>
 </resources>
