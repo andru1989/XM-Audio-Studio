@@ -1,6 +1,7 @@
 package io.github.andru1989.xmaudiostudio.ui
 
 import android.app.Application
+import android.os.SystemClock
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import io.github.andru1989.xmaudiostudio.AppContainer
@@ -9,6 +10,10 @@ import io.github.andru1989.xmaudiostudio.XmAudioStudioApp
 import io.github.andru1989.xmaudiostudio.bluetooth.PairedDevice
 import io.github.andru1989.xmaudiostudio.bluetooth.PairedDevices
 import io.github.andru1989.xmaudiostudio.core.device.DeviceCommand
+import io.github.andru1989.xmaudiostudio.core.device.Feature
+import io.github.andru1989.xmaudiostudio.core.device.Multipoint
+import io.github.andru1989.xmaudiostudio.core.device.PlaybackSourceAdvisor
+import io.github.andru1989.xmaudiostudio.core.device.SourceAdvice
 import io.github.andru1989.xmaudiostudio.core.device.HeadphoneModel
 import io.github.andru1989.xmaudiostudio.core.eq.FitResult
 import io.github.andru1989.xmaudiostudio.core.model.AmbientSoundMode
@@ -17,7 +22,9 @@ import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
 import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerPreset
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerState
+import io.github.andru1989.xmaudiostudio.core.model.InterruptedPlayback
 import io.github.andru1989.xmaudiostudio.core.model.ListeningMode
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackAction
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
 import io.github.andru1989.xmaudiostudio.core.presets.AutoEqImporter
 import io.github.andru1989.xmaudiostudio.core.presets.DeviceEqSetting
@@ -32,8 +39,10 @@ import io.github.andru1989.xmaudiostudio.core.session.ConnectionPhase
 import io.github.andru1989.xmaudiostudio.core.session.DeviceTarget
 import io.github.andru1989.xmaudiostudio.core.session.HeadphoneSession
 import io.github.andru1989.xmaudiostudio.core.session.SessionSnapshot
+import io.github.andru1989.xmaudiostudio.platform.LocalPlayback
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,6 +67,10 @@ data class UiState(
     val compareWith: DeviceEqSetting? = null,
     val autoEqPreview: AutoEqPreview? = null,
     val message: String? = null,
+    /** Where the audio is and what to offer about it (multipoint headphones). */
+    val sourceAdvice: SourceAdvice? = null,
+    /** Follow the audio and recover music the headphones cut off (only while the app is open). */
+    val followPlayback: Boolean = false,
 )
 
 class MainViewModel(app: Application) : AndroidViewModel(app) {
@@ -80,27 +93,137 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private var snapshotJob: Job? = null
     private var surfaceVisible = false
 
+    private var localPlayback = LocalPlayback(app, requireBluetoothOutput = !settings.demoMode)
+    private var localPlaybackJob: Job? = null
+    /** This phone's name as the headphones list it; Android does not reveal its own address. */
+    private var localName: String? = null
+    private var interruption: InterruptedPlayback? = null
+    private var interruptedSinceMs: Long? = null
+    /** Last automatic switch of either kind (follow or recover), so they can never ping-pong. */
+    private var lastAutoSwitchMs: Long? = null
+    private var adviceTicker: Job? = null
+
     init {
         container.protocolLog.enabled = settings.protocolLogging
         _ui.update {
-            it.copy(demoMode = settings.demoMode, releaseWhenIdle = settings.releaseWhenIdle, protocolLogging = settings.protocolLogging)
+            it.copy(
+                demoMode = settings.demoMode, releaseWhenIdle = settings.releaseWhenIdle,
+                protocolLogging = settings.protocolLogging, followPlayback = settings.followPlayback,
+            )
         }
         observeSession()
         restoreTarget()
         refreshProfiles()
+        startLocalPlayback()
     }
 
     private fun observeSession() {
         snapshotJob?.cancel()
         snapshotJob = viewModelScope.launch {
-            session.snapshot.collect { snap -> _ui.update { it.copy(snapshot = snap, activeProfile = matchActiveProfile(snap)) } }
+            session.snapshot.collect { snap ->
+                _ui.update { it.copy(snapshot = snap, activeProfile = matchActiveProfile(snap)) }
+                evaluatePlaybackSource()
+            }
         }
     }
+
+    // region Playback source (multipoint)
+
+    /** Demo mode has no Bluetooth audio and lists the simulated phone as "Pixel". */
+    private fun startLocalPlayback() {
+        localPlaybackJob?.cancel()
+        localPlayback.stop()
+        localPlayback = LocalPlayback(getApplication(), requireBluetoothOutput = !settings.demoMode)
+        localName = if (settings.demoMode) DEMO_PHONE_NAME else LocalPlayback.bluetoothName(getApplication())
+        localPlayback.start()
+        localPlaybackJob = viewModelScope.launch {
+            localPlayback.playingSince.collect {
+                // This phone started or stopped playing: ask the headphones where the audio is now.
+                session.refreshPlaybackSource()
+                evaluatePlaybackSource()
+            }
+        }
+    }
+
+    /**
+     * Shared rules (core PlaybackSourceAdvisor, same as macOS). Automatic switches happen only with
+     * "follow" on, while this screen is visible and the state was read live from the headphones.
+     */
+    private fun evaluatePlaybackSource() {
+        val snap = _ui.value.snapshot
+        val state = snap.state
+        val now = SystemClock.elapsedRealtime()
+        if (state.interruptedPlayback != interruption) {
+            interruption = state.interruptedPlayback
+            interruptedSinceMs = interruption?.let { now }
+        }
+        val thisDevice = Multipoint.thisDevice(state.devices, null, localName)
+        val advice = PlaybackSourceAdvisor.advise(
+            state = state,
+            thisDevice = thisDevice,
+            localPlayingSinceMs = localPlayback.playingSince.value,
+            nowMs = now,
+            followPlayback = settings.followPlayback,
+            lastAutoSwitchMs = lastAutoSwitchMs,
+            interruptedSinceMs = interruptedSinceMs,
+        )
+        if (_ui.value.sourceAdvice != advice) _ui.update { it.copy(sourceAdvice = advice) }
+
+        val canAct = surfaceVisible && snap.phase == ConnectionPhase.CONNECTED && snap.stateIsLive &&
+            snap.capabilities?.supports(Feature.PLAYBACK_SOURCE_SWITCH) == true
+        val recoverTo = advice.interrupted
+        when {
+            canAct && advice.switchHereNow && thisDevice != null -> {
+                lastAutoSwitchMs = now
+                session.execute(DeviceCommand.SwitchPlayback(thisDevice.macAddress))
+            }
+            canAct && advice.recoverNow && recoverTo != null -> {
+                lastAutoSwitchMs = now
+                session.execute(DeviceCommand.SwitchPlayback(recoverTo.fromMac, resumePlayback = true))
+            }
+        }
+        // The advice depends on time (settle delays) only while something is pending.
+        val needsTicker = surfaceVisible && (localPlayback.playingSince.value != null || interruption != null)
+        if (needsTicker && adviceTicker?.isActive != true) {
+            adviceTicker = viewModelScope.launch {
+                while (true) {
+                    delay(ADVICE_TICK_MS)
+                    evaluatePlaybackSource()
+                }
+            }
+        } else if (!needsTicker) {
+            adviceTicker?.cancel()
+            adviceTicker = null
+        }
+    }
+
+    fun setFollowPlayback(enabled: Boolean) {
+        settings.followPlayback = enabled
+        _ui.update { it.copy(followPlayback = enabled) }
+        evaluatePlaybackSource()
+    }
+
+    fun switchPlayback(mac: String) = session.execute(DeviceCommand.SwitchPlayback(mac))
+
+    /** Gives the playback right back to [fromMac] and, once the headphones confirm, plays there. */
+    fun recoverPlayback(fromMac: String) = session.execute(DeviceCommand.SwitchPlayback(fromMac, resumePlayback = true))
+
+    /** Play/pause/skip on the device holding the playback right, through the headphones. */
+    fun controlPlayback(action: PlaybackAction) = session.execute(DeviceCommand.ControlPlayback(action))
+
+    override fun onCleared() {
+        localPlayback.stop()
+        super.onCleared()
+    }
+
+    // endregion
 
     // region Device selection
 
     fun refreshDevices() {
         _ui.update { it.copy(devices = PairedDevices.list(getApplication())) }
+        // The Bluetooth permission may have just been granted.
+        if (!settings.demoMode) localName = LocalPlayback.bluetoothName(getApplication())
     }
 
     /** Same rule as the tile and the widget, which may have created the process (AppContainer). */
@@ -133,6 +256,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         settings.demoMode = enabled
         rebuildSession()
         refreshProfiles()
+        startLocalPlayback()
         _ui.update { it.copy(demoMode = enabled) }
     }
 
@@ -153,6 +277,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setSurfaceVisible(visible: Boolean) {
         surfaceVisible = visible
         session.setSurfaceVisible(SURFACE_ID, visible)
+        // Back in the foreground: the playback state may have changed while away.
+        if (visible) localPlayback.update()
+        evaluatePlaybackSource()
     }
     fun connect() = session.connect()
     fun disconnect() = session.disconnect()
@@ -192,7 +319,6 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun setSpeakToChatConfig(config: SpeakToChatConfig) = session.execute(DeviceCommand.SetSpeakToChatConfig(config))
     fun setAutoPowerOff(mode: AutomaticPowerOffMode) = session.execute(DeviceCommand.SetAutomaticPowerOff(mode))
     fun setPauseWhenTakenOff(enabled: Boolean) = session.execute(DeviceCommand.SetPauseWhenTakenOff(enabled))
-    fun switchPlayback(mac: String) = session.execute(DeviceCommand.SwitchPlayback(mac))
     /** Low latency (or a priority the headphones did not offer) is never sent; see Xm6Adapter. */
     fun setConnectionPriority(priority: ConnectionPriority) = session.execute(DeviceCommand.SetConnectionPriority(priority))
 
@@ -444,5 +570,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         const val DEMO_ADDRESS = AppContainer.DEMO_ADDRESS
         private const val SURFACE_ID = "main-activity"
         private const val MAX_HISTORY = 30
+        private const val ADVICE_TICK_MS = 1_000L
+        /** The phone the XM6 simulator lists (SimulatedXm6Channel.devices). */
+        private const val DEMO_PHONE_NAME = "Pixel"
     }
 }

@@ -121,4 +121,31 @@
     <string name="save_to_library">Guardar en la biblioteca</string>
     <string name="device_curve_name">Curva de mis audífonos</string>
     <string name="photo_credits">Fotos de producto © Sony Corporation, tomadas de sony.com para uso personal; no forman parte de la licencia del proyecto.</string>
+
+    <!-- Where it plays (multipoint playback source) -->
+    <string name="source_title">Dónde suena</string>
+    <string name="source_this_phone">Este teléfono</string>
+    <string name="source_playing">Reproduciendo</string>
+    <string name="source_paused">En pausa</string>
+    <string name="source_stopped">Detenido</string>
+    <string name="source_call">Llamada en curso</string>
+    <string name="source_controls_here">Controles aquí</string>
+    <string name="source_none">Los audífonos no indican qué dispositivo tiene los controles.</string>
+    <string name="source_connected">Conectado</string>
+    <string name="source_paired">Emparejado, sin conexión</string>
+    <string name="source_other_device">otro dispositivo</string>
+    <string name="source_controls_elsewhere">Este teléfono está reproduciendo, pero los botones de los audífonos controlan %1$s.</string>
+    <string name="source_bring_controls">Traer los controles aquí</string>
+    <string name="source_interrupted">La música en %1$s se detuvo cuando los audífonos pasaron a %2$s.</string>
+    <string name="source_resume_on">Volver a %1$s y reanudar</string>
+    <string name="source_failed_call">No se pudo cambiar: hay una llamada en curso.</string>
+    <string name="source_failed_a2dp">No se pudo cambiar: ese dispositivo no tiene el audio conectado.</string>
+    <string name="source_failed_assistant">No se pudo cambiar: el asistente de voz tiene prioridad.</string>
+    <string name="source_failed_unconfirmed">Los audífonos no confirmaron el cambio.</string>
+    <string name="playback_previous">Anterior</string>
+    <string name="playback_play">Reproducir</string>
+    <string name="playback_pause">Pausar</string>
+    <string name="playback_next">Siguiente</string>
+    <string name="follow_playback">Seguir la reproducción automáticamente</string>
+    <string name="follow_playback_detail">Lleva los controles al dispositivo que está sonando y recupera la música si los audífonos la cortan al cambiar de dispositivo. Solo mientras la app está abierta.</string>
 </resources>

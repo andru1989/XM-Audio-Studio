@@ -28,6 +28,14 @@ class AppSettings(context: Context) {
         get() = prefs.getBoolean("releaseWhenIdle", true)
         set(value) = prefs.edit { putBoolean("releaseWhenIdle", value) }
 
+    /**
+     * Move the headphones' playback right to where the audio is, and bring back music they cut off
+     * when changing devices. Only while the app is open; off unless the user turns it on.
+     */
+    var followPlayback: Boolean
+        get() = prefs.getBoolean("followPlayback", false)
+        set(value) = prefs.edit { putBoolean("followPlayback", value) }
+
     var protocolLogging: Boolean
         get() = prefs.getBoolean("protocolLogging", false)
         set(value) = prefs.edit { putBoolean("protocolLogging", value) }
