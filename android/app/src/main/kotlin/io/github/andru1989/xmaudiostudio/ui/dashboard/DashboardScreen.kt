@@ -109,6 +109,11 @@ fun DashboardScreen(
 
         ConnectionCard(snap, vm::connect, vm::disconnect, vm::refresh)
 
+        // Where the audio is (multipoint): right under the connection, where it is seen first.
+        if (caps != null && caps.supports(Feature.MULTIPOINT_LIST) && !s.devices.isNullOrEmpty()) {
+            PlaybackSourceCard(s, caps, state.sourceAdvice, vm)
+        }
+
         s.battery?.let { b ->
             SectionCard {
                 Row(verticalAlignment = Alignment.CenterVertically) {

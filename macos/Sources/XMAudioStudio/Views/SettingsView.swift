@@ -33,6 +33,10 @@ struct SettingsView: View {
                 Toggle("Release the headphones when I'm not using the app", isOn: $settings.releaseWhenIdle)
                 Text("Releases the control connection after all windows and panels have been closed for a short time.")
                     .font(.caption).foregroundStyle(.secondary)
+                Toggle("Follow playback automatically", isOn: $settings.followPlayback)
+                Text("Moves the headphone controls to the device that is playing, and gives the music back when the headphones cut it off while switching devices. With release turned off, it also watches while no window is open.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             Section("Developer") {
                 Toggle("Debug log", isOn: $controller.protocolLoggingEnabled)

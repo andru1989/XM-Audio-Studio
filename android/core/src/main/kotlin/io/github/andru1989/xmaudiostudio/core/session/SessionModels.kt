@@ -66,4 +66,10 @@ data class SessionConfig(
     /** Quiet time after the last state query is acknowledged before writes are allowed. */
     val stateSettleMs: Long = 300,
     val stateTimeoutMs: Long = 6_000,
+    /** While a control surface is visible, re-read where the audio is this often (0 disables). */
+    val sourceWatchMs: Long = 3_000,
+    /** A source switch the headphones neither confirm nor refuse stops being shown after this. */
+    val sourceSwitchTimeoutMs: Long = 5_000,
+    /** After a confirmed switch, read again once the audio has had time to move. */
+    val sourceSettleMs: Long = 1_500,
 )

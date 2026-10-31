@@ -257,6 +257,50 @@
       "args": {},
       "payload": "12 02",
       "source": "reference: mos9527/SonyHeadphonesClient tables (not captured on XM6)"
+    },
+    {
+      "command": "playbackStatusGet",
+      "args": {},
+      "payload": "a2 01",
+      "source": "mos9527 GetPlayStatus (MIT)"
+    },
+    {
+      "command": "nowPlayingGet",
+      "args": {},
+      "payload": "a6 01",
+      "source": "mos9527 GetPlayParam (MIT)"
+    },
+    {
+      "command": "playbackControlSet",
+      "args": {
+        "action": "pause"
+      },
+      "payload": "a4 01 00 01",
+      "source": "mos9527 SetPlayStatusPlaybackController; the 00 ENABLE byte is required"
+    },
+    {
+      "command": "playbackControlSet",
+      "args": {
+        "action": "play"
+      },
+      "payload": "a4 01 00 07",
+      "source": "mos9527 PlaybackControl.PLAY"
+    },
+    {
+      "command": "playbackControlSet",
+      "args": {
+        "action": "next"
+      },
+      "payload": "a4 01 00 02",
+      "source": "mos9527 PlaybackControl.TRACK_UP"
+    },
+    {
+      "command": "playbackControlSet",
+      "args": {
+        "action": "previous"
+      },
+      "payload": "a4 01 00 03",
+      "source": "mos9527 PlaybackControl.TRACK_DOWN"
     }
   ]
 }

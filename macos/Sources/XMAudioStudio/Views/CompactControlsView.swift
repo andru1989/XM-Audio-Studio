@@ -29,9 +29,9 @@ struct CompactControlsView: View {
                 listeningModeRow
                 equalizerRow
 
-                if let devices = controller.devices, devices.count > 1 {
+                if let devices = controller.devices, devices.contains(where: { $0.isConnected }) {
                     Divider()
-                    devicesRow(devices)
+                    CompactPlaybackSourceView(capabilities: capabilities)
                 }
             } else {
                 connectPrompt
@@ -175,36 +175,8 @@ struct CompactControlsView: View {
         return equalizer.preset?.label ?? "Personalized"
     }
 
-    private func devicesRow(_ devices: [MultipointDevice]) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            ForEach(devices) { device in
-                Button {
-                    if device.isConnected && !device.isPlayback {
-                        controller.switchPlayback(to: device)
-                    }
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: symbolForDevice(named: device.name))
-                            .font(.caption)
-                            .frame(width: 16)
-                            .foregroundStyle(device.isPlayback ? Color.brand : Color.secondary)
-                        Text(device.name)
-                            .font(.caption)
-                            .lineLimit(1)
-                            .foregroundStyle(device.isConnected ? Color.primary : Color.secondary)
-                        Spacer()
-                        if !device.isPlayback && device.isConnected {
-                            Text("Play here")
-                                .font(.caption2.weight(.medium))
-                                .foregroundStyle(Color.brand)
-                        }
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .disabled(!device.isConnected || device.isPlayback)
-            }
-        }
+    private var capabilities: DeviceCapabilities {
+        DeviceCatalog.capabilities(HeadphoneModel.from(bluetoothName: controller.deviceName) ?? .wh1000xm6)
     }
 
     private var connectPrompt: some View {

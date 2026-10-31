@@ -43,6 +43,19 @@ class SimulatedXm6Channel(
     /** LDAC. */
     var audioCodec = 0x10
     val devices = listOf("AA:BB:CC:DD:EE:01" to "MacBook Pro", "AA:BB:CC:DD:EE:02" to "Pixel")
+    /** PLAYBACK_CONTROLLER status of the source: 0x01 playing, 0x02 paused, 0x03 stopped. */
+    var playbackState = 0x01
+    var trackIndex = 0
+    /** Invented track names for demo mode. */
+    val tracks = listOf(
+        Triple("Amanecer en la ciudad", "Demostración", "XM Audio Studio"),
+        Triple("Ruido blanco", "Demostración", "XM Audio Studio"),
+        Triple("Café de madrugada", "Demostración", "XM Audio Studio"),
+    )
+    /** Result byte of `3d 01` for the next switch (0x00 success, 0x02 refused during a call, ...). */
+    var sourceSwitchResult = 0x00
+    /** False: a source switch is ACKed but neither confirmed nor carried out (unknown firmware). */
+    var answersSourceSwitch = true
 
     /** Set to make open() fail, e.g. to simulate another device holding the channel. */
     var refuseConnections = false
@@ -125,6 +138,24 @@ class SimulatedXm6Channel(
         if (focusOnVoice) 0x01 else 0x00, ambientLevel, 0x00, 0x00,
     )
 
+    /** Another device takes the playback right on its own, as when the phone starts playing. */
+    fun simulateSourceTakeover(index: Int, notify: Boolean) {
+        playbackIndex = index
+        if (notify) emitCommand(MessageType.COMMAND_2, deviceList(0x39))
+    }
+
+    private fun playbackReport(opcode: Int) = bytes(opcode, 0x01, 0x00, playbackState, 0x00)
+
+    private fun trackReport(opcode: Int): ByteArray {
+        val (title, album, artist) = tracks[trackIndex % tracks.size]
+        var out = bytes(opcode, 0x01)
+        for (name in listOf(title, album, artist, "")) {
+            val utf8 = name.toByteArray(Charsets.UTF_8)
+            out += bytes(if (name.isEmpty()) 0x01 else 0x02, utf8.size) + utf8
+        }
+        return out
+    }
+
     private fun eqReport(opcode: Int) = bytes(opcode, 0x04, eqPreset, eqBands.size, *eqBands.map { it + 6 }.toIntArray())
 
     private fun deviceList(opcode: Int): ByteArray {
@@ -140,10 +171,13 @@ class SimulatedXm6Channel(
         val reply: ByteArray? = if (type == MessageType.COMMAND_2) {
             when {
                 p.u(0) == 0x36 && p.u(1) == 0x02 -> deviceList(0x37)
-                p.u(0) == 0x3c && p.u(1) == 0x01 && p.size == 19 -> {
+                p.u(0) == 0x3c && p.u(1) == 0x01 && p.size == 19 && answersSourceSwitch -> {
                     val mac = String(p.copyOfRange(2, 19))
-                    devices.indexOfFirst { it.first == mac }.takeIf { it >= 0 }?.let { playbackIndex = it }
-                    deviceList(0x39)
+                    val index = devices.indexOfFirst { it.first == mac }
+                    val result = if (index < 0) 0x03 else sourceSwitchResult
+                    if (result == 0x00) playbackIndex = index
+                    emitCommand(type, bytes(0x3d, 0x01, result) + p.copyOfRange(2, 19))
+                    if (result == 0x00) deviceList(0x39) else null
                 }
                 else -> null
             }
@@ -172,6 +206,20 @@ class SimulatedXm6Channel(
                     eqReport(0x59)
                 }
                 0x12 -> if (p.u(1) == 0x02) bytes(0x13, 0x02, audioCodec) else null
+                0xa2 -> if (p.u(1) == 0x01) playbackReport(0xa3) else null
+                0xa6 -> if (p.u(1) == 0x01) trackReport(0xa7) else null
+                0xa4 -> if (p.size == 4 && p.u(1) == 0x01 && p.u(2) == 0x00) {
+                    when (p.u(3)) {
+                        0x01 -> playbackState = 0x02
+                        0x07 -> playbackState = 0x01
+                        0x02 -> trackIndex++
+                        0x03 -> trackIndex = (trackIndex - 1).coerceAtLeast(0)
+                    }
+                    if (p.u(3) == 0x02 || p.u(3) == 0x03) emitCommand(type, trackReport(0xa9))
+                    playbackReport(0xa5)
+                } else {
+                    null
+                }
                 // Capability as captured on an XM6 fw 3.1.5: quality, stable, low latency; no exclusive list.
                 0xe0 -> if (p.u(1) == 0x05) bytes(0xe1, 0x05, 0x03, 0x00, 0x01, 0x02, 0x00) else null
                 0xe6 -> when (p.u(1)) {

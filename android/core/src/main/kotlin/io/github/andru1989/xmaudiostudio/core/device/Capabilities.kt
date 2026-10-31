@@ -37,6 +37,8 @@ enum class Feature(val id: String) {
     EQ_CUSTOM_BANDS("eqCustomBands"),
     MULTIPOINT_LIST("multipointList"),
     PLAYBACK_SOURCE_SWITCH("playbackSourceSwitch"),
+    /** Play state, track names and play/pause/skip relayed to the source (PLAYBACK_CONTROLLER `a2-a7 01`). */
+    PLAYBACK_CONTROL("playbackControl"),
     /** "Priorizar calidad de sonido / conexión estable" (AUDIO type 0x05). */
     CONNECTION_PRIORITY("connectionPriority"),
     /** Read-only codec indicator (`12 02`). */

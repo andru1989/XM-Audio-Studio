@@ -25,4 +25,10 @@ interface HeadphoneDevice {
 
     /** A screen/panel showing headphone controls became visible or hidden. */
     fun setSurfaceVisible(id: String, visible: Boolean)
+
+    /**
+     * Re-read where the audio is (multipoint list, play state, track) if the channel is open, e.g.
+     * because this device started or stopped playing. Never opens the channel by itself.
+     */
+    fun refreshPlaybackSource() = Unit
 }

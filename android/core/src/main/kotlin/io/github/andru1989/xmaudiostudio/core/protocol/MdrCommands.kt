@@ -12,10 +12,15 @@ import io.github.andru1989.xmaudiostudio.core.model.EqualizerCapability
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerPreset
 import io.github.andru1989.xmaudiostudio.core.model.EqualizerState
 import io.github.andru1989.xmaudiostudio.core.model.MultipointDevice
+import io.github.andru1989.xmaudiostudio.core.model.NowPlaying
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackAction
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackState
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackStatus
 import io.github.andru1989.xmaudiostudio.core.model.ProtocolVersion
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatSensitivity
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatTimeout
+import io.github.andru1989.xmaudiostudio.core.model.SourceSwitchResult
 
 /**
  * Payload builders and decoders for the MDR v2 command families used by the
@@ -331,6 +336,61 @@ object MdrCommands {
     }
 
     fun isDeviceListReply(opcode: Int) = opcode == Opcode.PERI_RET || opcode == Opcode.PERI_NOTIFY
+
+    /**
+     * `3d 01 <result> <MAC17>`: the headphones' answer to a source switch (mos9527 tables,
+     * `PeripheralNotifyExtendedParamSourceSwitchControl`). Exactly 20 bytes.
+     */
+    fun decodeSourceSwitchResult(p: ByteArray): Pair<SourceSwitchResult, String>? {
+        if (p.size != 20 || p.u(0) != Opcode.PERI_NOTIFY_EXTENDED || p.u(1) != Subtype.PERI_SOURCE_SWITCH) return null
+        val mac = String(p.copyOfRange(3, 20), Charsets.UTF_8)
+        return SourceSwitchResult.fromCode(p.u(2)) to mac
+    }
+
+    // endregion
+    // region Playback controller (status, track names, play/pause/skip)
+
+    fun playbackStatusGet(): ByteArray = bytes(Opcode.PLAY_GET_STATUS, Subtype.PLAYBACK_CONTROLLER)
+
+    fun nowPlayingGet(): ByteArray = bytes(Opcode.PLAY_GET_PARAM, Subtype.PLAYBACK_CONTROLLER)
+
+    /** The ENABLE byte (`00`) is required; the headphones forward the key to the playback-right device. */
+    fun playbackControlSet(action: PlaybackAction): ByteArray =
+        bytes(Opcode.PLAY_SET_STATUS, Subtype.PLAYBACK_CONTROLLER, 0x00, action.code)
+
+    /** `a3/a5 01 <enable 00/01> <status 00-03> <music 00 / call 01>`, exactly 5 bytes; anything else is rejected. */
+    fun decodePlaybackStatus(p: ByteArray): PlaybackStatus? {
+        if (p.size != 5 || p.u(1) != Subtype.PLAYBACK_CONTROLLER) return null
+        if (p.u(0) != Opcode.PLAY_RET_STATUS && p.u(0) != Opcode.PLAY_NTFY_STATUS) return null
+        val available = when (p.u(2)) { 0x00 -> true; 0x01 -> false; else -> return null }
+        val state = PlaybackState.fromCode(p.u(3)) ?: return null
+        val isCall = when (p.u(4)) { 0x00 -> false; 0x01 -> true; else -> return null }
+        return PlaybackStatus(state, isCall, available)
+    }
+
+    fun isPlaybackStatusReply(opcode: Int) = opcode == Opcode.PLAY_RET_STATUS || opcode == Opcode.PLAY_NTFY_STATUS
+
+    /**
+     * `a7/a9 01 (<nameStatus> <len> <UTF-8 name>) x4`: title, album, artist and a fourth name the app
+     * does not use. Blank names are null; a truncated entry rejects the payload; trailing bytes are ignored.
+     */
+    fun decodeNowPlaying(p: ByteArray): NowPlaying? {
+        if (p.size < 2 || p.u(1) != Subtype.PLAYBACK_CONTROLLER) return null
+        if (p.u(0) != Opcode.PLAY_RET_PARAM && p.u(0) != Opcode.PLAY_NTFY_PARAM) return null
+        val names = mutableListOf<String?>()
+        var i = 2
+        repeat(4) {
+            if (i + 2 > p.size) return null
+            val length = p.u(i + 1)
+            i += 2
+            if (i + length > p.size) return null
+            names += String(p.copyOfRange(i, i + length), Charsets.UTF_8).trim().ifEmpty { null }
+            i += length
+        }
+        return NowPlaying(title = names[0], album = names[1], artist = names[2])
+    }
+
+    fun isNowPlayingReply(opcode: Int) = opcode == Opcode.PLAY_RET_PARAM || opcode == Opcode.PLAY_NTFY_PARAM
 
     // endregion
     // region Speak-to-Chat (enable flag inverted on v2: 0x00 = enabled)

@@ -103,6 +103,22 @@ final class ConformanceTests: XCTestCase {
             dict = ["event": "deviceList", "devices": devices.map {
                 ["mac": $0.macAddress, "name": $0.name, "connected": $0.isConnected, "playback": $0.isPlayback] as [String: Any]
             }]
+        case .sourceSwitchResult(let result, let mac):
+            let names: [SourceSwitchResult: String] = [
+                .success: "success", .failed: "failed", .failedCalling: "failedCalling",
+                .failedA2dpNotConnected: "failedA2dpNotConnected", .failedVoiceAssistant: "failedVoiceAssistant",
+            ]
+            dict = ["event": "sourceSwitchResult", "result": names[result] ?? "unknown", "mac": mac]
+        case .playbackStatus(let status):
+            let states: [PlaybackState: String] = [.unknown: "unknown", .playing: "playing", .paused: "paused", .stopped: "stopped"]
+            dict = ["event": "playbackStatus", "state": states[status.state]!, "call": status.isCall,
+                    "controlsAvailable": status.controlsAvailable]
+        case .nowPlaying(let track):
+            var d: [String: Any] = ["event": "nowPlaying"]
+            if let title = track.title { d["title"] = title }
+            if let album = track.album { d["album"] = album }
+            if let artist = track.artist { d["artist"] = artist }
+            dict = d
         case .modelName(let name):
             dict = ["event": "modelName", "name": name]
         case .firmwareVersion(let version):
@@ -191,6 +207,11 @@ final class ConformanceTests: XCTestCase {
             let priority = ConnectionPriority.allCases.first { Self.canonical($0) == a["priority"] as! String }!
             return SonyCommands.buildConnectionPrioritySet(priority)
         case "audioCodecGet": return SonyCommands.buildAudioCodecGet()
+        case "playbackStatusGet": return SonyCommands.buildPlaybackStatusGet()
+        case "nowPlayingGet": return SonyCommands.buildNowPlayingGet()
+        case "playbackControlSet":
+            let actions: [String: PlaybackAction] = ["pause": .pause, "play": .play, "next": .next, "previous": .previous]
+            return SonyCommands.buildPlaybackControlSet(actions[a["action"] as! String]!)
         default:
             XCTFail("fixture command not mapped: \(name)")
             return nil

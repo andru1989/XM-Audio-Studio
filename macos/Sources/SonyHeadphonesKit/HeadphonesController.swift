@@ -26,7 +26,12 @@ public final class HeadphonesController: ObservableObject {
     @Published public private(set) var equalizer: EqualizerState?
     @Published public private(set) var listeningMode: ListeningMode?
     @Published public private(set) var bgmRoomSize: BGMRoomSize?
-    @Published public private(set) var devices: [MultipointDevice]?
+    /// Where the audio is: multipoint list (playback right), play state, track, pending switch.
+    @Published public private(set) var playbackSource = PlaybackSourceState()
+    /// Multipoint list as shown (a pending switch already applied).
+    public var devices: [MultipointDevice]? { playbackSource.devices }
+    /// Bluetooth address of the headphones this controller talks to (IOBluetooth format).
+    @Published public private(set) var deviceAddress: String?
     /// What the headphones report about themselves (`04 01` / `04 02`); nil until answered.
     @Published public private(set) var reportedModelName: String?
     @Published public private(set) var firmwareVersion: String?
@@ -101,14 +106,35 @@ public final class HeadphonesController: ObservableObject {
     private var connectRetryCount = 0
     private var connectTarget: (address: String, name: String?)?
     private var lastConnectTarget: (address: String, name: String?)?
+    private let localAddressProvider: () -> String?
+    private var sourceWatchTask: Task<Void, Never>?
+    private var sourceSwitchTask: Task<Void, Never>?
+    private var sourceSettleTask: Task<Void, Never>?
+    /// Play once the switch to this MAC is confirmed (`switchPlayback(toAddress:resume:)`).
+    private var resumeOnSwitchTo: String?
+    /// While a control surface is visible, re-read where the audio is this often.
+    var sourceWatchInterval: Duration = .seconds(3)
+    /// A switch the headphones neither confirm nor refuse stops being shown after this.
+    var sourceSwitchTimeout: Duration = .seconds(5)
+    /// After a confirmed switch, read again once the audio has had time to move.
+    var sourceSettleDelay: Duration = .milliseconds(1500)
 
-    public convenience init() {
-        self.init(connection: RFCOMMConnection(), pairedDevices: RFCOMMConnection.pairedDevices)
+    /// Keep watching where the audio is even with no window or panel visible (following is on
+    /// and the channel is held anyway). Never opens the channel by itself.
+    public var watchesPlaybackInBackground = false {
+        didSet { updateSourceWatch() }
     }
 
-    init(connection: HeadphonesConnection, pairedDevices: @escaping () -> [PairedDeviceInfo]) {
+    public convenience init() {
+        self.init(connection: RFCOMMConnection(), pairedDevices: RFCOMMConnection.pairedDevices,
+                  localAddress: RFCOMMConnection.localAddress)
+    }
+
+    init(connection: HeadphonesConnection, pairedDevices: @escaping () -> [PairedDeviceInfo],
+         localAddress: @escaping () -> String? = { nil }) {
         self.connection = connection
         self.pairedDevicesProvider = pairedDevices
+        self.localAddressProvider = localAddress
         protocolLoggingEnabled = UserDefaults.standard.bool(forKey: "protocolLoggingEnabled")
         protocolLog.isEnabled = protocolLoggingEnabled
         connection.onEvent = { [weak self] event in
@@ -146,7 +172,13 @@ public final class HeadphonesController: ObservableObject {
         connectRetryCount = 0
         connectTarget = (address, name)
         lastConnectTarget = connectTarget
+        deviceAddress = address
         attemptConnect()
+    }
+
+    /// The multipoint entry for this Mac: by its Bluetooth address, else by its unique name.
+    public var thisDevice: MultipointDevice? {
+        Multipoint.thisDevice(devices, localAddress: localAddressProvider(), localName: Host.current().localizedName)
     }
 
     private func attemptConnect() {
@@ -212,6 +244,9 @@ public final class HeadphonesController: ObservableObject {
         guard usage.setSurface(id, visible: visible) else { return }
         scheduleIdleDisconnect()
         if releaseWhenIdle && visible { connectIfNeeded() }
+        updateSourceWatch()
+        // Coming back to a window or panel: say where the audio is now, not where it was.
+        if visible { refreshPlaybackSource() }
     }
 
     private func connectIfNeeded() {
@@ -392,17 +427,93 @@ public final class HeadphonesController: ObservableObject {
         }
     }
 
-    /// Switch the active playback source to another connected device.
-    public func switchPlayback(to device: MultipointDevice) {
-        guard let payload = SonyCommands.buildSourceSwitchSet(macAddress: device.macAddress) else { return }
-        devices = devices?.map { d in
-            var d = d
-            d.isPlayback = d.macAddress == device.macAddress
-            return d
+    /// Gives the playback right (where the headphones' buttons act) to another connected device.
+    /// `resume`: once the headphones confirm the switch, send play to that device.
+    public func switchPlayback(to device: MultipointDevice, resume: Bool = false) {
+        switchPlayback(toAddress: device.macAddress, resume: resume)
+    }
+
+    public func switchPlayback(toAddress macAddress: String, resume: Bool = false) {
+        guard let payload = SonyCommands.buildSourceSwitchSet(macAddress: macAddress) else { return }
+        playbackSource.beginSwitch(to: macAddress)
+        resumeOnSwitchTo = resume ? macAddress : nil
+        enqueueCommand(key: "source") { [unowned self] in
+            // Encoded when sent: the switch only counts from here.
+            self.expireSwitchLater(macAddress)
+            // The headphones answer `3d 01` and push a new list; read it anyway as a fallback.
+            return [(.command2, payload), (.command2, SonyCommands.buildDeviceListGet())]
         }
-        enqueueCommand(key: "source") {
-            // The device pushes an updated list after a switch; ask anyway as a fallback.
-            [(.command2, payload), (.command2, SonyCommands.buildDeviceListGet())]
+    }
+
+    /// Play/pause/skip on the device holding the playback right, relayed by the headphones.
+    public func controlPlayback(_ action: PlaybackAction) {
+        playbackSource.applyOptimistic(action)
+        let key = action == .next || action == .previous ? "skip" : "playPause"
+        enqueueCommand(key: key) {
+            // The headphones notify the new state; the read is a fallback.
+            [(.command1, SonyCommands.buildPlaybackControlSet(action)), (.command1, SonyCommands.buildPlaybackStatusGet())]
+        }
+    }
+
+    /// Re-reads where the audio is (list, play state, track) if the channel is open, e.g. because
+    /// this Mac started or stopped sending audio. Never opens the channel and never counts as
+    /// activity.
+    public func refreshPlaybackSource() {
+        refreshPlaybackSource(withList: true)
+    }
+
+    private func refreshPlaybackSource(withList: Bool) {
+        guard connectionState == .connected, protocolVersion != .unknown else { return }
+        var queries: [(SonyMessageType, [UInt8])] = [
+            (.command1, SonyCommands.buildPlaybackStatusGet()),
+            (.command1, SonyCommands.buildNowPlayingGet()),
+        ]
+        if withList { queries.insert((.command2, SonyCommands.buildDeviceListGet()), at: 0) }
+        for (type, payload) in queries where !outgoingQueue.contains(where: { !$0.isCommand && $0.payload == payload }) {
+            enqueue(payload, type: type)
+        }
+    }
+
+    private func updateSourceWatch() {
+        let shouldWatch = connectionState == .connected && (usage.hasVisibleSurfaces || watchesPlaybackInBackground)
+        guard shouldWatch else {
+            sourceWatchTask?.cancel()
+            sourceWatchTask = nil
+            return
+        }
+        guard sourceWatchTask == nil else { return }
+        sourceWatchTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let interval = self?.sourceWatchInterval else { return }
+                try? await Task.sleep(for: interval)
+                guard let self, !Task.isCancelled else { return }
+                self.refreshPlaybackSource()
+            }
+        }
+    }
+
+    private func expireSwitchLater(_ macAddress: String) {
+        sourceSwitchTask?.cancel()
+        sourceSwitchTask = Task { [weak self] in
+            guard let timeout = self?.sourceSwitchTimeout else { return }
+            try? await Task.sleep(for: timeout)
+            guard let self, !Task.isCancelled, self.playbackSource.switchingTo == macAddress else { return }
+            self.playbackSource.expireSwitch(macAddress)
+            // Never confirmed: resume only if the list already shows the switch happened.
+            if self.resumeOnSwitchTo == macAddress {
+                self.resumeOnSwitchTo = nil
+                if self.playbackSource.playbackDevice?.macAddress == macAddress { self.controlPlayback(.play) }
+            }
+            self.refreshPlaybackSource()
+        }
+    }
+
+    private func rereadPlaybackSource(after delay: Duration, withList: Bool = true) {
+        sourceSettleTask?.cancel()
+        sourceSettleTask = Task { [weak self] in
+            try? await Task.sleep(for: delay)
+            guard let self, !Task.isCancelled else { return }
+            self.refreshPlaybackSource(withList: withList)
         }
     }
 
@@ -433,7 +544,12 @@ public final class HeadphonesController: ObservableObject {
         equalizer = nil
         listeningMode = nil
         bgmRoomSize = nil
-        devices = nil
+        playbackSource = PlaybackSourceState()
+        sourceWatchTask?.cancel()
+        sourceWatchTask = nil
+        sourceSwitchTask?.cancel()
+        sourceSettleTask?.cancel()
+        resumeOnSwitchTo = nil
         connectionPriority = nil
         connectionPriorities = nil
         audioStream = nil
@@ -558,6 +674,7 @@ public final class HeadphonesController: ObservableObject {
             if releaseWhenIdle && awaitingAck { startAckTimeout() }
             requestFullState()
             startStateTimeout()
+            updateSourceWatch()
 
         case .ambientSound(var state):
             // XM6 answers 0x17 reads with a zero-update placeholder. Keep loading
@@ -586,7 +703,31 @@ public final class HeadphonesController: ObservableObject {
             cinemaEnabled = enabled
             updateListeningMode()
         case .deviceList(let list):
-            devices = list
+            let before = playbackSource.reportedDevices?.first { $0.isPlayback }?.macAddress
+            let hadList = playbackSource.reportedDevices != nil
+            playbackSource.applyList(list)
+            // Another device took the playback right: its play state and track are what matter now.
+            if hadList && before != list.first(where: { $0.isPlayback })?.macAddress {
+                refreshPlaybackSource(withList: false)
+            }
+        case .sourceSwitchResult(let result, let macAddress):
+            sourceSwitchTask?.cancel()
+            playbackSource.applySwitchResult(result, macAddress: macAddress)
+            if resumeOnSwitchTo == macAddress {
+                resumeOnSwitchTo = nil
+                if result == .success { controlPlayback(.play) }
+            }
+            // Success: read again once the audio moved. Refused: the list read shows the truth.
+            rereadPlaybackSource(after: result == .success ? sourceSettleDelay : .zero)
+        case .playbackStatus(let status):
+            let before = playbackSource.playbackStatus?.state
+            playbackSource.applyStatus(status)
+            if let before, before != status.state,
+               !outgoingQueue.contains(where: { $0.payload == SonyCommands.buildNowPlayingGet() }) {
+                enqueue(SonyCommands.buildNowPlayingGet())
+            }
+        case .nowPlaying(let track):
+            playbackSource.applyTrack(track)
         case .modelName(let name):
             reportedModelName = name
         case .firmwareVersion(let version):
@@ -642,6 +783,8 @@ public final class HeadphonesController: ObservableObject {
         enqueue(SonyCommands.buildConnectionPriorityGet())
         enqueue(SonyCommands.buildAudioCodecGet())
         enqueue(SonyCommands.buildDeviceListGet(), type: .command2)
+        enqueue(SonyCommands.buildPlaybackStatusGet())
+        enqueue(SonyCommands.buildNowPlayingGet())
     }
 
     // MARK: - Outbound queue

@@ -103,6 +103,9 @@ fun SettingsScreen(state: UiState, vm: MainViewModel, requestPermission: () -> U
                 OutlinedButton(onClick = vm::simulateTakeover) { Text(stringResource(R.string.demo_takeover)) }
             }
             ToggleRow(stringResource(R.string.settings_release_idle), stringResource(R.string.settings_release_idle_detail), state.releaseWhenIdle) { vm.setReleaseWhenIdle(it) }
+            if (caps == null || caps.supports(Feature.PLAYBACK_SOURCE_SWITCH)) {
+                ToggleRow(stringResource(R.string.follow_playback), stringResource(R.string.follow_playback_detail), state.followPlayback) { vm.setFollowPlayback(it) }
+            }
         }
 
         if (caps != null && snap.target != null) {
@@ -141,23 +144,6 @@ fun SettingsScreen(state: UiState, vm: MainViewModel, requestPermission: () -> U
                 }
                 // These settings plus the EQ, saved as one profile (a scene) in the library.
                 if (caps.equalizer != null) SaveSceneButton(state, vm)
-            }
-
-            val devices = s.devices
-            if (caps.supports(Feature.MULTIPOINT_LIST) && !devices.isNullOrEmpty()) {
-                SectionCard(stringResource(R.string.multipoint)) {
-                    devices.forEach { d ->
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Column(Modifier.weight(1f)) {
-                                Text(d.name)
-                                if (d.isPlayback) Text(stringResource(R.string.playing), color = c.success, style = MaterialTheme.typography.bodySmall)
-                            }
-                            if (!d.isPlayback && d.isConnected && caps.supports(Feature.PLAYBACK_SOURCE_SWITCH)) {
-                                TextButton(onClick = { vm.switchPlayback(d.macAddress) }) { Text(stringResource(R.string.play_here)) }
-                            }
-                        }
-                    }
-                }
             }
         }
 

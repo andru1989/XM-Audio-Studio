@@ -7,7 +7,9 @@ import io.github.andru1989.xmaudiostudio.core.device.HeadphoneDevice
 import io.github.andru1989.xmaudiostudio.core.device.HeadphoneState
 import io.github.andru1989.xmaudiostudio.core.device.Outgoing
 import io.github.andru1989.xmaudiostudio.core.device.ProtocolAdapter
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackAction
 import io.github.andru1989.xmaudiostudio.core.model.ProtocolVersion
+import io.github.andru1989.xmaudiostudio.core.model.SourceSwitchResult
 import io.github.andru1989.xmaudiostudio.core.protocol.FrameParser
 import io.github.andru1989.xmaudiostudio.core.protocol.MdrEvent
 import io.github.andru1989.xmaudiostudio.core.protocol.MdrCommands
@@ -81,6 +83,13 @@ class HeadphoneSession(
     private var ackTimeoutJob: Job? = null
     private var settleJob: Job? = null
     private var stateTimeoutJob: Job? = null
+    private var sourceWatchJob: Job? = null
+    private var sourceSwitchJob: Job? = null
+    private var sourceSettleJob: Job? = null
+    /** An in-flight switch the headphones already answered (`3d 01`): its optimism must not return. */
+    private var resolvedSwitch: DeviceCommand? = null
+    /** Play once the switch to this MAC is confirmed (SwitchPlayback.resumePlayback). */
+    private var resumeOnSwitchTo: String? = null
 
     // region Public API
 
@@ -105,6 +114,7 @@ class HeadphoneSession(
         if (feature != null && caps?.supports(feature) != true) return
         pending.removeAll { it.coalesceKey == command.coalesceKey }
         pending.addLast(command)
+        if (command is DeviceCommand.SwitchPlayback) resumeOnSwitchTo = command.macAddress.takeIf { command.resumePlayback }
         recordActivity()
         publish()
         when (phase) {
@@ -150,6 +160,20 @@ class HeadphoneSession(
         ) {
             openChannel()
         }
+        updateSourceWatch()
+        // Coming back to the app: say where the audio is now, not where it was.
+        if (visible) refreshPlaybackSource()
+    }
+
+    override fun refreshPlaybackSource() = refreshPlaybackSource(withList = true)
+
+    private fun refreshPlaybackSource(withList: Boolean) {
+        if (phase != ConnectionPhase.CONNECTED) return
+        val queries = adapter?.playbackSourceQueries().orEmpty().filter { withList || it.type != MessageType.COMMAND_2 }
+        // Background reads: they never count as activity, and never pile up behind each other.
+        if (queries.isEmpty() || outgoing.any { q -> q.command == null && queries.any { it.payload.contentEquals(q.outgoing.payload) } }) return
+        queries.forEach { outgoing.addLast(QueuedMessage(it, null)) }
+        sendNext()
     }
 
     // endregion
@@ -191,7 +215,14 @@ class HeadphoneSession(
     private fun closeChannel() {
         generation++
         channel.close()
-        listOf(connectTimeoutJob, initRetryJob, ackTimeoutJob, settleJob, stateTimeoutJob).forEach { it?.cancel() }
+        listOf(
+            connectTimeoutJob, initRetryJob, ackTimeoutJob, settleJob, stateTimeoutJob,
+            sourceWatchJob, sourceSwitchJob, sourceSettleJob,
+        ).forEach { it?.cancel() }
+        sourceWatchJob = null
+        // A switch can no longer be confirmed on this channel; the next read shows the truth.
+        confirmed.switchingTo?.let { confirmed = confirmed.expireSourceSwitch(it) }
+        resolvedSwitch = null
         outgoing.clear()
         awaiting = null
         awaitingInit = false
@@ -314,7 +345,14 @@ class HeadphoneSession(
             if (awaitingInit) {
                 awaitingInit = false
             } else {
-                awaiting?.command?.let { confirmed = confirmed.applyOptimistic(it) }
+                awaiting?.command?.let { command ->
+                    if (command === resolvedSwitch) {
+                        resolvedSwitch = null
+                    } else {
+                        confirmed = confirmed.applyOptimistic(command)
+                        if (command is DeviceCommand.SwitchPlayback) expireSwitchLater(command.macAddress)
+                    }
+                }
                 awaiting = null
             }
             afterQueueProgress()
@@ -350,8 +388,78 @@ class HeadphoneSession(
             sendNext()
             return
         }
+        val before = confirmed
         confirmed = confirmed.apply(event)
+        when {
+            event is MdrEvent.SourceSwitched -> {
+                sourceSwitchJob?.cancel()
+                resolvedSwitch = (listOfNotNull(awaiting?.command) + outgoing.mapNotNull { it.command })
+                    .lastOrNull { it is DeviceCommand.SwitchPlayback && it.macAddress == event.macAddress }
+                val success = event.result == SourceSwitchResult.SUCCESS
+                if (resumeOnSwitchTo == event.macAddress) {
+                    resumeOnSwitchTo = null
+                    if (success) execute(DeviceCommand.ControlPlayback(PlaybackAction.PLAY))
+                }
+                // Success: read again once the audio moved. Refused: the list read shows the truth.
+                rereadPlaybackSourceAfter(if (success) config.sourceSettleMs else 0)
+            }
+            // Another device took the playback right, or the play state changed: the track names
+            // the headphones hold may be stale, so ask for them.
+            event is MdrEvent.DeviceList && before.reportedDevices?.firstOrNull { it.isPlayback }?.macAddress !=
+                confirmed.reportedDevices?.firstOrNull { it.isPlayback }?.macAddress && before.reportedDevices != null ->
+                refreshPlaybackSource(withList = false)
+            event is MdrEvent.Playback && before.playbackStatus != null && before.playbackStatus.state != event.status.state ->
+                queueBackground(MdrCommands.nowPlayingGet())
+        }
         publish()
+    }
+
+    private fun expireSwitchLater(macAddress: String) {
+        sourceSwitchJob?.cancel()
+        sourceSwitchJob = scope.launch {
+            delay(config.sourceSwitchTimeoutMs)
+            if (confirmed.switchingTo == macAddress) {
+                confirmed = confirmed.expireSourceSwitch(macAddress)
+                // Never confirmed: resume only if the list already shows the switch happened.
+                if (resumeOnSwitchTo == macAddress) {
+                    resumeOnSwitchTo = null
+                    if (confirmed.playbackDevice?.macAddress == macAddress) execute(DeviceCommand.ControlPlayback(PlaybackAction.PLAY))
+                }
+                publish()
+                refreshPlaybackSource()
+            }
+        }
+    }
+
+    private fun rereadPlaybackSourceAfter(delayMs: Long) {
+        sourceSettleJob?.cancel()
+        sourceSettleJob = scope.launch {
+            delay(delayMs)
+            refreshPlaybackSource()
+        }
+    }
+
+    private fun queueBackground(payload: ByteArray) {
+        if (phase != ConnectionPhase.CONNECTED || outgoing.any { it.command == null && it.outgoing.payload.contentEquals(payload) }) return
+        outgoing.addLast(QueuedMessage(Outgoing(MessageType.COMMAND_1, payload), null))
+        sendNext()
+    }
+
+    /** Polls while something is on screen; the headphones do not always notify a source change. */
+    private fun updateSourceWatch() {
+        val shouldWatch = phase == ConnectionPhase.CONNECTED && visibleSurfaces.isNotEmpty() && config.sourceWatchMs > 0
+        if (!shouldWatch) {
+            sourceWatchJob?.cancel()
+            sourceWatchJob = null
+            return
+        }
+        if (sourceWatchJob?.isActive == true) return
+        sourceWatchJob = scope.launch {
+            while (true) {
+                delay(config.sourceWatchMs)
+                refreshPlaybackSource()
+            }
+        }
     }
 
     private fun afterQueueProgress() {
@@ -373,6 +481,7 @@ class HeadphoneSession(
         initialStateTimedOut = timedOut && (s.ambientSound == null || s.battery == null || s.equalizer == null)
         stateIsLive = true
         phase = ConnectionPhase.CONNECTED
+        updateSourceWatch()
         publish()
         sendNext()
     }
@@ -407,7 +516,7 @@ class HeadphoneSession(
     }
 
     private fun inFlightCommands(): List<DeviceCommand> =
-        listOfNotNull(awaiting?.command) + outgoing.mapNotNull { it.command }
+        (listOfNotNull(awaiting?.command) + outgoing.mapNotNull { it.command }).filter { it !== resolvedSwitch }
 
     // endregion
 
@@ -434,6 +543,7 @@ class HeadphoneSession(
             is DeviceCommand.SetAutomaticPowerOff -> Feature.AUTO_POWER_OFF
             is DeviceCommand.SetPauseWhenTakenOff -> Feature.WEAR_DETECTION
             is DeviceCommand.SwitchPlayback -> Feature.PLAYBACK_SOURCE_SWITCH
+            is DeviceCommand.ControlPlayback -> Feature.PLAYBACK_CONTROL
             is DeviceCommand.SetConnectionPriority -> Feature.CONNECTION_PRIORITY
             is DeviceCommand.Raw -> null
         }

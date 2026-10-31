@@ -120,4 +120,31 @@
     <string name="save_to_library">Save to library</string>
     <string name="device_curve_name">My headphones curve</string>
     <string name="photo_credits">Product photos © Sony Corporation, taken from sony.com for personal use; they are not covered by the project licence.</string>
+
+    <!-- Where it plays (multipoint playback source) -->
+    <string name="source_title">Where it plays</string>
+    <string name="source_this_phone">This phone</string>
+    <string name="source_playing">Playing</string>
+    <string name="source_paused">Paused</string>
+    <string name="source_stopped">Stopped</string>
+    <string name="source_call">On a call</string>
+    <string name="source_controls_here">Controls here</string>
+    <string name="source_none">The headphones don\'t say which device has the controls.</string>
+    <string name="source_connected">Connected</string>
+    <string name="source_paired">Paired, not connected</string>
+    <string name="source_other_device">another device</string>
+    <string name="source_controls_elsewhere">This phone is playing, but the headphone buttons control %1$s.</string>
+    <string name="source_bring_controls">Bring the controls here</string>
+    <string name="source_interrupted">The music on %1$s stopped when the headphones moved to %2$s.</string>
+    <string name="source_resume_on">Back to %1$s and resume</string>
+    <string name="source_failed_call">Couldn\'t switch: a call is in progress.</string>
+    <string name="source_failed_a2dp">Couldn\'t switch: that device has no audio connection.</string>
+    <string name="source_failed_assistant">Couldn\'t switch: the voice assistant has priority.</string>
+    <string name="source_failed_unconfirmed">The headphones didn\'t confirm the switch.</string>
+    <string name="playback_previous">Previous</string>
+    <string name="playback_play">Play</string>
+    <string name="playback_pause">Pause</string>
+    <string name="playback_next">Next</string>
+    <string name="follow_playback">Follow playback automatically</string>
+    <string name="follow_playback_detail">Moves the controls to the device that is playing and brings the music back if the headphones cut it off when switching devices. Only while the app is open.</string>
 </resources>

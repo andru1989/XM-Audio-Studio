@@ -15,6 +15,7 @@ final class AppSettings: ObservableObject {
     private static let menuBarOnlyKey = "menuBarOnly"
     private static let releaseWhenIdleKey = "releaseHeadphonesWhenIdle"
     private static let demoModeKey = "demoMode"
+    private static let followPlaybackKey = "followPlayback"
 
     /// Demo mode is fixed for the life of the process: the controller is built with the
     /// byte-level XM6 simulator instead of IOBluetooth. `--demo` forces it for one launch.
@@ -59,6 +60,12 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    /// Move the headphones' controls to where the audio is, and give back music the headphones
+    /// cut off when they switched devices. Off by default: it writes without a click.
+    @Published var followPlayback: Bool {
+        didSet { UserDefaults.standard.set(followPlayback, forKey: Self.followPlaybackKey) }
+    }
+
     /// `true` runs as a menu bar accessory: no Dock icon, no app-switcher entry, the
     /// menu bar panel is the whole interface. `false` is a normal Mac app.
     @Published var menuBarOnly: Bool {
@@ -99,6 +106,7 @@ final class AppSettings: ObservableObject {
         releaseWhenIdle = UserDefaults.standard.object(forKey: Self.releaseWhenIdleKey) as? Bool ?? true
         menuBarOnly = UserDefaults.standard.bool(forKey: Self.menuBarOnlyKey)
         demoOnNextLaunch = UserDefaults.standard.bool(forKey: Self.demoModeKey)
+        followPlayback = UserDefaults.standard.bool(forKey: Self.followPlaybackKey)
         controller.releaseWhenIdle = releaseWhenIdle
         terminationObserver = NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)
             .sink { [weak controller] _ in controller?.disconnect() }

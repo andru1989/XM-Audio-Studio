@@ -12,6 +12,7 @@ import io.github.andru1989.xmaudiostudio.core.device.Feature.FOCUS_ON_VOICE
 import io.github.andru1989.xmaudiostudio.core.device.Feature.LISTENING_MODE
 import io.github.andru1989.xmaudiostudio.core.device.Feature.MULTIPOINT_LIST
 import io.github.andru1989.xmaudiostudio.core.device.Feature.NOISE_CANCELLING
+import io.github.andru1989.xmaudiostudio.core.device.Feature.PLAYBACK_CONTROL
 import io.github.andru1989.xmaudiostudio.core.device.Feature.PLAYBACK_SOURCE_SWITCH
 import io.github.andru1989.xmaudiostudio.core.device.Feature.SPEAK_TO_CHAT
 import io.github.andru1989.xmaudiostudio.core.device.Feature.WEAR_DETECTION
@@ -106,6 +107,8 @@ object DeviceCatalog {
                 EQ_CUSTOM_BANDS to VERIFIED_HARDWARE,
                 MULTIPOINT_LIST to VERIFIED_HARDWARE,
                 PLAYBACK_SOURCE_SWITCH to PENDING_HARDWARE,
+                // mos9527 reports "current playing" and track controls working on the XM6; not tried here.
+                PLAYBACK_CONTROL to PENDING_HARDWARE,
                 // e0/e6/e8 05 layouts captured live on an XM6 fw 3.1.5 (Anneo22/xm6-control).
                 CONNECTION_PRIORITY to VERIFIED_HARDWARE,
                 // `12 02` from mos9527's tables; never captured on an XM6.

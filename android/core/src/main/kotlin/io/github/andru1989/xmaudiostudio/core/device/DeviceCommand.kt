@@ -5,6 +5,7 @@ import io.github.andru1989.xmaudiostudio.core.model.AutomaticPowerOffMode
 import io.github.andru1989.xmaudiostudio.core.model.BgmRoomSize
 import io.github.andru1989.xmaudiostudio.core.model.ConnectionPriority
 import io.github.andru1989.xmaudiostudio.core.model.ListeningMode
+import io.github.andru1989.xmaudiostudio.core.model.PlaybackAction
 import io.github.andru1989.xmaudiostudio.core.model.SpeakToChatConfig
 import io.github.andru1989.xmaudiostudio.core.protocol.MessageType
 
@@ -65,8 +66,18 @@ sealed interface DeviceCommand {
         override val coalesceKey get() = "priority"
     }
 
-    data class SwitchPlayback(val macAddress: String) : DeviceCommand {
+    /**
+     * Gives the playback right (where the headphones' buttons act) to the connected device [macAddress].
+     * [resumePlayback]: once the headphones confirm the switch, send play to that device.
+     */
+    data class SwitchPlayback(val macAddress: String, val resumePlayback: Boolean = false) : DeviceCommand {
         override val coalesceKey get() = "source"
+    }
+
+    /** Play/pause/skip on the device holding the playback right, relayed by the headphones. */
+    data class ControlPlayback(val action: PlaybackAction) : DeviceCommand {
+        // Play/pause replace each other while unsent (latest wins); so do the skips.
+        override val coalesceKey get() = if (action == PlaybackAction.NEXT || action == PlaybackAction.PREVIOUS) "skip" else "playPause"
     }
 
     /** Developer probe only; never coalesced. */

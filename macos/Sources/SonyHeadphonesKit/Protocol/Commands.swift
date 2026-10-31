@@ -419,6 +419,67 @@ public enum SonyCommands {
         opcode == Opcode.periRetParam || opcode == Opcode.periNotifyParam
     }
 
+    /// `3d 01 <result> <MAC17>`: the headphones' answer to a source switch (mos9527 tables,
+    /// `PeripheralNotifyExtendedParamSourceSwitchControl`). Exactly 20 bytes.
+    public static func decodeSourceSwitchResult(_ payload: [UInt8]) -> (SourceSwitchResult, String)? {
+        guard payload.count == 20, payload[0] == Opcode.periNotifyExtendedParam,
+              payload[1] == Subtype.periSourceSwitch else { return nil }
+        return (SourceSwitchResult(code: payload[2]), String(decoding: payload[3..<20], as: UTF8.self))
+    }
+
+    // MARK: - Playback controller (status, track names, play/pause/skip)
+
+    public static func buildPlaybackStatusGet() -> [UInt8] {
+        [Opcode.playGetStatus, Subtype.playbackController]
+    }
+
+    public static func buildNowPlayingGet() -> [UInt8] {
+        [Opcode.playGetParam, Subtype.playbackController]
+    }
+
+    /// The ENABLE byte (`00`) is required; the headphones forward the key to the playback-right device.
+    public static func buildPlaybackControlSet(_ action: PlaybackAction) -> [UInt8] {
+        [Opcode.playSetStatus, Subtype.playbackController, 0x00, action.rawValue]
+    }
+
+    /// `a3/a5 01 <enable 00/01> <status 00-03> <music 00 / call 01>`, exactly 5 bytes.
+    public static func decodePlaybackStatus(_ p: [UInt8]) -> PlaybackStatus? {
+        guard p.count == 5, p[1] == Subtype.playbackController,
+              p[0] == Opcode.playRetStatus || p[0] == Opcode.playNotifyStatus,
+              let available = boolFromByte(p[2]).map({ !$0 }), // ENABLE = 00
+              let state = PlaybackState(rawValue: p[3]),
+              let isCall = boolFromByte(p[4]) else { return nil }
+        return PlaybackStatus(state: state, isCall: isCall, controlsAvailable: available)
+    }
+
+    static func isPlaybackStatusReply(opcode: UInt8) -> Bool {
+        opcode == Opcode.playRetStatus || opcode == Opcode.playNotifyStatus
+    }
+
+    /// `a7/a9 01 (<nameStatus> <len> <UTF-8 name>) x4`: title, album, artist and a fourth name the
+    /// app does not use. Blank names are nil; a truncated entry rejects the payload; trailing bytes
+    /// are ignored.
+    public static func decodeNowPlaying(_ p: [UInt8]) -> NowPlaying? {
+        guard p.count >= 2, p[1] == Subtype.playbackController,
+              p[0] == Opcode.playRetParam || p[0] == Opcode.playNotifyParam else { return nil }
+        var names: [String?] = []
+        var i = 2
+        for _ in 0..<4 {
+            guard i + 2 <= p.count else { return nil }
+            let length = Int(p[i + 1])
+            i += 2
+            guard i + length <= p.count else { return nil }
+            let name = String(decoding: p[i..<(i + length)], as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+            names.append(name.isEmpty ? nil : name)
+            i += length
+        }
+        return NowPlaying(title: names[0], album: names[1], artist: names[2])
+    }
+
+    static func isNowPlayingReply(opcode: UInt8) -> Bool {
+        opcode == Opcode.playRetParam || opcode == Opcode.playNotifyParam
+    }
+
     // MARK: - Speak-to-Chat enabled
 
     public static func buildSpeakToChatEnabledGet() -> [UInt8] {
