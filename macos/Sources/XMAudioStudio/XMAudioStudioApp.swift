@@ -9,6 +9,8 @@ struct XMAudioStudioApp: App {
     @StateObject private var settings: AppSettings
     @StateObject private var studio: EqStudioModel
     @StateObject private var widgetBridge: WidgetBridge
+    /// Where the audio is: local CoreAudio activity + the headphones' report + following.
+    @StateObject private var playbackSource: PlaybackSourceCoordinator
     /// Local DSP ("Advanced EQ"); off at every launch, only shown in the studio window.
     @StateObject private var dsp = DSPStudioModel()
 
@@ -17,8 +19,10 @@ struct XMAudioStudioApp: App {
         AppSettings.migrateWindowFramesIfNeeded()
         let controller = AppSettings.launchesInDemoMode ? HeadphonesController.demo() : HeadphonesController()
         let studio = EqStudioModel(controller: controller)
+        let settings = AppSettings(controller: controller)
         _controller = StateObject(wrappedValue: controller)
-        _settings = StateObject(wrappedValue: AppSettings(controller: controller))
+        _settings = StateObject(wrappedValue: settings)
+        _playbackSource = StateObject(wrappedValue: PlaybackSourceCoordinator(controller: controller, settings: settings))
         _studio = StateObject(wrappedValue: studio)
 
         // WidgetKit widgets (Xcode build only; inert without the App Group entitlement).
@@ -40,6 +44,7 @@ struct XMAudioStudioApp: App {
                 .environmentObject(controller)
                 .environmentObject(settings)
                 .environmentObject(studio)
+                .environmentObject(playbackSource)
                 .frame(minWidth: 380, idealWidth: 960, minHeight: 480, idealHeight: 820)
                 .background(ControlSurfaceObserver(controller: controller, hideInitialWindow: settings.shouldHideInitialWindow))
                 .onAppear {
@@ -74,6 +79,7 @@ struct XMAudioStudioApp: App {
                 .environmentObject(controller)
                 .environmentObject(settings)
                 .environmentObject(studio)
+                .environmentObject(playbackSource)
                 .background(ControlSurfaceObserver(controller: controller))
         } label: {
             MenuBarIcon()
@@ -105,6 +111,7 @@ struct XMAudioStudioApp: App {
                 .environmentObject(controller)
                 .environmentObject(settings)
                 .environmentObject(studio)
+                .environmentObject(playbackSource)
                 .background(ControlSurfaceObserver(controller: controller))
         }
         .windowResizability(.contentSize)

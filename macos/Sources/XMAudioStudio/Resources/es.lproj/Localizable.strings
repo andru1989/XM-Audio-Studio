@@ -261,3 +261,33 @@
 "Prioritize Low Latency (read-only)" = "Priorizar baja latencia (solo lectura)";
 "Changing it can cut the Bluetooth audio for a moment." = "Al cambiarla, el audio Bluetooth puede cortarse un momento.";
 "The headphones didn't report their connection priority." = "Los audífonos no informaron su prioridad de conexión.";
+
+/* Where it's playing (multipoint) */
+"Where it's playing" = "Dónde suena";
+"None of the connected devices has the playback controls right now." = "Ningún dispositivo conectado tiene ahora los controles de reproducción.";
+"Gives this device the headphone controls and the audio" = "Le da a este dispositivo los controles de los audífonos y el audio";
+"Music on %@ stopped when the headphones switched to %@." = "La música en %@ se detuvo cuando los audífonos pasaron a %@.";
+"Back to %@ and resume" = "Volver a %@ y reanudar";
+"This Mac is sending audio, but the headphone buttons control %@." = "Este Mac está enviando audio, pero los botones de los audífonos controlan %@.";
+"Bring the controls here" = "Traer los controles aquí";
+"Couldn't switch: there is a call in progress." = "No se pudo cambiar: hay una llamada en curso.";
+"Couldn't switch: that device doesn't have the audio connected." = "No se pudo cambiar: ese dispositivo no tiene el audio conectado.";
+"Couldn't switch: the voice assistant has priority." = "No se pudo cambiar: el asistente de voz tiene prioridad.";
+"The headphones didn't confirm the switch." = "Los audífonos no confirmaron el cambio.";
+"Previous track" = "Pista anterior";
+"Next track" = "Pista siguiente";
+"Play" = "Reproducir";
+"Pause" = "Pausar";
+"This Mac" = "Este Mac";
+"this Mac" = "este Mac";
+"No device has the controls" = "Ningún dispositivo tiene los controles";
+"Playing on %@" = "Sonando en %@";
+"Paused on %@" = "En pausa en %@";
+"Stopped on %@" = "Detenido en %@";
+"Controls on %@" = "Controles en %@";
+"In a call" = "Llamada en curso";
+"Paused" = "En pausa";
+"Stopped" = "Detenido";
+"Has the controls" = "Tiene los controles";
+"Follow playback automatically" = "Seguir la reproducción automáticamente";
+"Moves the headphone controls to the device that is playing, and gives the music back when the headphones cut it off while switching devices. With release turned off, it also watches while no window is open." = "Lleva los controles de los audífonos al dispositivo que está sonando y devuelve la música cuando los audífonos la cortan al cambiar de dispositivo. Si la liberación está desactivada, también vigila sin ninguna ventana abierta.";
